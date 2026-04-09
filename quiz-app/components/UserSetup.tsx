@@ -6,9 +6,10 @@ import { useUserStore } from '@/store/userStore'
 export default function UserSetup() {
   const [input, setInput] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const login = useUserStore((s) => s.login)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const name = input.trim()
     if (!name) {
@@ -19,7 +20,9 @@ export default function UserSetup() {
       setError('2글자 이상 입력해주세요')
       return
     }
-    login(name)
+    setLoading(true)
+    await login(name)
+    setLoading(false)
   }
 
   return (
@@ -54,14 +57,15 @@ export default function UserSetup() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-lg transition-colors"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition-colors"
           >
-            시작하기
+            {loading ? '불러오는 중...' : '시작하기'}
           </button>
         </form>
 
         <p className="text-center text-gray-600 text-xs mt-6">
-          진행상황은 이 브라우저에 저장됩니다
+          진행상황은 서버에 저장됩니다
         </p>
       </div>
     </div>

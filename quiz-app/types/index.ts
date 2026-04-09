@@ -1,5 +1,5 @@
 export type Difficulty = 'easy' | 'medium' | 'hard'
-export type Category = 'javascript' | 'react' | 'nextjs'
+export type Category = 'javascript' | 'react' | 'nextjs' | 'typescript'
 export type ProblemType = 'multiple-choice' | 'code-output' | 'bug-find' | 'code-complete'
 
 export interface Problem {
