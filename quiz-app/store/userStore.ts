@@ -16,10 +16,10 @@ interface UserStore {
   progress: UserProgress | null
   isLoaded: boolean
 
-  login: (username: string) => void
+  login: (username: string) => Promise<void>
   logout: () => void
-  submitAnswer: (result: Omit<SolvedResult, 'attempts'>) => void
-  refreshProgress: () => void
+  submitAnswer: (result: Omit<SolvedResult, 'attempts'>) => Promise<void>
+  refreshProgress: () => Promise<void>
 }
 
 export const useUserStore = create<UserStore>((set, get) => ({
@@ -27,9 +27,9 @@ export const useUserStore = create<UserStore>((set, get) => ({
   progress: null,
   isLoaded: false,
 
-  login: (username: string) => {
+  login: async (username: string) => {
     setCurrentUser(username)
-    const progress = getUserProgress(username)
+    const progress = await getUserProgress(username)
     set({ username, progress, isLoaded: true })
   },
 
@@ -38,24 +38,28 @@ export const useUserStore = create<UserStore>((set, get) => ({
     set({ username: null, progress: null })
   },
 
-  submitAnswer: (result: Omit<SolvedResult, 'attempts'>) => {
-    const { username } = get()
+  submitAnswer: async (result: Omit<SolvedResult, 'attempts'>) => {
+    const { username, progress } = get()
     if (!username) return
 
-    const fullResult: SolvedResult = { ...result, attempts: 0 }
-    saveSolvedResult(username, fullResult)
+    const existing = progress?.solvedProblems[result.problemId]
+    const fullResult: SolvedResult = {
+      ...result,
+      attempts: (existing?.attempts ?? 0) + 1,
+    }
 
-    const progress = getUserProgress(username)
-    set({ progress })
+    await saveSolvedResult(username, fullResult)
+    const updatedProgress = await getUserProgress(username)
+    set({ progress: updatedProgress })
   },
 
-  refreshProgress: () => {
+  refreshProgress: async () => {
     const username = getCurrentUser()
     if (!username) {
       set({ isLoaded: true })
       return
     }
-    const progress = getUserProgress(username)
+    const progress = await getUserProgress(username)
     set({ username, progress, isLoaded: true })
   },
 }))

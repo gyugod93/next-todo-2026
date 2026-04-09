@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useUserStore } from '@/store/userStore'
-import { getAllUsernames, getUserStats } from '@/lib/storage'
+import { getAllUsersLeaderboard } from '@/lib/storage'
 import { allProblems } from '@/data/problems'
 import UserSetup from '@/components/UserSetup'
 import type { LeaderboardEntry } from '@/types'
@@ -17,13 +17,7 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     if (!isLoaded) return
-    const usernames = getAllUsernames()
-    const data: LeaderboardEntry[] = usernames.map((name) => {
-      const stats = getUserStats(name)
-      return { username: name, ...stats }
-    })
-    data.sort((a, b) => b.score - a.score || b.correctCount - a.correctCount)
-    setEntries(data)
+    getAllUsersLeaderboard().then(setEntries)
   }, [isLoaded])
 
   if (!isLoaded) {

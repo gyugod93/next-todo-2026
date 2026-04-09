@@ -1,9 +1,7 @@
-import type { UserProgress, SolvedResult } from '@/types'
+import type { UserProgress, SolvedResult, LeaderboardEntry } from '@/types'
 
 const STORAGE_PREFIX = 'dev-quiz:'
 const CURRENT_USER_KEY = `${STORAGE_PREFIX}current-user`
-const PROGRESS_KEY = (username: string) =>
-  `${STORAGE_PREFIX}progress:${username}`
 
 export function getCurrentUser(): string | null {
   if (typeof window === 'undefined') return null
@@ -18,58 +16,41 @@ export function clearCurrentUser(): void {
   localStorage.removeItem(CURRENT_USER_KEY)
 }
 
-export function getUserProgress(username: string): UserProgress {
-  if (typeof window === 'undefined') {
+export async function getUserProgress(username: string): Promise<UserProgress> {
+  try {
+    const res = await fetch(`/api/progress/${encodeURIComponent(username)}`)
+    if (!res.ok) throw new Error('fetch failed')
+    return await res.json()
+  } catch {
     return { username, solvedProblems: {}, createdAt: Date.now() }
   }
-
-  const raw = localStorage.getItem(PROGRESS_KEY(username))
-  if (!raw) {
-    const fresh: UserProgress = {
-      username,
-      solvedProblems: {},
-      createdAt: Date.now(),
-    }
-    saveUserProgress(fresh)
-    return fresh
-  }
-
-  return JSON.parse(raw) as UserProgress
 }
 
-export function saveUserProgress(progress: UserProgress): void {
-  localStorage.setItem(PROGRESS_KEY(progress.username), JSON.stringify(progress))
-}
-
-export function saveSolvedResult(
+export async function saveSolvedResult(
   username: string,
   result: SolvedResult,
-): void {
-  const progress = getUserProgress(username)
-  const existing = progress.solvedProblems[result.problemId]
+): Promise<void> {
+  await fetch(`/api/progress/${encodeURIComponent(username)}/solve`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(result),
+  })
+}
 
-  progress.solvedProblems[result.problemId] = {
-    ...result,
-    attempts: (existing?.attempts ?? 0) + 1,
+export async function getAllUsersLeaderboard(): Promise<LeaderboardEntry[]> {
+  try {
+    const res = await fetch('/api/leaderboard')
+    if (!res.ok) throw new Error('fetch failed')
+    return await res.json()
+  } catch {
+    return []
   }
-
-  saveUserProgress(progress)
 }
 
-export function getAllUsernames(): string[] {
-  if (typeof window === 'undefined') return []
-  const keys = Object.keys(localStorage).filter((k) =>
-    k.startsWith(`${STORAGE_PREFIX}progress:`),
-  )
-  return keys.map((k) => k.replace(`${STORAGE_PREFIX}progress:`, ''))
-}
-
-export function getUserStats(username: string) {
-  const progress = getUserProgress(username)
+export function getUserStats(progress: UserProgress) {
   const results = Object.values(progress.solvedProblems)
   const totalSolved = results.length
   const correctCount = results.filter((r) => r.correct).length
   const score = correctCount * 10 - (totalSolved - correctCount) * 2
-
   return { totalSolved, correctCount, score }
 }
