@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useUserStore } from '@/store/userStore'
 import { getProblemById, allProblems, categoryMeta } from '@/data/problems'
+import { allLessons } from '@/data/lessons'
 import MultipleChoice from '@/components/problems/MultipleChoice'
 import CodeOutputQuiz from '@/components/problems/CodeOutputQuiz'
 import BugFinder from '@/components/problems/BugFinder'
@@ -23,16 +24,23 @@ export default function ProblemPage() {
   const router = useRouter()
   const id = params.id as string
 
-  const { username, progress, isLoaded, refreshProgress, submitAnswer } =
+  const { username, progress, isLoaded, retryQueue, refreshProgress, submitAnswer } =
     useUserStore()
   const [submitted, setSubmitted] = useState(false)
+  const [isRetrying, setIsRetrying] = useState(false)
 
   useEffect(() => {
     refreshProgress()
   }, [refreshProgress])
 
+  // retry 모드 진입 시 제출 상태 초기화
+  useEffect(() => {
+    if (isRetrying) setSubmitted(false)
+  }, [isRetrying])
+
   const problem = getProblemById(id)
   const solvedResult: SolvedResult | undefined = progress?.solvedProblems[id]
+  const isInRetryQueue = retryQueue.includes(id)
 
   if (!isLoaded) {
     return (
@@ -61,6 +69,11 @@ export default function ProblemPage() {
   const meta = categoryMeta[problem.category]
   const diff = difficultyLabel[problem.difficulty]
 
+  // 이 문제를 relatedProblemIds에서 참조하는 학습 카드
+  const relatedLessons = allLessons.filter((l) =>
+    l.relatedProblemIds?.includes(id)
+  )
+
   const currentIndex = allProblems.findIndex((p) => p.id === id)
   const nextProblem = allProblems[currentIndex + 1]
   const prevProblem = allProblems[currentIndex - 1]
@@ -75,10 +88,10 @@ export default function ProblemPage() {
     })
   }
 
-  const sharedProps = {
-    problem,
-    onSubmit: handleSubmit,
-  }
+  // retry 모드일 때는 initialAnswer 전달 안 함 → 컴포넌트 신선하게 시작
+  const initialAnswer = isRetrying ? undefined : solvedResult?.userAnswer
+
+  const sharedProps = { problem, onSubmit: handleSubmit }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
@@ -98,6 +111,33 @@ export default function ProblemPage() {
         <span className="text-gray-400">{problem.title}</span>
       </div>
 
+      {/* 다시 풀기 배너 */}
+      {isInRetryQueue && !isRetrying && (
+        <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📌</span>
+            <div>
+              <p className="text-orange-300 text-sm font-medium">다시 풀기 목록에 있는 문제</p>
+              <p className="text-orange-400/60 text-xs">처음부터 다시 도전해서 개념을 확실히 잡아보세요</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsRetrying(true)}
+            className="shrink-0 text-sm bg-orange-500 hover:bg-orange-400 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+          >
+            다시 도전하기
+          </button>
+        </div>
+      )}
+
+      {/* 다시 도전 중 배너 */}
+      {isRetrying && !submitted && (
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl px-4 py-3 flex items-center gap-2">
+          <span className="text-blue-400 text-sm">🔄</span>
+          <p className="text-blue-300 text-sm">다시 도전 중 — 이번엔 맞춰보세요!</p>
+        </div>
+      )}
+
       {/* 문제 헤더 */}
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-3">
         <div className="flex items-center gap-2 flex-wrap">
@@ -110,7 +150,7 @@ export default function ProblemPage() {
           >
             {diff.text}
           </span>
-          {solvedResult && (
+          {solvedResult && !isRetrying && (
             <span
               className={`text-xs px-2 py-0.5 rounded-full ${
                 solvedResult.correct
@@ -121,53 +161,70 @@ export default function ProblemPage() {
               {solvedResult.correct ? '✓ 정답' : '✗ 오답'}
             </span>
           )}
+          {isRetrying && (
+            <span className="text-xs px-2 py-0.5 rounded-full text-orange-400 bg-orange-400/10">
+              재도전
+            </span>
+          )}
         </div>
 
         <h1 className="text-xl font-bold text-white">{problem.title}</h1>
         <p className="text-gray-400 text-sm leading-relaxed">
           {problem.description}
         </p>
+
+        {/* 관련 학습 카드 */}
+        {relatedLessons.length > 0 && (
+          <div className="pt-2 flex flex-wrap gap-2">
+            {relatedLessons.map((lesson) => (
+              <Link
+                key={lesson.id}
+                href={`/learn/${lesson.category}/${lesson.id}`}
+                className="flex items-center gap-1.5 text-xs bg-violet-900/30 text-violet-300 border border-violet-700/40 px-3 py-1.5 rounded-lg hover:bg-violet-900/50 transition-colors"
+              >
+                <span>📖</span>
+                <span>개념 먼저 보기: {lesson.title}</span>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 문제 본문 */}
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
         {problem.type === 'multiple-choice' && (
           <MultipleChoice
+            key={isRetrying ? `${id}-retry` : id}
             {...sharedProps}
             initialAnswer={
-              solvedResult?.userAnswer !== undefined
-                ? (solvedResult.userAnswer as number)
-                : undefined
+              initialAnswer !== undefined ? (initialAnswer as number) : undefined
             }
           />
         )}
         {problem.type === 'code-output' && (
           <CodeOutputQuiz
+            key={isRetrying ? `${id}-retry` : id}
             {...sharedProps}
             initialAnswer={
-              solvedResult?.userAnswer !== undefined
-                ? (solvedResult.userAnswer as number)
-                : undefined
+              initialAnswer !== undefined ? (initialAnswer as number) : undefined
             }
           />
         )}
         {problem.type === 'bug-find' && (
           <BugFinder
+            key={isRetrying ? `${id}-retry` : id}
             {...sharedProps}
             initialAnswer={
-              solvedResult?.userAnswer !== undefined
-                ? (solvedResult.userAnswer as string)
-                : undefined
+              initialAnswer !== undefined ? (initialAnswer as string) : undefined
             }
           />
         )}
         {problem.type === 'code-complete' && (
           <CodeComplete
+            key={isRetrying ? `${id}-retry` : id}
             {...sharedProps}
             initialAnswer={
-              solvedResult?.userAnswer !== undefined
-                ? (solvedResult.userAnswer as string)
-                : undefined
+              initialAnswer !== undefined ? (initialAnswer as string) : undefined
             }
           />
         )}

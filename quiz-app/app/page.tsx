@@ -3,13 +3,15 @@
 import Link from 'next/link'
 import { useEffect } from 'react'
 import { useUserStore } from '@/store/userStore'
-import { categoryMeta, allProblems } from '@/data/problems'
+import { categoryMeta, allProblems, getProblemById } from '@/data/problems'
+import { lessonsByCategory } from '@/data/lessons'
+import { lessonCategoryMeta } from '@/types'
 import ProgressBar from '@/components/ProgressBar'
 import UserSetup from '@/components/UserSetup'
-import type { Category } from '@/types'
+import type { Category, LessonCategory } from '@/types'
 
 export default function HomePage() {
-  const { username, progress, isLoaded, refreshProgress } = useUserStore()
+  const { username, progress, isLoaded, retryQueue, refreshProgress } = useUserStore()
 
   useEffect(() => {
     refreshProgress()
@@ -26,6 +28,7 @@ export default function HomePage() {
   if (!username) return <UserSetup />
 
   const solved = Object.values(progress?.solvedProblems ?? {})
+  const retryProblems = retryQueue.map((id) => getProblemById(id)).filter(Boolean)
   const totalSolved = solved.length
   const correctCount = solved.filter((s) => s.correct).length
   const totalProblems = allProblems.length
@@ -97,6 +100,78 @@ export default function HomePage() {
                     />
                   </div>
                 </div>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* 다시 풀기 목록 */}
+      {retryProblems.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📌</span>
+            <h2 className="font-semibold text-white">다시 풀기 목록</h2>
+            <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
+              {retryProblems.length}개
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {retryProblems.map((p) => {
+              const pMeta = categoryMeta[p!.category]
+              return (
+                <Link
+                  key={p!.id}
+                  href={`/problems/${p!.id}`}
+                  className="bg-gray-900 border border-orange-500/20 hover:border-orange-500/40 rounded-xl px-4 py-3 flex items-center justify-between group transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-base">{pMeta.emoji}</span>
+                    <div>
+                      <p className="text-sm text-white font-medium group-hover:text-orange-300 transition-colors">
+                        {p!.title}
+                      </p>
+                      <p className="text-xs text-gray-500">{p!.subcategory}</p>
+                    </div>
+                  </div>
+                  <span className="text-orange-500/50 group-hover:text-orange-400 text-sm transition-colors">
+                    다시 도전 →
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 학습 카드 섹션 */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-white">📖 개념 학습</h2>
+          <Link href="/learn" className="text-xs text-blue-400 hover:text-blue-300 transition-colors">
+            전체 보기 →
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {(Object.keys(lessonCategoryMeta) as LessonCategory[]).map((cat) => {
+            const lMeta = lessonCategoryMeta[cat]
+            const lessons = lessonsByCategory[cat]
+            return (
+              <Link
+                key={cat}
+                href={`/learn/${cat}`}
+                className="bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-xl p-4 flex items-center gap-3 transition-all group"
+              >
+                <span className="text-2xl">{lMeta.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors">
+                    {lMeta.label}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">{lMeta.description}</p>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${lMeta.color}`}>
+                  {lessons.length}
+                </span>
               </Link>
             )
           })}
