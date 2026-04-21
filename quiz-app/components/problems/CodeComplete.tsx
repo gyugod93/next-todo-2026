@@ -106,6 +106,9 @@ export default function CodeComplete({ problem, onSubmit, initialAnswer }: Props
           <Explanation
             correct={normalizeCode(code.trim()) === normalizeCode(correctAnswer)}
             explanation={problem.explanation}
+            deepDive={problem.deepDive}
+            relatedProblemIds={problem.relatedProblems}
+            problemId={problem.id}
           />
         </>
       )}

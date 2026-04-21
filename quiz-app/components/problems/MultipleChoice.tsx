@@ -70,6 +70,9 @@ export default function MultipleChoice({ problem, onSubmit, initialAnswer }: Pro
         <Explanation
           correct={selected === correctIndex}
           explanation={problem.explanation}
+          deepDive={problem.deepDive}
+          relatedProblemIds={problem.relatedProblems}
+          problemId={problem.id}
         />
       )}
     </div>
