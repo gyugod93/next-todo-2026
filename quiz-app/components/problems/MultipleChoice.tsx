@@ -9,9 +9,10 @@ interface Props {
   problem: Problem
   onSubmit: (answer: number, correct: boolean) => void
   initialAnswer?: number
+  onRetry?: () => void
 }
 
-export default function MultipleChoice({ problem, onSubmit, initialAnswer }: Props) {
+export default function MultipleChoice({ problem, onSubmit, initialAnswer, onRetry }: Props) {
   const [selected, setSelected] = useState<number | null>(
     initialAnswer !== undefined ? initialAnswer : null,
   )
@@ -73,6 +74,7 @@ export default function MultipleChoice({ problem, onSubmit, initialAnswer }: Pro
           deepDive={problem.deepDive}
           relatedProblemIds={problem.relatedProblems}
           problemId={problem.id}
+          onRetry={onRetry}
         />
       )}
     </div>

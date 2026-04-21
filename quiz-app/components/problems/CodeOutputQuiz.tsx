@@ -9,9 +9,10 @@ interface Props {
   problem: Problem
   onSubmit: (answer: number, correct: boolean) => void
   initialAnswer?: number
+  onRetry?: () => void
 }
 
-export default function CodeOutputQuiz({ problem, onSubmit, initialAnswer }: Props) {
+export default function CodeOutputQuiz({ problem, onSubmit, initialAnswer, onRetry }: Props) {
   const [selected, setSelected] = useState<number | null>(
     initialAnswer !== undefined ? initialAnswer : null,
   )
@@ -81,6 +82,7 @@ export default function CodeOutputQuiz({ problem, onSubmit, initialAnswer }: Pro
           deepDive={problem.deepDive}
           relatedProblemIds={problem.relatedProblems}
           problemId={problem.id}
+          onRetry={onRetry}
         />
       )}
     </div>

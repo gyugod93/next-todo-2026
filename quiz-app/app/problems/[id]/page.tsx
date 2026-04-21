@@ -38,6 +38,14 @@ export default function ProblemPage() {
     if (isRetrying) setSubmitted(false)
   }, [isRetrying])
 
+  // 틀린 문제에 재접속하면 자동으로 retry 모드 진입
+  useEffect(() => {
+    if (isLoaded && progress?.solvedProblems[id]?.correct === false && !isRetrying) {
+      setIsRetrying(true)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, id, progress])
+
   const problem = getProblemById(id)
   const solvedResult: SolvedResult | undefined = progress?.solvedProblems[id]
   const isInRetryQueue = retryQueue.includes(id)
@@ -91,7 +99,8 @@ export default function ProblemPage() {
   // retry 모드일 때는 initialAnswer 전달 안 함 → 컴포넌트 신선하게 시작
   const initialAnswer = isRetrying ? undefined : solvedResult?.userAnswer
 
-  const sharedProps = { problem, onSubmit: handleSubmit }
+  const handleRetry = () => setIsRetrying(true)
+  const sharedProps = { problem, onSubmit: handleSubmit, onRetry: handleRetry }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">

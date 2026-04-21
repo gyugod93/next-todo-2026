@@ -12,9 +12,10 @@ interface Props {
   problem: Problem
   onSubmit: (answer: string, correct: boolean) => void
   initialAnswer?: string
+  onRetry?: () => void
 }
 
-export default function CodeComplete({ problem, onSubmit, initialAnswer }: Props) {
+export default function CodeComplete({ problem, onSubmit, initialAnswer, onRetry }: Props) {
   const [code, setCode] = useState(initialAnswer ?? problem.code ?? '')
   const [submitted, setSubmitted] = useState(!!initialAnswer)
   const [showHints, setShowHints] = useState(false)
@@ -109,6 +110,7 @@ export default function CodeComplete({ problem, onSubmit, initialAnswer }: Props
             deepDive={problem.deepDive}
             relatedProblemIds={problem.relatedProblems}
             problemId={problem.id}
+            onRetry={onRetry}
           />
         </>
       )}
