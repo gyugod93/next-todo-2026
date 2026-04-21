@@ -178,6 +178,24 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Claude Code 도구 */}
+      <div className="bg-gradient-to-r from-violet-950 to-gray-900 border border-violet-700/50 rounded-2xl p-5 flex items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xl">⚡</span>
+            <h2 className="font-semibold text-white">Claude Code Thrifty</h2>
+            <span className="text-xs bg-emerald-900 text-emerald-300 px-2 py-0.5 rounded-full">보안 검증</span>
+          </div>
+          <p className="text-gray-400 text-sm">토큰 낭비를 막는 훅 시스템. 팀 전체에 적용 가능.</p>
+        </div>
+        <Link
+          href="/tools/thrifty"
+          className="flex-shrink-0 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors whitespace-nowrap"
+        >
+          세팅 가이드 →
+        </Link>
+      </div>
+
       <div className="flex gap-3">
         <Link
           href="/problems"
