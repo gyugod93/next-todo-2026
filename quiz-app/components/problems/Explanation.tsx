@@ -11,6 +11,7 @@ interface Props {
   deepDive?: string
   relatedProblemIds?: string[]
   problemId?: string
+  onRetry?: () => void
 }
 
 export default function Explanation({
@@ -19,6 +20,7 @@ export default function Explanation({
   deepDive,
   relatedProblemIds,
   problemId,
+  onRetry,
 }: Props) {
   const [retryAdded, setRetryAdded] = useState(false)
   const { addToRetry, retryQueue } = useUserStore()
@@ -54,20 +56,33 @@ export default function Explanation({
           </span>
         </div>
 
-        {/* 나중에 다시 풀기 버튼 */}
-        {!correct && problemId && (
-          <button
-            onClick={handleAddToRetry}
-            disabled={alreadyInQueue || retryAdded}
-            className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
-              alreadyInQueue || retryAdded
-                ? 'border-orange-500/30 bg-orange-500/10 text-orange-400 cursor-default'
-                : 'border-gray-700 hover:border-orange-500/50 hover:bg-orange-500/10 text-gray-400 hover:text-orange-400'
-            }`}
-          >
-            <span>📌</span>
-            <span>{alreadyInQueue || retryAdded ? '다시 풀기 목록에 추가됨' : '나중에 다시 풀기'}</span>
-          </button>
+        {/* 오답 액션 버튼 */}
+        {!correct && (
+          <div className="flex items-center gap-2">
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="text-xs px-3 py-1.5 rounded-lg border border-blue-500/50 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all flex items-center gap-1.5"
+              >
+                <span>🔄</span>
+                <span>바로 다시 풀기</span>
+              </button>
+            )}
+            {problemId && (
+              <button
+                onClick={handleAddToRetry}
+                disabled={alreadyInQueue || retryAdded}
+                className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                  alreadyInQueue || retryAdded
+                    ? 'border-orange-500/30 bg-orange-500/10 text-orange-400 cursor-default'
+                    : 'border-gray-700 hover:border-orange-500/50 hover:bg-orange-500/10 text-gray-400 hover:text-orange-400'
+                }`}
+              >
+                <span>📌</span>
+                <span>{alreadyInQueue || retryAdded ? '목록에 추가됨' : '나중에 다시 풀기'}</span>
+              </button>
+            )}
+          </div>
         )}
       </div>
 
