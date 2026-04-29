@@ -7,6 +7,11 @@ import { aiToolsProblems } from './ai-tools'
 import { csBasicsProblems } from './cs-basics'
 import { debuggingProblems } from './debugging'
 import { realworldProblems } from './realworld'
+import { databaseProblems } from './database'
+import { backendProblems } from './backend'
+import { authSecurityProblems } from './auth-security'
+import { infraBasicsProblems } from './infra-basics'
+import { codeTrainingProblems } from './code-training'
 import type { Problem, Category } from '@/types'
 
 export const allProblems: Problem[] = [
@@ -19,6 +24,11 @@ export const allProblems: Problem[] = [
   ...csBasicsProblems,
   ...debuggingProblems,
   ...realworldProblems,
+  ...databaseProblems,
+  ...backendProblems,
+  ...authSecurityProblems,
+  ...infraBasicsProblems,
+  ...codeTrainingProblems,
 ]
 
 export const problemsByCategory: Record<Category, Problem[]> = {
@@ -31,6 +41,11 @@ export const problemsByCategory: Record<Category, Problem[]> = {
   'cs-basics': csBasicsProblems,
   debugging: debuggingProblems,
   realworld: realworldProblems,
+  database: databaseProblems,
+  backend: backendProblems,
+  'auth-security': authSecurityProblems,
+  'infra-basics': infraBasicsProblems,
+  'code-training': codeTrainingProblems,
 }
 
 export const categoryMeta: Record<
@@ -91,6 +106,36 @@ export const categoryMeta: Record<
     color: 'bg-orange-500 text-white',
     emoji: '🛠️',
   },
+  database: {
+    label: '데이터베이스',
+    description: 'MongoDB 용어, Mongoose ODM, RDBMS/SQL, Aggregation, 스키마 설계',
+    color: 'bg-green-600 text-white',
+    emoji: '🗄️',
+  },
+  backend: {
+    label: '백엔드',
+    description: 'REST API, HTTP, NestJS 구조, Guard/Pipe/Interceptor, Node.js',
+    color: 'bg-indigo-500 text-white',
+    emoji: '⚙️',
+  },
+  'auth-security': {
+    label: '인증/보안',
+    description: 'JWT, OAuth 2.0, OIDC, Session, XSS, CSRF, bcrypt, CORS',
+    color: 'bg-red-600 text-white',
+    emoji: '🔐',
+  },
+  'infra-basics': {
+    label: '인프라',
+    description: 'Docker, CI/CD, Monolith vs MSA, Blue-Green, CDN, Load Balancer',
+    color: 'bg-slate-600 text-white',
+    emoji: '🚀',
+  },
+  'code-training': {
+    label: '코딩 훈련',
+    description: '직접 버그 수정(code-fix), 코드 설계 후 모범 답안 비교(self-check)',
+    color: 'bg-teal-500 text-white',
+    emoji: '🏋️',
+  },
 }
 
 export function getProblemById(id: string): Problem | undefined {
@@ -111,4 +156,9 @@ export {
   csBasicsProblems,
   debuggingProblems,
   realworldProblems,
+  databaseProblems,
+  backendProblems,
+  authSecurityProblems,
+  infraBasicsProblems,
+  codeTrainingProblems,
 }

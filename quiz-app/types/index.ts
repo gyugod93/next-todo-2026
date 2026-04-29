@@ -1,6 +1,20 @@
 export type Difficulty = 'easy' | 'medium' | 'hard'
-export type Category = 'javascript' | 'react' | 'nextjs' | 'typescript' | 'design-patterns' | 'ai-tools' | 'cs-basics' | 'debugging' | 'realworld'
-export type ProblemType = 'multiple-choice' | 'code-output' | 'bug-find' | 'code-complete'
+export type Category =
+  | 'javascript'
+  | 'react'
+  | 'nextjs'
+  | 'typescript'
+  | 'design-patterns'
+  | 'ai-tools'
+  | 'cs-basics'
+  | 'debugging'
+  | 'realworld'
+  | 'database'
+  | 'backend'
+  | 'auth-security'
+  | 'infra-basics'
+  | 'code-training'
+export type ProblemType = 'multiple-choice' | 'code-output' | 'bug-find' | 'code-complete' | 'code-fix' | 'self-check'
 
 export interface Problem {
   id: string

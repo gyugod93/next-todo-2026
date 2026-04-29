@@ -10,6 +10,8 @@ import MultipleChoice from '@/components/problems/MultipleChoice'
 import CodeOutputQuiz from '@/components/problems/CodeOutputQuiz'
 import BugFinder from '@/components/problems/BugFinder'
 import CodeComplete from '@/components/problems/CodeComplete'
+import CodeFix from '@/components/problems/CodeFix'
+import SelfCheck from '@/components/problems/SelfCheck'
 import UserSetup from '@/components/UserSetup'
 import type { SolvedResult } from '@/types'
 
@@ -27,21 +29,21 @@ export default function ProblemPage() {
   const { username, progress, isLoaded, retryQueue, refreshProgress, submitAnswer } =
     useUserStore()
   const [submitted, setSubmitted] = useState(false)
-  const [isRetrying, setIsRetrying] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     refreshProgress()
   }, [refreshProgress])
 
-  // retry 모드 진입 시 제출 상태 초기화
+  // retry 카운트 증가 시 제출 상태 초기화
   useEffect(() => {
-    if (isRetrying) setSubmitted(false)
-  }, [isRetrying])
+    if (retryCount > 0) setSubmitted(false)
+  }, [retryCount])
 
   // 틀린 문제에 재접속하면 자동으로 retry 모드 진입
   useEffect(() => {
-    if (isLoaded && progress?.solvedProblems[id]?.correct === false && !isRetrying) {
-      setIsRetrying(true)
+    if (isLoaded && progress?.solvedProblems[id]?.correct === false && retryCount === 0) {
+      setRetryCount(1)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded, id, progress])
@@ -97,9 +99,9 @@ export default function ProblemPage() {
   }
 
   // retry 모드일 때는 initialAnswer 전달 안 함 → 컴포넌트 신선하게 시작
-  const initialAnswer = isRetrying ? undefined : solvedResult?.userAnswer
+  const initialAnswer = retryCount > 0 ? undefined : solvedResult?.userAnswer
 
-  const handleRetry = () => setIsRetrying(true)
+  const handleRetry = () => setRetryCount((c) => c + 1)
   const sharedProps = { problem, onSubmit: handleSubmit, onRetry: handleRetry }
 
   return (
@@ -121,7 +123,7 @@ export default function ProblemPage() {
       </div>
 
       {/* 다시 풀기 배너 */}
-      {isInRetryQueue && !isRetrying && (
+      {isInRetryQueue && retryCount === 0 && (
         <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="text-lg">📌</span>
@@ -131,7 +133,7 @@ export default function ProblemPage() {
             </div>
           </div>
           <button
-            onClick={() => setIsRetrying(true)}
+            onClick={() => setRetryCount((c) => c + 1)}
             className="shrink-0 text-sm bg-orange-500 hover:bg-orange-400 text-white px-4 py-2 rounded-lg transition-colors font-medium"
           >
             다시 도전하기
@@ -140,7 +142,7 @@ export default function ProblemPage() {
       )}
 
       {/* 다시 도전 중 배너 */}
-      {isRetrying && !submitted && (
+      {retryCount > 0 && !submitted && (
         <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl px-4 py-3 flex items-center gap-2">
           <span className="text-blue-400 text-sm">🔄</span>
           <p className="text-blue-300 text-sm">다시 도전 중 — 이번엔 맞춰보세요!</p>
@@ -159,7 +161,7 @@ export default function ProblemPage() {
           >
             {diff.text}
           </span>
-          {solvedResult && !isRetrying && (
+          {solvedResult && retryCount === 0 && (
             <span
               className={`text-xs px-2 py-0.5 rounded-full ${
                 solvedResult.correct
@@ -170,7 +172,7 @@ export default function ProblemPage() {
               {solvedResult.correct ? '✓ 정답' : '✗ 오답'}
             </span>
           )}
-          {isRetrying && (
+          {retryCount > 0 && (
             <span className="text-xs px-2 py-0.5 rounded-full text-orange-400 bg-orange-400/10">
               재도전
             </span>
@@ -203,7 +205,7 @@ export default function ProblemPage() {
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
         {problem.type === 'multiple-choice' && (
           <MultipleChoice
-            key={isRetrying ? `${id}-retry` : id}
+            key={`${id}-${retryCount}`}
             {...sharedProps}
             initialAnswer={
               initialAnswer !== undefined ? (initialAnswer as number) : undefined
@@ -212,16 +214,26 @@ export default function ProblemPage() {
         )}
         {problem.type === 'code-output' && (
           <CodeOutputQuiz
-            key={isRetrying ? `${id}-retry` : id}
+            key={`${id}-${retryCount}`}
             {...sharedProps}
             initialAnswer={
               initialAnswer !== undefined ? (initialAnswer as number) : undefined
             }
           />
         )}
-        {problem.type === 'bug-find' && (
+        {problem.type === 'bug-find' && problem.options ? (
+          // options가 있는 bug-find → 코드+선택지 형태로 렌더링
+          <MultipleChoice
+            key={`${id}-${retryCount}`}
+            {...sharedProps}
+            initialAnswer={
+              initialAnswer !== undefined ? (initialAnswer as number) : undefined
+            }
+          />
+        ) : problem.type === 'bug-find' && (
+          // options 없는 bug-find → 직접 코드 수정 에디터
           <BugFinder
-            key={isRetrying ? `${id}-retry` : id}
+            key={`${id}-${retryCount}`}
             {...sharedProps}
             initialAnswer={
               initialAnswer !== undefined ? (initialAnswer as string) : undefined
@@ -230,7 +242,25 @@ export default function ProblemPage() {
         )}
         {problem.type === 'code-complete' && (
           <CodeComplete
-            key={isRetrying ? `${id}-retry` : id}
+            key={`${id}-${retryCount}`}
+            {...sharedProps}
+            initialAnswer={
+              initialAnswer !== undefined ? (initialAnswer as string) : undefined
+            }
+          />
+        )}
+        {problem.type === 'code-fix' && (
+          <CodeFix
+            key={`${id}-${retryCount}`}
+            {...sharedProps}
+            initialAnswer={
+              initialAnswer !== undefined ? (initialAnswer as string) : undefined
+            }
+          />
+        )}
+        {problem.type === 'self-check' && (
+          <SelfCheck
+            key={`${id}-${retryCount}`}
             {...sharedProps}
             initialAnswer={
               initialAnswer !== undefined ? (initialAnswer as string) : undefined

@@ -18,6 +18,8 @@ const typeConfig = {
   'code-output': { label: '출력 예측', icon: '💻' },
   'bug-find': { label: '버그 찾기', icon: '🐛' },
   'code-complete': { label: '코드 완성', icon: '✏️' },
+  'code-fix': { label: '직접 수정', icon: '🔧' },
+  'self-check': { label: '자가 평가', icon: '🏋️' },
 }
 
 export default function ProblemCard({ problem, solvedResult }: Props) {
