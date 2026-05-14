@@ -279,4 +279,95 @@ app.post("/login", async (req, res) => {
       '```typescript\nimport * as bcrypt from "bcrypt"\n\n// 해시 생성 (saltRounds = cost factor)\nconst saltRounds = 10  // 2^10번 해시 반복 → 브루트포스 방어\nconst hash = await bcrypt.hash("password123", saltRounds)\n// "$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"\n// $2b$ = bcrypt 버전\n// $10$ = cost factor\n// 나머지 = salt(22자) + hash\n\n// 검증 (salt는 해시 안에 포함되어 있음)\nconst isMatch = await bcrypt.compare("password123", hash)  // true\n\n// Mongoose pre("save") 훅에서 사용\nuserSchema.pre("save", async function(next) {\n  if (this.isModified("password")) {\n    this.password = await bcrypt.hash(this.password, 10)\n  }\n  next()\n})\n```\n\nbcrypt vs argon2:\n• bcrypt: 널리 사용, 안정적\n• argon2: 더 현대적, 메모리-하드 (GPU 공격 방어), 권장\n• 절대 금지: MD5, SHA1로 비밀번호 해시 (빠르기 때문에 브루트포스에 취약)',
     relatedProblems: ['auth-q-011', 'db-q-009'],
   },
+
+  // ─── 생체 인식 / Passkeys / WebAuthn ────────────────────────────────────────
+
+  {
+    id: 'auth-q-013',
+    category: 'auth-security',
+    subcategory: 'biometric',
+    type: 'multiple-choice',
+    difficulty: 'medium',
+    title: 'WebAuthn / Passkeys — 핵심 원리',
+    description: 'Passkeys(WebAuthn)가 기존 비밀번호 방식보다 안전한 핵심 이유는?',
+    options: [
+      '비밀번호를 더 길고 복잡하게 암호화하여 서버에 저장하는 방식이다',
+      '공개키/개인키 쌍을 사용하며, 개인키는 기기 밖으로 절대 나가지 않고 생체 정보도 서버에 전송되지 않는다',
+      '생체 정보(지문, 얼굴)를 서버에 안전하게 저장하여 매번 비교한다',
+      'Passkeys는 비밀번호와 생체 정보를 함께 조합하여 더 강력한 해시를 만든다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'Passkeys는 공개키 암호화(Public Key Cryptography) 기반입니다. 등록 시 기기에서 공개키/개인키 쌍이 생성되고, 공개키만 서버에 저장됩니다. 인증 시 서버가 챌린지(랜덤값)를 보내면, 기기가 개인키로 서명하여 응답합니다. 생체 인식(지문/Face ID)은 개인키를 기기 안에서 꺼내는 열쇠 역할만 하며, 생체 데이터 자체는 기기 밖으로 나가지 않습니다. 서버 유출 시에도 공개키만 노출되어 안전합니다.',
+    hints: ['공개키는 서버에, 개인키는 기기에', '생체 데이터 = 기기 로컬에서만'],
+    deepDive:
+      'WebAuthn 인증 흐름:\n\n[등록]\n1. 서버 → 클라이언트: challenge(랜덤값) 전달\n2. 브라우저: `navigator.credentials.create()` 호출\n3. OS/기기: 생체 인식으로 사용자 확인 → 공개키/개인키 쌍 생성\n4. 기기: 공개키 + attestation(기기 증명) → 서버 전달\n5. 서버: 공개키 저장\n\n[인증]\n1. 서버 → 클라이언트: challenge 전달\n2. 브라우저: `navigator.credentials.get()` 호출\n3. OS/기기: 생체 인식으로 개인키 잠금 해제\n4. 기기: 개인키로 challenge에 서명(signature) → 서버 전달\n5. 서버: 저장된 공개키로 서명 검증 → 인증 성공\n\n보안 장점:\n• 피싱 불가: 개인키는 등록된 도메인에서만 사용됨 (origin binding)\n• 서버 유출 무의미: 공개키만 저장, 개인키는 기기에\n• 생체 데이터 미전송: 지문/얼굴은 기기 보안 칩(Secure Enclave)에만 존재\n• 재사용 공격 불가: 매번 다른 challenge 서명',
+    relatedProblems: ['auth-q-014', 'auth-q-015'],
+  },
+  {
+    id: 'auth-q-014',
+    category: 'auth-security',
+    subcategory: 'biometric',
+    type: 'multiple-choice',
+    difficulty: 'hard',
+    title: 'navigator.credentials API — 등록 vs 인증',
+    description: '다음 코드에서 각 단계의 역할로 올바른 것은?',
+    code: `// 등록 (Registration)
+const credential = await navigator.credentials.create({
+  publicKey: {
+    challenge: serverChallenge,          // A
+    rp: { name: "MyApp", id: "myapp.com" },
+    user: { id: userId, name: userEmail, displayName: "홍길동" },
+    pubKeyCredParams: [{ alg: -7, type: "public-key" }],  // B
+    authenticatorSelection: {
+      userVerification: "required",      // C
+    },
+  },
+})
+
+// 인증 (Authentication)
+const assertion = await navigator.credentials.get({
+  publicKey: {
+    challenge: serverChallenge,
+    rpId: "myapp.com",
+    allowCredentials: [{ id: credentialId, type: "public-key" }],
+    userVerification: "required",
+  },
+})`,
+    options: [
+      'A=서버 비밀키, B=암호화 방식, C=2FA 필요 여부',
+      'A=리플레이 공격 방지용 랜덤값, B=지원할 공개키 알고리즘(-7=ES256), C=생체/PIN으로 사용자 직접 확인 필수 여부',
+      'A=세션 토큰, B=해시 반복 횟수, C=관리자 권한 여부',
+      'A=챌린지는 선택 사항이며 없어도 된다, B=-7은 RSA 알고리즘, C=원격 인증 허용 여부',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'challenge: 서버가 생성한 랜덤 바이트값으로, 매 요청마다 새로 생성되어 재사용 공격(Replay Attack)을 방지합니다. pubKeyCredParams의 alg: -7은 COSE 알고리즘 식별자로 ES256(ECDSA with SHA-256)을 의미합니다. alg: -257은 RS256(RSA)입니다. userVerification: "required"는 생체 인식 또는 PIN으로 사용자를 반드시 확인해야 함을 의미합니다.',
+    hints: ['challenge = 매번 새로운 랜덤값', 'alg -7 = ES256 (Elliptic Curve)'],
+    deepDive:
+      'WebAuthn 주요 옵션:\n\n등록 옵션:\n```typescript\npubKeyCredParams: [\n  { alg: -7, type: "public-key" },   // ES256 (권장)\n  { alg: -257, type: "public-key" }, // RS256 (호환성)\n]\n\nauthenticatorSelection: {\n  authenticatorAttachment: "platform",  // 기기 내장 인증기 (Face ID, Touch ID)\n  // authenticatorAttachment: "cross-platform",  // 외부 인증기 (YubiKey)\n  residentKey: "required",    // Passkey: 기기에 credential 저장 (사용자명 불필요)\n  userVerification: "required",  // 생체/PIN 필수\n}\n```\n\n인증 결과 처리 (서버):\n```typescript\n// 서버에서 검증 (simplewebauthn 라이브러리 사용)\nimport { verifyRegistrationResponse, verifyAuthenticationResponse } from "@simplewebauthn/server"\n\n// 등록 검증\nconst verification = await verifyRegistrationResponse({\n  response: credential,\n  expectedChallenge,\n  expectedOrigin: "https://myapp.com",\n  expectedRPID: "myapp.com",\n})\n\n// 인증 검증\nconst verification = await verifyAuthenticationResponse({\n  response: assertion,\n  expectedChallenge,\n  authenticator: storedCredential,  // DB에서 꺼낸 공개키\n  expectedOrigin: "https://myapp.com",\n  expectedRPID: "myapp.com",\n})\n```\n\n추천 라이브러리: @simplewebauthn/browser (클라이언트), @simplewebauthn/server (서버)',
+    relatedProblems: ['auth-q-013', 'auth-q-015'],
+  },
+  {
+    id: 'auth-q-015',
+    category: 'auth-security',
+    subcategory: 'biometric',
+    type: 'multiple-choice',
+    difficulty: 'medium',
+    title: 'Passkeys vs 비밀번호 — 보안 비교',
+    description: 'Passkeys가 기존 비밀번호+2FA 방식 대비 갖는 장점으로 올바르지 않은 것은?',
+    options: [
+      'Passkeys는 피싱 공격에 면역이다. 개인키가 등록된 도메인(RP ID)에서만 동작하므로 가짜 사이트에서는 사용 불가능하다',
+      'Passkeys는 서버 DB가 해킹되어도 공개키만 노출되므로 계정이 탈취되지 않는다',
+      'Passkeys는 오프라인 환경에서도 동작하지 않는다. 인증마다 서버와 실시간 통신이 필요하다',
+      'Passkeys는 비밀번호 재사용 문제가 없다. 각 서비스마다 고유한 키 쌍이 생성된다',
+    ],
+    correctAnswer: 2,
+    explanation:
+      '틀린 것은 3번입니다. Passkeys의 인증 과정에서 실시간 서버 통신은 필요하지만(challenge 교환 및 서명 검증), 이는 기존 비밀번호 로그인도 마찬가지입니다. "오프라인에서 동작 안 한다"는 Passkeys만의 단점이 아닙니다. 나머지 보기는 모두 사실입니다: 피싱 면역(origin binding), 서버 유출 무의미(공개키만 저장), 비밀번호 재사용 없음(서비스별 고유 키 쌍).',
+    hints: ['Passkeys도 서버 통신은 필요함 — 비밀번호와 동일'],
+    deepDive:
+      'Passkeys 도입 현황 및 고려사항:\n\n지원 플랫폼:\n• iOS 16+, macOS Ventura+: iCloud Keychain으로 기기 간 동기화\n• Android 9+: Google Password Manager로 동기화\n• Windows 11: Windows Hello (얼굴/지문/PIN)\n• 브라우저: Chrome 108+, Safari 16+, Firefox 122+\n\n폴백(Fallback) 전략:\n```typescript\n// Passkeys 지원 여부 확인\nconst isPasskeySupported = await PublicKeyCredential\n  .isUserVerifyingPlatformAuthenticatorAvailable()\n\nif (isPasskeySupported) {\n  // Passkey 등록/인증\n} else {\n  // 기존 비밀번호 또는 SMS OTP 폴백\n}\n```\n\n기기 분실 시 복구:\n• iCloud/Google 계정 복구로 Passkeys 복원\n• 백업 인증 수단(이메일 코드, 복구 코드) 필수 제공\n• FIDO2 Cross-Device Authentication: 다른 기기의 Passkey로 인증 가능 (QR 스캔)\n\nNestJS 구현 흐름:\n1. POST /auth/passkey/register/start → challenge 생성, Redis에 저장\n2. POST /auth/passkey/register/finish → credential 검증 후 DB에 공개키 저장\n3. POST /auth/passkey/login/start → challenge 생성\n4. POST /auth/passkey/login/finish → 서명 검증 → JWT 발급',
+    relatedProblems: ['auth-q-013', 'auth-q-014'],
+  },
 ]

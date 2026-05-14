@@ -55,7 +55,7 @@ export interface LeaderboardEntry {
   score: number
 }
 
-export type LessonCategory = 'ai-tools' | 'cs-basics' | 'design-patterns' | 'debugging' | 'realworld'
+export type LessonCategory = 'ai-tools' | 'cs-basics' | 'design-patterns' | 'debugging' | 'realworld' | 'auth-security'
 
 export interface LessonSection {
   title: string
@@ -111,5 +111,11 @@ export const lessonCategoryMeta: Record<
     description: 'TanStack Query, React Hook Form + Zod, Zustand, NextAuth 실제 구현',
     color: 'bg-orange-500 text-white',
     emoji: '🏗️',
+  },
+  'auth-security': {
+    label: '인증/보안',
+    description: 'JWT, OAuth 2.0, Session, XSS/CSRF, bcrypt, WebAuthn, Passkeys, 생체 인식',
+    color: 'bg-red-600 text-white',
+    emoji: '🔐',
   },
 }

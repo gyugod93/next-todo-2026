@@ -40,13 +40,13 @@ export default function ProblemPage() {
     if (retryCount > 0) setSubmitted(false)
   }, [retryCount])
 
-  // 틀린 문제에 재접속하면 자동으로 retry 모드 진입
+  // 틀린 문제에 재접속하면 자동으로 retry 모드 진입 (초기 로드 시에만 체크)
   useEffect(() => {
     if (isLoaded && progress?.solvedProblems[id]?.correct === false && retryCount === 0) {
       setRetryCount(1)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded, id, progress])
+  }, [isLoaded, id])
 
   const problem = getProblemById(id)
   const solvedResult: SolvedResult | undefined = progress?.solvedProblems[id]

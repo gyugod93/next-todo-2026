@@ -65,6 +65,7 @@ export default function SelfCheck({ problem, onSubmit, initialAnswer, onRetry }:
                 theme="vs-dark"
                 value={code}
                 onChange={(val) => setCode(val ?? '')}
+                loading={<div className="h-[320px] bg-[#1e1e1e] flex items-center justify-center text-gray-600 text-sm">에디터 로딩 중...</div>}
                 options={{
                   minimap: { enabled: false },
                   fontSize: 13,
@@ -73,6 +74,7 @@ export default function SelfCheck({ problem, onSubmit, initialAnswer, onRetry }:
                   wordWrap: 'on',
                   padding: { top: 12, bottom: 12 },
                   cursorBlinking: 'smooth',
+                  placeholder: '여기에 코드를 작성하세요...',
                 }}
               />
             </div>
@@ -120,6 +122,7 @@ export default function SelfCheck({ problem, onSubmit, initialAnswer, onRetry }:
                 language="typescript"
                 theme="vs-dark"
                 value={code}
+                loading={<div className="h-[240px] bg-[#1e1e1e] flex items-center justify-center text-gray-600 text-sm">에디터 로딩 중...</div>}
                 options={{
                   minimap: { enabled: false },
                   fontSize: 13,
@@ -184,6 +187,7 @@ export default function SelfCheck({ problem, onSubmit, initialAnswer, onRetry }:
                 language="typescript"
                 theme="vs-dark"
                 value={code}
+                loading={<div className="h-[200px] bg-[#1e1e1e] flex items-center justify-center text-gray-600 text-sm">에디터 로딩 중...</div>}
                 options={{
                   minimap: { enabled: false },
                   fontSize: 13,

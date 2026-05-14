@@ -106,6 +106,89 @@ export const aiToolsProblems: Problem[] = [
       'CoT와 함께 쓰면 좋은 기법들: ① XML 태그 구조화 (<task>, <context>, <output_format>) — Claude가 특히 잘 반응 ② Few-Shot: 원하는 출력 형식의 예시 2-3개 포함 ③ System Prompt에 역할 부여 ("당신은 시니어 Next.js 개발자입니다"). 세 기법을 조합하면 일관된 고품질 출력을 얻을 수 있습니다.',
     relatedProblems: ['ai-q-003'],
   },
+  // ─── AWS Bedrock ─────────────────────────────────────────────────────────────
+
+  {
+    id: 'ai-q-007',
+    category: 'ai-tools',
+    subcategory: 'aws-bedrock',
+    type: 'multiple-choice',
+    difficulty: 'easy',
+    title: 'AWS Bedrock이란?',
+    description: 'AWS Bedrock에 대한 설명으로 올바른 것은?',
+    options: [
+      'Anthropic이 AWS 서버에 배포한 Claude 전용 서비스다',
+      'AWS가 운영하는 관리형 AI 서비스로, Claude · Llama · Mistral 등 여러 Foundation Model을 단일 API로 호출할 수 있다',
+      'AWS EC2에 AI 모델을 직접 설치해 사용하는 자체 호스팅 방식이다',
+      'Bedrock은 AWS S3에 AI 모델 가중치를 저장하는 서비스다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'AWS Bedrock은 AWS가 운영하는 완전 관리형(Managed) AI 서비스입니다. Anthropic Claude, Meta Llama, Mistral, Amazon Titan 등 다양한 Foundation Model을 서버 설정 없이 API로 호출할 수 있습니다. 모델 인프라는 AWS가 관리하고, 데이터는 AWS 인프라 안에 머물러 컴플라이언스/보안 요건을 충족합니다. Anthropic API를 직접 쓰는 것과 달리, 기업 환경에서 IAM, VPC, CloudTrail 등 AWS 보안 체계와 통합됩니다.',
+    hints: ['관리형(Managed) = 서버/인프라 설정 불필요', 'Foundation Model = 대형 사전 학습 모델'],
+    deepDive:
+      'Bedrock vs Anthropic API 직접 호출 비교:\n\n| | Bedrock | Anthropic API |\n|---|---|---|\n| 인증 | AWS IAM (SigV4) | API Key |\n| 데이터 위치 | AWS 인프라 내 | Anthropic 서버 |\n| 모델 종류 | 멀티벤더 | Claude만 |\n| 추가 기능 | Knowledge Base, Agents, Guardrails | 없음 |\n| 보안 통합 | VPC, CloudTrail, KMS | 없음 |\n| 비용 | AWS 과금 | Anthropic 과금 |\n\nBedrock 주요 기능:\n• **InvokeModel**: 단일 모델 호출\n• **Knowledge Bases**: RAG(문서 검색 증강 생성)\n• **Agents for Bedrock**: 멀티스텝 태스크 자동화\n• **Guardrails**: 유해 콘텐츠 필터\n• **Model Evaluation**: 모델 품질 평가\n• **Provisioned Throughput**: 고정 처리량 예약',
+    relatedProblems: ['ai-q-008', 'ai-q-009'],
+  },
+  {
+    id: 'ai-q-008',
+    category: 'ai-tools',
+    subcategory: 'aws-bedrock',
+    type: 'multiple-choice',
+    difficulty: 'medium',
+    title: 'Bedrock 인증 — IAM vs API Key',
+    description: '다음 코드에서 Bedrock 호출 방식으로 올바른 것은?',
+    code: `// 방법 A — Anthropic SDK
+import Anthropic from "@anthropic-ai/sdk"
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+await client.messages.create({ model: "claude-sonnet-4-6", ... })
+
+// 방법 B — Bedrock SDK (AWS SDK v3)
+import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime"
+const client = new BedrockRuntimeClient({
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+})`,
+    options: [
+      '방법 A와 B는 동일한 엔드포인트로 통신한다',
+      '방법 A는 Anthropic API Key로 인증하고, 방법 B는 AWS IAM 자격증명(SigV4)으로 인증한다. 모델 ID 형식도 다르다',
+      '방법 B에서 ANTHROPIC_API_KEY도 함께 필요하다',
+      '방법 B는 Bedrock이 아닌 EC2에서만 동작한다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      '방법 A는 Anthropic API(api.anthropic.com)에 ANTHROPIC_API_KEY로 인증합니다. 방법 B는 AWS Bedrock(bedrock-runtime.us-east-1.amazonaws.com)에 IAM Access Key/Secret Key로 인증(AWS Signature v4)합니다. 모델 ID도 다릅니다: Anthropic API는 "claude-sonnet-4-6", Bedrock은 "anthropic.claude-sonnet-4-5" 또는 Cross-Region Inference Profile "us.anthropic.claude-sonnet-4-5-20251001-v2:0" 형식을 사용합니다.',
+    hints: ['인증 주체가 다름 — Anthropic 계정 vs AWS 계정'],
+    deepDive:
+      'Bedrock에서 Claude 호출 — @anthropic-ai/sdk를 Bedrock과 함께 사용:\n```typescript\nimport AnthropicBedrock from "@anthropic-ai/bedrock-sdk"\n// npm install @anthropic-ai/bedrock-sdk\n\nconst client = new AnthropicBedrock({\n  awsAccessKey: process.env.AWS_ACCESS_KEY_ID,\n  awsSecretKey: process.env.AWS_SECRET_ACCESS_KEY,\n  awsRegion: "us-east-1",\n})\n\nconst response = await client.messages.create({\n  model: "anthropic.claude-sonnet-4-5",  // Bedrock 모델 ID\n  max_tokens: 1024,\n  messages: [{ role: "user", content: "안녕하세요" }],\n})\n```\n\nAWS SDK 직접 사용:\n```typescript\nimport { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime"\n\nconst client = new BedrockRuntimeClient({ region: "us-east-1" })\n// EC2/Lambda에서는 IAM Role 사용 (credentials 생략 가능 — 환경변수 자동 감지)\n\nconst command = new InvokeModelCommand({\n  modelId: "anthropic.claude-sonnet-4-5",\n  contentType: "application/json",\n  accept: "application/json",\n  body: JSON.stringify({\n    anthropic_version: "bedrock-2023-05-31",\n    max_tokens: 1024,\n    messages: [{ role: "user", content: "안녕하세요" }],\n  }),\n})\nconst response = await client.send(command)\nconst result = JSON.parse(new TextDecoder().decode(response.body))\n```\n\nEC2/Lambda 환경: IAM Role 연결 시 credentials 명시 불필요 (Instance Metadata에서 자동 취득)',
+    relatedProblems: ['ai-q-007', 'ai-q-009'],
+  },
+  {
+    id: 'ai-q-009',
+    category: 'ai-tools',
+    subcategory: 'aws-bedrock',
+    type: 'multiple-choice',
+    difficulty: 'hard',
+    title: 'Bedrock 모델 ID와 Cross-Region Inference',
+    description: 'Bedrock에서 모델 호출 시 발생하는 ThrottlingException을 줄이기 위한 방법은?',
+    options: [
+      'API Key를 여러 개 발급받아 로테이션한다',
+      'Cross-Region Inference Profile을 사용해 여러 AWS 리전의 처리 용량을 자동으로 분산한다',
+      'Bedrock은 ThrottlingException이 발생하지 않는다',
+      'EC2 인스턴스 타입을 높여 처리량을 늘린다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'Bedrock의 각 리전은 모델별로 처리량(TPM/RPM) 한도가 있습니다. Cross-Region Inference Profile은 단일 모델 ID로 여러 리전(예: us-east-1, us-west-2, eu-west-1)의 처리 용량을 자동 분산합니다. 모델 ID가 "us.anthropic.claude-sonnet-4-5-20251001-v2:0"처럼 "us." 또는 "eu." 접두사가 붙은 것이 Inference Profile입니다. 트래픽이 많을 때 단순 리전 모델 ID보다 안정적입니다.',
+    hints: ['Cross-Region = 여러 리전 용량을 합쳐서 사용'],
+    deepDive:
+      'Bedrock Claude 모델 ID 형식:\n```\n// 단일 리전 모델 (리전 내 한도만 사용)\nanthropic.claude-sonnet-4-5\nanthropic.claude-opus-4-5\nanthropic.claude-haiku-4-5\n\n// Cross-Region Inference Profile (여러 리전 용량 자동 분산)\nus.anthropic.claude-sonnet-4-5-20251001-v2:0  // 미국 리전 풀\neu.anthropic.claude-sonnet-4-5-20251001-v2:0  // 유럽 리전 풀\n```\n\nProvisioned Throughput (예약 처리량):\n```typescript\n// 고정 처리량 예약 — 안정적인 서비스 운영 시\n// Bedrock 콘솔에서 구매 후 ARN 사용\nconst command = new InvokeModelCommand({\n  modelId: "arn:aws:bedrock:us-east-1::provisioned-model/xxxxx",\n  ...\n})\n```\n\nBedrock IAM 권한 최소화:\n```json\n{\n  "Version": "2012-10-17",\n  "Statement": [{\n    "Effect": "Allow",\n    "Action": [\n      "bedrock:InvokeModel",\n      "bedrock:InvokeModelWithResponseStream"\n    ],\n    "Resource": [\n      "arn:aws:bedrock:*::foundation-model/anthropic.claude-*"\n    ]\n  }]\n}\n```\n\nBedrock 스트리밍:\n```typescript\nimport { InvokeModelWithResponseStreamCommand } from "@aws-sdk/client-bedrock-runtime"\n\nconst command = new InvokeModelWithResponseStreamCommand({ modelId, body })\nconst response = await client.send(command)\n\nfor await (const event of response.body!) {\n  if (event.chunk?.bytes) {\n    const chunk = JSON.parse(new TextDecoder().decode(event.chunk.bytes))\n    if (chunk.type === "content_block_delta") {\n      process.stdout.write(chunk.delta.text)\n    }\n  }\n}\n```',
+    relatedProblems: ['ai-q-007', 'ai-q-008'],
+  },
+
   {
     id: 'ai-q-006',
     category: 'ai-tools',

@@ -3,6 +3,7 @@ import { csBasicsLessons } from './cs-basics'
 import { designPatternLessons } from './design-patterns'
 import { debuggingLessons } from './debugging'
 import { realworldLessons } from './realworld'
+import { authSecurityLessons } from './auth-security'
 import type { Lesson, LessonCategory } from '@/types'
 
 export const allLessons: Lesson[] = [
@@ -11,6 +12,7 @@ export const allLessons: Lesson[] = [
   ...designPatternLessons,
   ...debuggingLessons,
   ...realworldLessons,
+  ...authSecurityLessons,
 ]
 
 export const lessonsByCategory: Record<LessonCategory, Lesson[]> = {
@@ -19,6 +21,7 @@ export const lessonsByCategory: Record<LessonCategory, Lesson[]> = {
   'design-patterns': designPatternLessons,
   debugging: debuggingLessons,
   realworld: realworldLessons,
+  'auth-security': authSecurityLessons,
 }
 
 export function getLessonById(id: string): Lesson | undefined {
@@ -29,4 +32,4 @@ export function getLessonsByCategory(category: LessonCategory): Lesson[] {
   return lessonsByCategory[category] ?? []
 }
 
-export { aiToolsLessons, csBasicsLessons, designPatternLessons, debuggingLessons, realworldLessons }
+export { aiToolsLessons, csBasicsLessons, designPatternLessons, debuggingLessons, realworldLessons, authSecurityLessons }
