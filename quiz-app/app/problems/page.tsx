@@ -109,7 +109,7 @@ export default function ProblemsPage() {
           ))}
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+        <label className="inline-flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
           <input
             type="checkbox"
             checked={showSolved}

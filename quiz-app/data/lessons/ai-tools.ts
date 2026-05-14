@@ -756,6 +756,307 @@ Tailwind CSS와 TypeScript strict mode를 사용합니다.
     relatedProblemIds: ['ai-q-005'],
   },
   {
+    id: 'ai-008',
+    category: 'ai-tools',
+    subcategory: 'aws-bedrock',
+    title: 'AWS Bedrock으로 Claude 사용하기',
+    description: 'Anthropic API와 무엇이 다른가 — IAM 인증, 모델 ID, Cross-Region Inference, Knowledge Base까지',
+    emoji: '🏗️',
+    readingTime: 9,
+    tags: ['aws-bedrock', 'claude', 'iam', 'foundation-model'],
+    sections: [
+      {
+        title: 'AWS Bedrock이란?',
+        content: `AWS Bedrock은 AWS가 운영하는 **완전 관리형(Managed) AI 서비스**입니다. Anthropic Claude, Meta Llama, Mistral, Amazon Titan 등 여러 Foundation Model을 서버 설정 없이 API로 호출할 수 있습니다.
+
+**Anthropic API 직접 호출과의 차이:**
+
+| | Anthropic API | AWS Bedrock |
+|---|---|---|
+| 인증 | ANTHROPIC_API_KEY | AWS IAM (Access Key / Role) |
+| 데이터 위치 | Anthropic 서버 | AWS 인프라 내 |
+| 모델 | Claude만 | 멀티벤더 |
+| 보안 통합 | 없음 | VPC, IAM, CloudTrail, KMS |
+| 추가 기능 | 없음 | Knowledge Base, Agents, Guardrails |
+| 적합한 환경 | 빠른 프로토타입 | 기업 서비스, 컴플라이언스 필요 시 |
+
+**Bedrock을 선택하는 이유:**
+- 데이터가 AWS 인프라 밖으로 나가지 않아야 하는 보안 요건
+- 기존 AWS 인프라(EC2, Lambda, ECS)와 통합
+- IAM으로 팀/역할별 세밀한 접근 제어
+- CloudTrail로 모든 API 호출 감사 로그`,
+      },
+      {
+        title: 'IAM 설정 — Bedrock 권한 부여',
+        content: `Bedrock을 사용하려면 AWS 계정에서 **Bedrock 모델 접근 활성화**와 **IAM 권한** 두 가지가 필요합니다.
+
+**1단계:** AWS 콘솔 → Amazon Bedrock → Model Access → Claude 모델 활성화 요청
+
+**2단계:** IAM 정책에 bedrock:InvokeModel 권한 추가
+
+로컬 개발: IAM Access Key + Secret Key를 환경변수로 설정
+EC2/Lambda 배포: IAM Role 연결 (credentials 코드에서 생략 가능)`,
+        code: `// IAM 정책 예시 (최소 권한 원칙)
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:*::foundation-model/anthropic.claude-*"
+      ]
+    }
+  ]
+}
+
+// 환경변수 설정 (로컬 개발)
+// .env.local
+AWS_ACCESS_KEY_ID=AKIAxxx
+AWS_SECRET_ACCESS_KEY=xxx
+AWS_REGION=us-east-1`,
+        language: 'json',
+      },
+      {
+        title: '@anthropic-ai/bedrock-sdk로 간편하게 사용',
+        content: `Anthropic이 공식 제공하는 **@anthropic-ai/bedrock-sdk** 패키지를 사용하면 Anthropic SDK와 거의 동일한 인터페이스로 Bedrock을 사용할 수 있습니다. AWS SDK를 직접 다루는 것보다 훨씬 편리합니다.`,
+        code: `// npm install @anthropic-ai/bedrock-sdk
+import AnthropicBedrock from "@anthropic-ai/bedrock-sdk"
+
+const client = new AnthropicBedrock({
+  // 로컬: 환경변수에서 자동으로 읽어옴
+  awsAccessKey: process.env.AWS_ACCESS_KEY_ID,
+  awsSecretKey: process.env.AWS_SECRET_ACCESS_KEY,
+  awsRegion: "us-east-1",
+  // EC2/Lambda에서는 credentials 생략 → IAM Role 자동 사용
+})
+
+// ─── 일반 호출 ──────────────────────────────────────────
+const response = await client.messages.create({
+  model: "anthropic.claude-sonnet-4-5",  // Bedrock 모델 ID
+  max_tokens: 1024,
+  messages: [{ role: "user", content: "AWS Bedrock이 뭔지 설명해줘" }],
+})
+console.log(response.content[0].text)
+
+// ─── 스트리밍 ──────────────────────────────────────────
+const stream = await client.messages.stream({
+  model: "anthropic.claude-sonnet-4-5",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: "Next.js 14 App Router 설명해줘" }],
+})
+
+for await (const chunk of stream) {
+  if (
+    chunk.type === "content_block_delta" &&
+    chunk.delta.type === "text_delta"
+  ) {
+    process.stdout.write(chunk.delta.text)
+  }
+}`,
+        language: 'typescript',
+      },
+      {
+        title: '모델 ID와 Cross-Region Inference',
+        content: `Bedrock에서 Claude를 호출할 때 모델 ID 형식이 두 가지입니다.
+
+**단일 리전 모델 ID:** 해당 리전의 처리 용량만 사용
+**Cross-Region Inference Profile:** 여러 리전 용량을 자동 분산 → 트래픽 폭증 시 ThrottlingException 감소
+
+트래픽이 많거나 안정적인 서비스라면 **Inference Profile 사용을 권장**합니다.`,
+        code: `// 단일 리전 모델 ID (해당 리전 한도 내에서만)
+"anthropic.claude-sonnet-4-5"
+"anthropic.claude-opus-4-5"
+"anthropic.claude-haiku-4-5"
+
+// Cross-Region Inference Profile (여러 리전 자동 분산)
+// 미국 리전 풀 (us-east-1 + us-west-2 등)
+"us.anthropic.claude-sonnet-4-5-20251001-v2:0"
+
+// 유럽 리전 풀
+"eu.anthropic.claude-sonnet-4-5-20251001-v2:0"
+
+// 사용 예시
+const client = new AnthropicBedrock({ awsRegion: "us-east-1" })
+
+const response = await client.messages.create({
+  // Inference Profile: "us." 접두사 → 미국 여러 리전 분산
+  model: "us.anthropic.claude-sonnet-4-5-20251001-v2:0",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: "안녕" }],
+})`,
+        language: 'typescript',
+      },
+      {
+        title: 'AWS SDK v3 직접 사용 (저수준 제어)',
+        content: `더 세밀한 제어가 필요하다면 **@aws-sdk/client-bedrock-runtime**을 직접 사용할 수 있습니다. Lambda, EC2에서 IAM Role을 사용할 때도 이 방식이 적합합니다.`,
+        code: `import {
+  BedrockRuntimeClient,
+  InvokeModelCommand,
+  InvokeModelWithResponseStreamCommand,
+} from "@aws-sdk/client-bedrock-runtime"
+
+// EC2/Lambda: credentials 생략 → IAM Role 자동 적용
+const client = new BedrockRuntimeClient({ region: "us-east-1" })
+
+// ─── 일반 호출 ──────────────────────────────────────────
+const command = new InvokeModelCommand({
+  modelId: "anthropic.claude-sonnet-4-5",
+  contentType: "application/json",
+  accept: "application/json",
+  body: JSON.stringify({
+    anthropic_version: "bedrock-2023-05-31",  // Bedrock 필수 필드
+    max_tokens: 1024,
+    messages: [{ role: "user", content: "안녕하세요" }],
+  }),
+})
+
+const response = await client.send(command)
+const result = JSON.parse(new TextDecoder().decode(response.body))
+console.log(result.content[0].text)
+
+// ─── 스트리밍 ──────────────────────────────────────────
+const streamCommand = new InvokeModelWithResponseStreamCommand({
+  modelId: "anthropic.claude-sonnet-4-5",
+  contentType: "application/json",
+  accept: "application/json",
+  body: JSON.stringify({
+    anthropic_version: "bedrock-2023-05-31",
+    max_tokens: 1024,
+    messages: [{ role: "user", content: "Node.js 이벤트 루프 설명해줘" }],
+  }),
+})
+
+const streamResponse = await client.send(streamCommand)
+for await (const event of streamResponse.body!) {
+  if (event.chunk?.bytes) {
+    const chunk = JSON.parse(new TextDecoder().decode(event.chunk.bytes))
+    if (chunk.type === "content_block_delta" && chunk.delta?.text) {
+      process.stdout.write(chunk.delta.text)
+    }
+  }
+}`,
+        language: 'typescript',
+      },
+      {
+        title: 'Next.js App Router에서 Bedrock 연동',
+        content: `Next.js Server Action 또는 Route Handler에서 Bedrock을 호출하는 패턴입니다. 클라이언트에 AWS 자격증명이 노출되지 않습니다.`,
+        code: `// app/api/ai/route.ts — Route Handler
+import AnthropicBedrock from "@anthropic-ai/bedrock-sdk"
+import { NextRequest } from "next/server"
+
+const bedrock = new AnthropicBedrock({
+  awsRegion: process.env.AWS_REGION ?? "us-east-1",
+  // Vercel/서버리스: 환경변수로 credentials 주입
+  // AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY 환경변수 자동 감지
+})
+
+export async function POST(req: NextRequest) {
+  const { message } = await req.json()
+
+  // 스트리밍 응답
+  const stream = await bedrock.messages.stream({
+    model: "us.anthropic.claude-sonnet-4-5-20251001-v2:0",
+    max_tokens: 2048,
+    system: "당신은 친절한 개발 도우미입니다.",
+    messages: [{ role: "user", content: message }],
+  })
+
+  const readableStream = new ReadableStream({
+    async start(controller) {
+      for await (const chunk of stream) {
+        if (
+          chunk.type === "content_block_delta" &&
+          chunk.delta.type === "text_delta"
+        ) {
+          controller.enqueue(new TextEncoder().encode(chunk.delta.text))
+        }
+      }
+      controller.close()
+    },
+  })
+
+  return new Response(readableStream, {
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  })
+}
+
+// ─── 클라이언트 컴포넌트에서 스트리밍 수신 ───────────────
+// "use client"
+async function sendMessage(message: string) {
+  const response = await fetch("/api/ai", {
+    method: "POST",
+    body: JSON.stringify({ message }),
+    headers: { "Content-Type": "application/json" },
+  })
+
+  const reader = response.body!.getReader()
+  const decoder = new TextDecoder()
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    setAnswer((prev) => prev + decoder.decode(value))
+  }
+}`,
+        language: 'typescript',
+      },
+      {
+        title: 'Bedrock Knowledge Base — RAG 구현',
+        content: `Bedrock Knowledge Base는 S3에 업로드한 문서를 자동으로 임베딩하고 벡터 DB에 저장하여, **RAG(Retrieval-Augmented Generation)** 를 코드 없이 구축할 수 있게 해줍니다.
+
+**구성:** S3 버킷에 PDF/MD/TXT 업로드 → Bedrock이 자동 임베딩 → 질문 시 관련 문서 검색 → Claude에 컨텍스트로 주입
+
+직접 벡터 DB(Pinecone, pgvector)를 구축하지 않고도 엔터프라이즈급 RAG를 구현할 수 있습니다.`,
+        code: `import {
+  BedrockAgentRuntimeClient,
+  RetrieveAndGenerateCommand,
+} from "@aws-sdk/client-bedrock-agent-runtime"
+
+const agentClient = new BedrockAgentRuntimeClient({ region: "us-east-1" })
+
+// Knowledge Base에서 검색 + 답변 생성 (RAG)
+const command = new RetrieveAndGenerateCommand({
+  input: { text: "환불 정책이 어떻게 되나요?" },
+  retrieveAndGenerateConfiguration: {
+    type: "KNOWLEDGE_BASE",
+    knowledgeBaseConfiguration: {
+      knowledgeBaseId: process.env.BEDROCK_KB_ID!,
+      modelArn:
+        "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-5",
+    },
+  },
+})
+
+const response = await agentClient.send(command)
+console.log(response.output?.text)
+
+// 참조 문서 확인
+response.citations?.forEach((citation) => {
+  citation.retrievedReferences?.forEach((ref) => {
+    console.log("출처:", ref.location?.s3Location?.uri)
+    console.log("내용:", ref.content?.text?.slice(0, 100))
+  })
+})`,
+        language: 'typescript',
+      },
+    ],
+    keyPoints: [
+      'Bedrock은 IAM 인증(SigV4) — Anthropic API Key 불필요, AWS 자격증명 사용',
+      'EC2/Lambda에서는 IAM Role 연결 시 credentials 코드 생략 가능 (자동 감지)',
+      '@anthropic-ai/bedrock-sdk 사용 시 Anthropic SDK와 거의 동일한 인터페이스',
+      'Bedrock 모델 ID: "anthropic.claude-sonnet-4-5", Cross-Region은 "us." 접두사',
+      'AWS SDK 직접 사용 시 body에 anthropic_version: "bedrock-2023-05-31" 필수',
+      'Knowledge Base로 코드 없이 RAG 구축 가능 — S3 문서 자동 임베딩',
+      'ThrottlingException 빈번 시 Cross-Region Inference Profile로 전환',
+    ],
+    relatedProblemIds: ['ai-q-007', 'ai-q-008', 'ai-q-009'],
+  },
+
+  {
     id: 'ai-007',
     category: 'ai-tools',
     subcategory: 'cursor',

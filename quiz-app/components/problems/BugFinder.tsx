@@ -19,12 +19,14 @@ export default function BugFinder({ problem, onSubmit, initialAnswer, onRetry }:
   const [code, setCode] = useState(initialAnswer ?? problem.code ?? '')
   const [submitted, setSubmitted] = useState(!!initialAnswer)
   const [showHints, setShowHints] = useState(false)
+  const [isCorrect, setIsCorrect] = useState<boolean>(false)
 
   const correctAnswer = problem.correctAnswer as string
 
   const handleSubmit = () => {
     const trimmed = code.trim()
-    const correct = normalizeCode(trimmed) === normalizeCode(correctAnswer)
+    const correct = evaluate(trimmed, correctAnswer)
+    setIsCorrect(correct)
     setSubmitted(true)
     onSubmit(trimmed, correct)
   }
@@ -49,6 +51,7 @@ export default function BugFinder({ problem, onSubmit, initialAnswer, onRetry }:
             theme="vs-dark"
             value={code}
             onChange={(val) => setCode(val ?? '')}
+            loading={<div className="h-[250px] bg-[#1e1e1e] flex items-center justify-center text-gray-600 text-sm">에디터 로딩 중...</div>}
             options={{
               minimap: { enabled: false },
               fontSize: 13,
@@ -100,7 +103,7 @@ export default function BugFinder({ problem, onSubmit, initialAnswer, onRetry }:
             <CodeBlock code={correctAnswer} />
           </div>
           <Explanation
-            correct={normalizeCode(code.trim()) === normalizeCode(correctAnswer)}
+            correct={isCorrect}
             explanation={problem.explanation}
             deepDive={problem.deepDive}
             relatedProblemIds={problem.relatedProblems}
@@ -113,6 +116,20 @@ export default function BugFinder({ problem, onSubmit, initialAnswer, onRetry }:
   )
 }
 
-function normalizeCode(code: string): string {
-  return code.replace(/\s+/g, ' ').trim()
+/** correctAnswer가 짧으면 포함 여부, 길면 핵심 줄 75% 이상 일치 */
+function evaluate(userCode: string, correctAnswer: string): boolean {
+  const normalize = (s: string) => s.replace(/\s+/g, ' ').trim()
+  const userNorm = normalize(userCode)
+
+  if (correctAnswer.length <= 120) {
+    return userNorm.includes(normalize(correctAnswer))
+  }
+
+  const keyLines = correctAnswer
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 4 && !l.startsWith('//') && !l.startsWith('*'))
+  if (keyLines.length === 0) return false
+  const matched = keyLines.filter((l) => userNorm.includes(normalize(l)))
+  return matched.length / keyLines.length >= 0.75
 }

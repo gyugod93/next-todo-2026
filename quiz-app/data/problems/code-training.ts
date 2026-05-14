@@ -506,6 +506,49 @@ export class UserController {
     relatedProblems: ['be-q-008', 'be-q-010'],
   },
 
+
+  {
+    id: 'fix-q-011',
+    category: 'code-training',
+    subcategory: 'react-hooks',
+    type: 'code-fix',
+    difficulty: 'medium',
+    title: 'useEffect 무한 루프 — 객체 참조 동일성',
+    description:
+      '버튼을 클릭하지 않았는데도 무한 API 호출이 발생합니다. 원인을 파악하고 수정하세요.',
+    code: `function UserList() {
+  const [users, setUsers] = useState([])
+  // 렌더마다 새 객체 생성!
+  const filters = { role: 'all', active: true }
+
+  useEffect(() => {
+    fetchUsers(filters).then(setUsers)
+  }, [filters]) // 항상 새 참조 → 항상 변경 감지 → 무한루프
+
+  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>
+}`,
+    correctAnswer: `function UserList() {
+  const [users, setUsers] = useState([])
+  const [role, setRole] = useState('all')
+  const [active, setActive] = useState(true)
+
+  useEffect(() => {
+    fetchUsers({ role, active }).then(setUsers)
+  }, [role, active]) // 원시값: 실제 변경 시에만 실행
+
+  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>
+}`,
+    explanation:
+      "JavaScript는 객체를 참조(메모리 주소)로 비교합니다. { role: 'all' } === { role: 'all' }는 false입니다. 컴포넌트 안에서 const filters = { ... }를 선언하면 렌더마다 새 객체가 생성됩니다. React의 useEffect는 deps를 Object.is()로 비교하는데 항상 새 참조 → 항상 변경으로 판단 → effect 실행 → setUsers → 리렌더 → 또 새 filters → 무한루프. 원시값(string, boolean)을 deps에 넣으면 실제 값이 바뀔 때만 실행됩니다.",
+    hints: [
+      "객체 비교: { role: 'all' } === { role: 'all' } // false (다른 참조)",
+      'deps에는 원시값(string, number, boolean)이 안전합니다',
+    ],
+    deepDive:
+      '해결 방법 3가지:\n\n1. 원시값으로 분리 (권장)\nconst [role, setRole] = useState("all")\nconst [active, setActive] = useState(true)\nuseEffect(() => { fetchUsers({role, active}).then(setUsers) }, [role, active])\n\n2. useState에 객체 저장\nconst [filters, setFilters] = useState({ role: "all", active: true })\nuseEffect(() => { fetchUsers(filters).then(setUsers) }, [filters])\n\n3. useMemo로 참조 안정화\nconst stable = useMemo(() => ({ role, active }), [role, active])\nuseEffect(() => { fetchUsers(stable).then(setUsers) }, [stable])\n\n규칙: deps에는 원시값이 안전. 객체는 참조가 안정적인 것만.',
+    relatedProblems: ['fix-q-001', 'fix-q-006', 'cs-q-007'],
+  },
+
   // ─── self-check: 직접 작성 후 모범 답안 비교 ─────────────────────────────────
 
   {
