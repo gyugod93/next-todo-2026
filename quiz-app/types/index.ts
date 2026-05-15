@@ -14,7 +14,8 @@ export type Category =
   | 'auth-security'
   | 'infra-basics'
   | 'code-training'
-export type ProblemType = 'multiple-choice' | 'code-output' | 'bug-find' | 'code-complete' | 'code-fix' | 'self-check'
+  | 'css'
+export type ProblemType = 'multiple-choice' | 'code-output' | 'bug-find' | 'code-complete' | 'code-fix' | 'self-check' | 'css-visual'
 
 export interface Problem {
   id: string
