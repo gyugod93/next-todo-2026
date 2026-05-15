@@ -12,6 +12,7 @@ import BugFinder from '@/components/problems/BugFinder'
 import CodeComplete from '@/components/problems/CodeComplete'
 import CodeFix from '@/components/problems/CodeFix'
 import SelfCheck from '@/components/problems/SelfCheck'
+import CssVisual from '@/components/problems/CssVisual'
 import UserSetup from '@/components/UserSetup'
 import type { SolvedResult } from '@/types'
 
@@ -260,6 +261,15 @@ export default function ProblemPage() {
         )}
         {problem.type === 'self-check' && (
           <SelfCheck
+            key={`${id}-${retryCount}`}
+            {...sharedProps}
+            initialAnswer={
+              initialAnswer !== undefined ? (initialAnswer as string) : undefined
+            }
+          />
+        )}
+        {problem.type === 'css-visual' && (
+          <CssVisual
             key={`${id}-${retryCount}`}
             {...sharedProps}
             initialAnswer={
