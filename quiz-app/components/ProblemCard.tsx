@@ -20,6 +20,7 @@ const typeConfig = {
   'code-complete': { label: '코드 완성', icon: '✏️' },
   'code-fix': { label: '직접 수정', icon: '🔧' },
   'self-check': { label: '자가 평가', icon: '🏋️' },
+  'css-visual': { label: 'CSS 챌린지', icon: '🎨' },
 }
 
 export default function ProblemCard({ problem, solvedResult }: Props) {
