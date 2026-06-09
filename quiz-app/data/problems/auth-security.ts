@@ -370,4 +370,407 @@ const assertion = await navigator.credentials.get({
       'Passkeys 도입 현황 및 고려사항:\n\n지원 플랫폼:\n• iOS 16+, macOS Ventura+: iCloud Keychain으로 기기 간 동기화\n• Android 9+: Google Password Manager로 동기화\n• Windows 11: Windows Hello (얼굴/지문/PIN)\n• 브라우저: Chrome 108+, Safari 16+, Firefox 122+\n\n폴백(Fallback) 전략:\n```typescript\n// Passkeys 지원 여부 확인\nconst isPasskeySupported = await PublicKeyCredential\n  .isUserVerifyingPlatformAuthenticatorAvailable()\n\nif (isPasskeySupported) {\n  // Passkey 등록/인증\n} else {\n  // 기존 비밀번호 또는 SMS OTP 폴백\n}\n```\n\n기기 분실 시 복구:\n• iCloud/Google 계정 복구로 Passkeys 복원\n• 백업 인증 수단(이메일 코드, 복구 코드) 필수 제공\n• FIDO2 Cross-Device Authentication: 다른 기기의 Passkey로 인증 가능 (QR 스캔)\n\nNestJS 구현 흐름:\n1. POST /auth/passkey/register/start → challenge 생성, Redis에 저장\n2. POST /auth/passkey/register/finish → credential 검증 후 DB에 공개키 저장\n3. POST /auth/passkey/login/start → challenge 생성\n4. POST /auth/passkey/login/finish → 서명 검증 → JWT 발급',
     relatedProblems: ['auth-q-013', 'auth-q-014'],
   },
+
+  // ─── NextAuth JWT / Session Callback ─────────────────────────────────────────
+
+  {
+    id: 'auth-q-016',
+    category: 'auth-security',
+    subcategory: 'nextauth',
+    type: 'multiple-choice',
+    difficulty: 'easy',
+    title: 'NextAuth.js — jwt vs database 세션 전략',
+    description: 'NextAuth.js에서 `session: { strategy: "jwt" }`와 `session: { strategy: "database" }`의 차이로 올바른 것은?',
+    options: [
+      '두 전략 모두 세션 데이터를 서버 DB에 저장한다',
+      '`jwt` 전략은 세션 데이터를 암호화된 Cookie에 저장하고 DB 조회 없이 검증하며, `database` 전략은 서버 DB에 세션을 저장하고 매 요청마다 DB를 조회한다',
+      '`database` 전략은 JWT 토큰을 사용하고, `jwt` 전략은 DB를 사용한다',
+      '`jwt` 전략은 세션이 없어 로그인 상태를 유지할 수 없다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      '`jwt` 전략: 세션 데이터를 서버가 서명한 JWT로 만들어 httpOnly Cookie에 저장합니다. 서버는 DB 조회 없이 서명 검증만으로 인증합니다(Stateless). 서버리스/수평 확장에 유리합니다. `database` 전략: 세션을 DB에 저장하고 클라이언트에는 Session ID만 Cookie로 전달합니다(Stateful). 즉시 세션 무효화가 가능하지만 매 요청마다 DB를 조회합니다.',
+    hints: ['jwt 전략 = Stateless, database 전략 = Stateful'],
+    deepDive:
+      '```typescript\n// jwt 전략 — 서버리스/Vercel 환경에 적합\nexport const authOptions: NextAuthOptions = {\n  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },\n  // DB 어댑터 없이도 동작\n}\n\n// database 전략 — Prisma 어댑터 필요\nexport const authOptions: NextAuthOptions = {\n  session: { strategy: "database" },\n  adapter: PrismaAdapter(prisma),\n  // 세션 즉시 무효화 가능\n  // 모든 요청 시 DB sessions 테이블 조회\n}\n```\n\n선택 기준:\n• 서버리스(Vercel 등) → jwt\n• 즉각적인 권한 제어, 강제 로그아웃 → database\n• NextAuth 기본값: database (어댑터 없으면 jwt로 fallback)',
+    relatedProblems: ['auth-q-007', 'auth-q-017'],
+  },
+  {
+    id: 'auth-q-017',
+    category: 'auth-security',
+    subcategory: 'nextauth',
+    type: 'multiple-choice',
+    difficulty: 'medium',
+    title: 'NextAuth JWT callback — 최초 로그인 vs 이후 호출 분기',
+    description: '다음 JWT callback 코드에서 `if (user)` 분기가 실행되는 시점은?',
+    code: `jwt: async ({ token, user }) => {
+  if (user) {
+    return { ...token, id: user.id, role: user.role }
+  }
+  return token
+}`,
+    options: [
+      '매 API 요청마다 실행된다',
+      '`useSession()` 훅이 호출될 때마다 실행된다',
+      '`authorize()` 함수가 user 객체를 반환한 직후 — 즉 최초 로그인 성공 시에만 실행된다',
+      '`update()` 함수를 호출할 때만 실행된다',
+    ],
+    correctAnswer: 2,
+    explanation:
+      '`jwt` 콜백의 `user` 인자는 `authorize()` (CredentialsProvider) 또는 OAuth 로그인이 성공하여 user 객체가 생성된 직후, 즉 최초 로그인 시에만 전달됩니다. 이후 세션 조회/갱신 시에는 `user`가 `undefined`이므로 `if (user)` 분기가 실행되지 않고 기존 `token`이 처리됩니다. 따라서 커스텀 필드를 토큰에 저장하려면 반드시 `if (user)` 블록에서 처리해야 합니다.',
+    hints: ['user 인자는 최초 로그인 1회만 존재'],
+    deepDive:
+      'JWT callback이 호출되는 시점:\n1. 최초 로그인 성공 → user 있음 → 커스텀 데이터 토큰에 저장\n2. useSession() 호출 → user 없음 → token 반환\n3. update() 호출 → user 없음 → token 반환 + 주기적 재검증 가능\n4. getServerSession() 호출 → user 없음\n\n```typescript\njwt: async ({ token, user, trigger, session }) => {\n  // 최초 로그인\n  if (user) {\n    return { ...token, role: (user as any).role }\n  }\n  // update() 호출 시 (trigger === "update")\n  if (trigger === "update" && session?.role) {\n    token.role = session.role\n  }\n  return token\n}\n```',
+    relatedProblems: ['auth-q-016', 'auth-q-018', 'auth-q-019'],
+  },
+  {
+    id: 'auth-q-018',
+    category: 'auth-security',
+    subcategory: 'nextauth',
+    type: 'multiple-choice',
+    difficulty: 'medium',
+    title: 'NextAuth session callback의 역할',
+    description: '다음 코드에서 session callback이 없다면 어떤 문제가 발생하는가?',
+    code: `// jwt callback에서 role을 토큰에 저장
+jwt: async ({ token, user }) => {
+  if (user) return { ...token, role: (user as any).role }
+  return token
+},
+
+// session callback 없는 경우
+// session callback이 있는 경우:
+// session: async ({ session, token }) => {
+//   session.user.role = token.role
+//   return session
+// },`,
+    options: [
+      'JWT 토큰이 생성되지 않는다',
+      '클라이언트에서 useSession()으로 가져온 session.user.role이 undefined가 된다. JWT에는 role이 있어도 session으로 전파되지 않기 때문이다',
+      'API 요청 시 401 에러가 발생한다',
+      '세션이 만료된다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'jwt callback에서 token에 `role`을 저장해도, session callback이 없으면 클라이언트의 `useSession()`이 반환하는 `session.user`에는 기본 필드(name, email, image)만 포함됩니다. 커스텀 필드를 클라이언트에서 사용하려면 session callback에서 `session.user.role = token.role` 처럼 명시적으로 복사해야 합니다.',
+    hints: ['token ≠ session — 별도 객체, 명시적으로 복사 필요'],
+    deepDive:
+      '```typescript\n// session callback: token → session 전파\nsession: async ({ session, token }) => {\n  if (session.user) {\n    session.user.role = token.role           // 필수\n    session.user.trainerId = token.id\n    session.user.forceLogout = token.forceLogout\n  }\n  if (token.error) session.error = token.error\n  return session  // 반드시 return!\n},\n\n// 타입 확장 (next-auth.d.ts)\ndeclare module "next-auth" {\n  interface Session {\n    user?: {\n      role?: string\n      forceLogout?: boolean\n    }\n    error?: "RoleChanged"\n  }\n}\n\n// 클라이언트 사용\nconst { data: session } = useSession()\nconsole.log(session?.user?.role)  // session callback 없으면 undefined\n```',
+    relatedProblems: ['auth-q-017', 'auth-q-019', 'auth-q-020'],
+  },
+  {
+    id: 'auth-q-019',
+    category: 'auth-security',
+    subcategory: 'nextauth',
+    type: 'multiple-choice',
+    difficulty: 'hard',
+    title: 'update() 호출이 JWT callback을 재실행하는 이유',
+    description: '다음 RoleGuard 코드에서 pathname이 변경될 때마다 `update()`를 호출하는 이유는?',
+    code: `export default function RoleGuard() {
+  const { data: session, update } = useSession()
+  const pathname = usePathname()
+
+  useEffect(() => {
+    update()
+  }, [pathname])
+
+  useEffect(() => {
+    if (session?.user?.forceLogout) {
+      signOut({ callbackUrl: '/login' })
+    }
+  }, [session?.user?.forceLogout])
+
+  return null
+}`,
+    options: [
+      'update()는 세션을 삭제하는 함수다',
+      'update()는 /api/auth/session에 PATCH 요청을 보내 JWT callback을 재실행시키고, 재검증된 세션(forceLogout 포함)을 클라이언트에 반영한다',
+      'pathname이 변경되면 자동으로 세션이 만료되므로 갱신이 필요하다',
+      'update()는 서버를 재시작하는 함수다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      '`update()`를 호출하면 NextAuth가 `/api/auth/session`에 요청을 보내고, 서버에서 JWT callback이 다시 실행됩니다. JWT callback 내부에서 `lastRoleCheck` 기반 5분 주기 DB 재검증이 이루어지고, 트레이너가 비활성화(useYn=\'N\')된 경우 `forceLogout=true`가 세팅됩니다. 이 변경된 세션이 클라이언트에 반영되면 두 번째 useEffect가 감지하여 `signOut()`을 트리거합니다.',
+    hints: ['update() = /api/auth/session 재요청 = JWT callback 재실행'],
+    deepDive:
+      '흐름:\n```\npathname 변경\n→ update() 호출\n→ PATCH /api/auth/session\n→ 서버: JWT callback 실행\n→ lastRoleCheck 체크 (5분 경과?)\n→ 경과 시: DB 조회 (trainer.useYn 확인)\n→ useYn=\'N\' 발견: token.forceLogout = true 세팅\n→ session callback: session.user.forceLogout = true 전파\n→ 클라이언트: session 업데이트\n→ useEffect 감지: signOut() 호출\n→ /login 리다이렉트\n```\n\n주의: update()를 호출하지 않으면 쿠키가 갱신되지 않아 변경사항이 클라이언트에 반영되지 않습니다. JWT는 서버가 직접 push할 수 없기 때문에 클라이언트가 능동적으로 갱신을 요청해야 합니다.',
+    relatedProblems: ['auth-q-017', 'auth-q-020', 'auth-q-021'],
+  },
+  {
+    id: 'auth-q-020',
+    category: 'auth-security',
+    subcategory: 'nextauth',
+    type: 'multiple-choice',
+    difficulty: 'hard',
+    title: 'forceLogout 플래그 전파 흐름',
+    description: '관리자가 트레이너를 삭제(useYn=\'N\')했을 때 해당 트레이너가 강제 로그아웃되는 전체 흐름에서 순서가 올바른 것은?',
+    options: [
+      'JWT 토큰 삭제 → DB 업데이트 → 클라이언트 리다이렉트',
+      'DB에 useYn=\'N\' 저장 → 트레이너의 update() 호출 → JWT callback에서 DB 재검증 → token.forceLogout=true → session.user.forceLogout=true → signOut()',
+      'signOut() 즉시 호출 → DB 업데이트',
+      'Middleware가 DB를 직접 폴링하여 useYn=\'N\'을 감지 → 요청 차단',
+    ],
+    correctAnswer: 1,
+    explanation:
+      '강제 로그아웃은 직접 토큰을 삭제할 수 없는 JWT 전략의 한계를 우회합니다. ① DB에 useYn=\'N\' 저장(소프트 삭제), ② 트레이너가 페이지 이동 시 RoleGuard의 update() 호출, ③ JWT callback 재실행 → lastRoleCheck 경과 시 DB 조회, ④ useYn=\'N\' 확인 → token.forceLogout=true, error=\'RoleChanged\' 세팅, ⑤ session callback → session.user.forceLogout=true 전파, ⑥ RoleGuard가 감지 → signOut() 호출. Middleware는 이미 forceLogout=true인 토큰의 접근을 차단하는 역할을 합니다.',
+    hints: ['JWT 전략에서는 토큰을 직접 삭제할 수 없어 플래그 방식 사용'],
+    deepDive:
+      '최악의 시나리오: 트레이너가 삭제 후 5분 이내에 페이지 이동을 하지 않으면 최대 5분간 접근 가능합니다(ROLE_CHECK_INTERVAL_SECONDS = 300). 이는 성능(매 요청마다 DB 조회 방지)과 보안의 트레이드오프입니다.\n\n더 빠른 강제 로그아웃이 필요한 경우:\n• database 전략 사용 → 세션 레코드 직접 삭제로 즉시 무효화\n• JWT Blacklist (Redis) → 삭제 즉시 토큰을 블랙리스트에 등록\n• ROLE_CHECK_INTERVAL_SECONDS를 줄임 (DB 부하 증가)',
+    relatedProblems: ['auth-q-019', 'auth-q-021'],
+  },
+  {
+    id: 'auth-q-021',
+    category: 'auth-security',
+    subcategory: 'nextauth',
+    type: 'multiple-choice',
+    difficulty: 'medium',
+    title: 'withAuth middleware — authorized 콜백',
+    description: '다음 middleware 코드에서 `authorized` 콜백이 `false`를 반환하면 어떻게 되는가?',
+    code: `export default withAuth(
+  (req) => {
+    const requestHeaders = new Headers(req.headers)
+    requestHeaders.set('x-current-pathname', req.nextUrl.pathname)
+    return NextResponse.next({ request: { headers: requestHeaders } })
+  },
+  {
+    callbacks: {
+      authorized: ({ token }) => {
+        if (token?.forceLogout) return false
+        return !!token
+      },
+    },
+  }
+)`,
+    options: [
+      '요청이 정상 처리되고 middleware 함수가 실행된다',
+      '`false`를 반환하면 middleware 함수 실행이 건너뛰어지고, `signIn` 페이지로 리다이렉트된다',
+      '500 서버 에러가 발생한다',
+      '요청이 즉시 취소되고 브라우저가 닫힌다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      '`authorized` 콜백이 `false`를 반환하면 NextAuth는 사용자를 자동으로 로그인 페이지(기본값: `/api/auth/signin`)로 리다이렉트합니다. middleware 함수(첫 번째 인자)는 실행되지 않습니다. 이 코드에서는 유효한 토큰이 있더라도 `forceLogout=true`이면 `false`를 반환하므로, 강제 로그아웃된 트레이너는 어떤 페이지에도 접근할 수 없습니다.',
+    hints: ['authorized = false → signIn 페이지로 리다이렉트'],
+    deepDive:
+      '```typescript\nexport default withAuth(middlewareFn, {\n  callbacks: {\n    authorized: ({ token }) => {\n      // false 반환 → 로그인 페이지 리다이렉트\n      // true 반환 → middlewareFn 실행\n      return !!token && !token.forceLogout\n    },\n  },\n  pages: {\n    signIn: "/login",  // 커스텀 로그인 페이지\n  },\n})\n\n// config: matcher로 보호할 경로 설정\nexport const config = {\n  matcher: [\n    "/((?!register|api|login|key|privacy|terms|robots).*)"\n  ],\n}\n```\n\n`matcher` 패턴에서 `(?!...)` 는 부정 전방탐색으로, 해당 경로는 middleware를 건너뜁니다. 로그인 페이지(/login), API 라우트(/api), 공개 페이지를 제외하고 모든 페이지를 보호합니다.',
+    relatedProblems: ['auth-q-019', 'auth-q-020'],
+  },
+  {
+    id: 'auth-q-022',
+    category: 'auth-security',
+    subcategory: 'nextauth',
+    type: 'multiple-choice',
+    difficulty: 'medium',
+    title: 'next-auth.d.ts — TypeScript 모듈 확장',
+    description: '다음 코드가 필요한 이유로 올바른 것은?',
+    code: `// next-auth.d.ts
+declare module 'next-auth' {
+  interface Session {
+    user?: {
+      role?: string
+      forceLogout?: boolean
+    }
+    error?: 'RoleChanged'
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    role?: string
+    forceLogout?: boolean
+    lastRoleCheck?: number
+  }
+}`,
+    options: [
+      'NextAuth.js 런타임 동작을 변경하기 위해 필요하다',
+      'NextAuth의 기본 User/Session/JWT 타입에는 role, forceLogout 같은 커스텀 필드가 없으므로, TypeScript에게 이 필드들이 존재함을 알려 타입 오류 없이 사용할 수 있게 한다',
+      '이 파일이 없으면 NextAuth가 작동하지 않는다',
+      '이 파일은 JWT 서명 알고리즘을 설정한다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'TypeScript의 Declaration Merging(선언 병합) 기능을 활용합니다. `declare module \'next-auth\'`로 기존 모듈의 타입을 확장하여, `session.user?.role`, `session.user?.forceLogout`, `token.lastRoleCheck` 같은 커스텀 필드에 TypeScript 타입 오류 없이 접근할 수 있게 됩니다. 런타임 동작과는 무관하며, 순수하게 타입 시스템에만 영향을 줍니다.',
+    hints: ['Declaration Merging = 기존 타입을 확장하는 TypeScript 기능'],
+    deepDive:
+      '```typescript\n// next-auth.d.ts — 전체 예시\nimport { DefaultUser } from "next-auth"\n\ndeclare module "next-auth" {\n  interface User extends DefaultUser {\n    role?: "admin" | "trainer" | "user"\n    trainerId?: string\n    forceLogout?: boolean\n  }\n  interface Session {\n    user?: User  // 위에서 확장한 User 참조\n    error?: "RoleChanged"\n  }\n}\n\ndeclare module "next-auth/jwt" {\n  interface JWT {\n    id?: string\n    role?: "admin" | "trainer" | "user"\n    forceLogout?: boolean\n    lastRoleCheck?: number\n    error?: "RoleChanged"\n  }\n}\n\n// 이 파일은 tsconfig.json의 include에 포함되어야 합니다\n// tsconfig.json: { "include": ["next-auth.d.ts", "src/**/*"] }\n```',
+    relatedProblems: ['auth-q-017', 'auth-q-018'],
+  },
+
+  // ─── 로그인 기법 비교 ──────────────────────────────────────────────────────────
+
+  {
+    id: 'auth-q-023',
+    category: 'auth-security',
+    subcategory: 'sso',
+    type: 'multiple-choice',
+    difficulty: 'easy',
+    title: 'SSO(Single Sign-On) 핵심 개념',
+    description: 'SSO(Single Sign-On)의 정의와 대표적인 사용 사례로 올바른 것은?',
+    options: [
+      'SSO는 여러 비밀번호를 하나의 마스터 비밀번호로 관리하는 비밀번호 매니저다',
+      'SSO는 한 번의 로그인으로 여러 독립적인 서비스에 재인증 없이 접근할 수 있는 인증 방식이다. 기업 환경에서 사내 시스템들(HR, 그룹웨어, ERP)을 단일 인증으로 통합할 때 주로 사용된다',
+      'SSO는 동일한 비밀번호를 여러 사이트에 재사용하는 관행을 의미한다',
+      'SSO는 소셜 로그인(Google, Kakao)과 동일한 기술이다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'SSO는 중앙 IdP(Identity Provider)에서 한 번 인증하면, SP(Service Provider)들이 IdP에게 "이 사람이 인증됐나요?"를 확인하여 별도 로그인 없이 접근을 허용하는 방식입니다. 기업에서 구글 워크스페이스/Okta로 사원이 한 번 로그인하면 Slack, Jira, GitHub, 그룹웨어 등 모든 사내 시스템에 자동 로그인되는 것이 대표적인 예입니다.',
+    hints: ['SSO = 한 번 로그인, 여러 서비스 이용'],
+    deepDive:
+      'SSO 구성 요소:\n• IdP (Identity Provider): 중앙 인증 서버 — Okta, Azure AD, Google Workspace\n• SP (Service Provider): 개별 서비스 — Slack, GitHub, 사내 시스템\n\nSSO 프로토콜:\n• SAML 2.0: XML 기반, 기업 환경, 레거시 시스템과 호환성 좋음\n• OIDC: JSON/JWT 기반, 모던 웹/모바일 앱, 구현 쉬움\n\nSSO 장점:\n• 사용자: 비밀번호 1개만 기억\n• 보안 팀: 퇴직 직원 계정을 IdP에서 한 번만 비활성화하면 모든 서비스 접근 차단\n• 개발팀: 개별 인증 구현 불필요',
+    relatedProblems: ['auth-q-024', 'auth-q-006'],
+  },
+  {
+    id: 'auth-q-024',
+    category: 'auth-security',
+    subcategory: 'sso',
+    type: 'multiple-choice',
+    difficulty: 'hard',
+    title: 'SAML vs OIDC 비교',
+    description: 'SAML 2.0과 OIDC(OpenID Connect)를 비교한 것으로 올바른 것은?',
+    options: [
+      'SAML은 모바일 앱에 최적화되어 있고, OIDC는 레거시 엔터프라이즈 시스템에 적합하다',
+      'SAML은 XML 기반으로 기업 레거시 시스템과 호환성이 높고, OIDC는 JWT/JSON 기반으로 모던 웹/모바일에 적합하며 구현이 더 간단하다',
+      'SAML과 OIDC는 완전히 동일한 기술이며 이름만 다르다',
+      'OIDC는 SSO를 지원하지 않는다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'SAML 2.0: 2005년 표준, XML + SOAP 기반, 기업의 Active Directory, 레거시 ERP/HR 시스템과 통합 시 주로 사용. XML 파싱 복잡. OIDC: 2014년 표준, JWT + REST 기반, 구글/카카오/GitHub 소셜 로그인, Okta 등 현대적 IdP에 사용. 라이브러리 지원 풍부, SPA/모바일에 적합. 새로 구축하는 시스템은 대부분 OIDC를 선택합니다.',
+    hints: ['SAML = XML 구세대, OIDC = JWT 신세대'],
+    deepDive:
+      '비교표:\n\n| 항목 | SAML 2.0 | OIDC |\n|---|---|---||\n| 연도 | 2005 | 2014 |\n| 데이터 형식 | XML | JSON/JWT |\n| 전송 방식 | HTTP Redirect/POST | HTTP Redirect + REST |\n| 모바일 | 어려움 | 쉬움 |\n| 구현 복잡도 | 높음 | 낮음 |\n| 주요 사용처 | 기업 레거시 | 모던 웹/모바일 |\n\nNextAuth.js는 OIDC를 네이티브 지원:\n```typescript\n// Okta OIDC — SSO\nOktaProvider({\n  clientId: process.env.OKTA_CLIENT_ID,\n  issuer: "https://company.okta.com",\n})\n\n// SAML은 별도 라이브러리 필요\nimport { Strategy as SamlStrategy } from "passport-saml"\n```',
+    relatedProblems: ['auth-q-023', 'auth-q-006'],
+  },
+  {
+    id: 'auth-q-025',
+    category: 'auth-security',
+    subcategory: 'auth-methods',
+    type: 'multiple-choice',
+    difficulty: 'medium',
+    title: 'Magic Link vs Email OTP — 차이와 보안',
+    description: 'Magic Link와 Email OTP의 차이 및 보안 특성으로 올바른 것은?',
+    options: [
+      'Magic Link는 비밀번호가 링크에 포함되어 있어 안전하지 않다',
+      'Magic Link는 클릭 한 번으로 로그인되는 일회용 URL이고, Email OTP는 짧은 숫자 코드를 입력하는 방식이다. 둘 다 이메일 계정 보안에 의존하며 짧은 유효시간(5~15분)이 핵심 보안 요소다',
+      'Magic Link는 재사용 가능하고 유효기간이 없다',
+      'Email OTP는 SMS OTP보다 SIM 스와핑 공격에 취약하다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'Magic Link: 서버가 단기 토큰을 생성하여 URL에 포함(`/auth/verify?token=xxxxx`)하고, 사용자가 클릭하면 토큰 검증 후 세션 발급. Email OTP: 6자리 랜덤 숫자를 이메일로 전송, 사용자가 입력. 둘 다 ① 토큰/코드 1회용 ② 짧은 유효시간 ③ 사용 즉시 서버에서 삭제 세 가지가 보안 핵심입니다. SMS OTP와 달리 SIM 스와핑 공격 영향 없음.',
+    hints: ['이메일 계정 = 인증의 신뢰 근거'],
+    deepDive:
+      '```typescript\n// Magic Link 구현 (NestJS)\nasync sendMagicLink(email: string) {\n  const token = crypto.randomBytes(32).toString("hex")\n  await redis.set(\`magic:\${token}\`, email, "EX", 15 * 60) // 15분\n  const link = \`https://myapp.com/auth/verify?token=\${token}\`\n  await emailService.send({ to: email, subject: "로그인 링크", html: link })\n}\n\nasync verifyMagicLink(token: string) {\n  const email = await redis.get(\`magic:\${token}\`)\n  if (!email) throw new UnauthorizedException("만료된 링크")\n  await redis.del(\`magic:\${token}\`) // 1회용\n  const user = await userRepo.findByEmail(email)\n  return jwtService.sign({ sub: user.id })\n}\n\n// NextAuth EmailProvider가 이 로직을 내장\n```\n\nSecurity tips:\n• 토큰은 crypto.randomBytes(32) 이상 — 예측 불가\n• 사용 후 즉시 Redis에서 삭제\n• 유효시간 10~15분 이내\n• 동일 이메일로 재요청 시 이전 토큰 무효화 권장',
+    relatedProblems: ['auth-q-007', 'auth-q-026'],
+  },
+  {
+    id: 'auth-q-026',
+    category: 'auth-security',
+    subcategory: 'jwt',
+    type: 'multiple-choice',
+    difficulty: 'hard',
+    title: 'Refresh Token Rotation 심화',
+    description: 'Refresh Token Rotation 패턴에서 탈취된 Refresh Token을 감지하는 원리로 올바른 것은?',
+    options: [
+      'Refresh Token에 IP 주소가 저장되어 IP가 바뀌면 감지된다',
+      '갱신 시 이전 Refresh Token을 무효화하고 새 Refresh Token을 발급한다. 공격자가 탈취한 토큰으로 갱신을 시도하면 이미 사용된 토큰이므로 감지되고, 해당 사용자의 모든 세션을 강제 종료할 수 있다',
+      'Refresh Token은 탈취되어도 Access Token이 없으면 아무것도 할 수 없다',
+      'Rotation은 성능 최적화를 위한 기법으로 보안과 무관하다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'Refresh Token Rotation: ① 갱신 요청 → 서버가 기존 RT 무효화 + 새 RT 발급. ② 정상 사용자는 항상 새 RT를 가짐. ③ 공격자가 탈취한 이전 RT로 갱신 시도 → 서버가 "이미 사용된 RT"를 감지 → 해당 사용자의 모든 RT를 무효화(세션 강제 종료). 이를 Refresh Token Reuse Detection이라고 합니다. 단, 동시 요청 발생 시 정상 사용자도 로그아웃될 수 있으므로 구현에 주의 필요.',
+    hints: ['이미 사용된 RT로 갱신 요청 = 탈취 의심'],
+    deepDive:
+      '```typescript\n// Refresh Token Rotation (NestJS)\nasync refreshTokens(userId: string, oldRefreshToken: string) {\n  const user = await userRepo.findById(userId)\n\n  // ① 이전 RT와 DB 저장 RT 비교\n  const isValid = await bcrypt.compare(oldRefreshToken, user.hashedRefreshToken)\n  if (!isValid) {\n    // 이미 사용된 RT → 탈취 의심 → 모든 세션 무효화\n    await userRepo.clearAllRefreshTokens(userId)\n    throw new ForbiddenException("Token reuse detected")\n  }\n\n  // ② 새 토큰 발급\n  const newAccessToken = jwtService.sign({ sub: userId }, { expiresIn: "15m" })\n  const newRefreshToken = uuidv4()\n\n  // ③ 새 RT 저장 (해시 저장), 이전 RT 무효화\n  await userRepo.updateRefreshToken(userId, await bcrypt.hash(newRefreshToken, 10))\n\n  return { accessToken: newAccessToken, refreshToken: newRefreshToken }\n}\n```\n\nRT 저장 방법:\n• DB에 해시 저장 (bcrypt) — DB 유출 시 원본 RT 보호\n• httpOnly Cookie — XSS 방어\n• Rotate 시 기존 RT 즉시 무효화',
+    relatedProblems: ['auth-q-002', 'auth-q-004'],
+  },
+  {
+    id: 'auth-q-027',
+    category: 'auth-security',
+    subcategory: 'jwt',
+    type: 'multiple-choice',
+    difficulty: 'hard',
+    title: 'JWT Blacklist — 강제 로그아웃 구현',
+    description: 'JWT(Stateless) 방식에서 즉각적인 강제 로그아웃을 구현하는 Blacklist 패턴으로 올바른 것은?',
+    options: [
+      'JWT는 Stateless이므로 강제 로그아웃 구현이 원천적으로 불가능하다',
+      '로그아웃 시 해당 JWT를 Redis Blacklist에 저장하고, 모든 API 요청에서 Blacklist 조회 후 포함된 토큰은 거부한다. TTL을 토큰 만료 시간과 동일하게 설정하여 자동 정리한다',
+      'Blacklist에 토큰을 저장하면 보안이 약해진다',
+      'JWT를 DB에 전부 저장하는 방식으로만 강제 로그아웃이 가능하다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'JWT Blacklist 패턴: ① 로그아웃/강제 로그아웃 시 해당 JWT를 Redis에 저장(`SET blacklist:{token} 1 EX {남은TTL}`). ② Guard/Middleware에서 매 요청마다 Redis Blacklist 조회. ③ 블랙리스트에 있으면 401 반환. 단점: 매 요청마다 Redis 조회(DB보다 빠르지만 비용 발생), Blacklist가 커지면 메모리 사용 증가. TTL을 토큰 만료 시간과 동일하게 설정하면 만료된 토큰이 자동으로 Redis에서 제거됩니다.',
+    hints: ['Redis TTL = 토큰 남은 만료 시간으로 설정 → 자동 정리'],
+    deepDive:
+      '```typescript\n// NestJS JwtAuthGuard with Blacklist\n@Injectable()\nexport class JwtAuthGuard extends AuthGuard("jwt") {\n  constructor(private readonly redis: RedisService) { super() }\n\n  async canActivate(context: ExecutionContext): Promise<boolean> {\n    // 1. JWT 서명 검증\n    const isValid = await super.canActivate(context) as boolean\n    if (!isValid) return false\n\n    // 2. Blacklist 조회\n    const request = context.switchToHttp().getRequest()\n    const token = request.headers.authorization?.replace("Bearer ", "")\n    const isBlacklisted = await this.redis.get(\`blacklist:\${token}\`)\n    if (isBlacklisted) throw new UnauthorizedException("로그아웃된 토큰")\n\n    return true\n  }\n}\n\n// 로그아웃 시 Blacklist 등록\nasync logout(token: string) {\n  const decoded = jwtService.decode(token) as { exp: number }\n  const ttl = decoded.exp - Math.floor(Date.now() / 1000)\n  if (ttl > 0) {\n    await redis.set(\`blacklist:\${token}\`, "1", "EX", ttl)\n  }\n}\n```',
+    relatedProblems: ['auth-q-007', 'auth-q-020', 'auth-q-026'],
+  },
+  {
+    id: 'auth-q-028',
+    category: 'auth-security',
+    subcategory: 'auth-methods',
+    type: 'multiple-choice',
+    difficulty: 'medium',
+    title: '로그인 기법 선택 기준',
+    description: '다음 시나리오별로 가장 적합한 인증 방식을 매칭한 것으로 올바른 것은?',
+    options: [
+      'A) B2C 서비스 소셜 로그인 → SAML, B) 기업 내부 시스템 통합 → Magic Link, C) 금융 서비스 → 비밀번호만',
+      'A) B2C 서비스 소셜 로그인 → OAuth/OIDC (Google, Kakao), B) 기업 내부 시스템 통합 → SSO (Okta/SAML/OIDC), C) 금융 서비스 → 비밀번호 + TOTP MFA 또는 Passkeys',
+      'A) B2C 서비스 → JWT만, B) 기업 내부 → JWT만, C) 금융 → JWT만',
+      '어떤 서비스든 Session 기반이 가장 안전하다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'B2C 소셜 로그인: OAuth 2.0/OIDC를 사용하는 Google, Kakao 등의 provider를 연동합니다(NextAuth.js 활용). 기업 내부 시스템: SSO로 직원이 한 번만 로그인하면 모든 사내 서비스 접근, 퇴직자 계정 일괄 관리. 금융/의료 등 보안 최우선 서비스: MFA(TOTP 앱)나 Passkeys로 추가 인증 레이어를 요구합니다. 하나의 정답이 아니라 서비스 특성에 따라 조합해서 사용합니다.',
+    hints: ['서비스 유형에 따라 최적 기법이 다름'],
+    deepDive:
+      '실무 선택 가이드:\n\n| 상황 | 추천 방식 |\n|---|---|\n| 빠른 MVP, 소규모 앱 | NextAuth.js + Credentials + JWT |\n| B2C 소셜 로그인 | NextAuth.js + OAuth (Google/Kakao/GitHub) |\n| B2B SaaS | OIDC 기반 SSO (Okta, Auth0) |\n| 기업 레거시 통합 | SAML 2.0 |\n| 비밀번호 없는 서비스 | Magic Link + Email OTP |\n| 금융/의료 | 비밀번호 + TOTP MFA + Passkeys |\n| MSA/수평 확장 | JWT + Redis Blacklist + Refresh Rotation |\n| 즉각 권한 제어 필요 | Session + Redis |\n\n팁: 인증은 직접 구현보다 Auth0, Clerk, Supabase Auth 같은 인증 플랫폼 활용을 검토하세요.',
+    relatedProblems: ['auth-q-007', 'auth-q-023', 'auth-q-030'],
+  },
+  {
+    id: 'auth-q-029',
+    category: 'auth-security',
+    subcategory: 'web-security',
+    type: 'multiple-choice',
+    difficulty: 'hard',
+    title: 'Session Fixation 공격',
+    description: 'Session Fixation 공격과 방어 방법으로 올바른 것은?',
+    options: [
+      'Session Fixation은 세션이 너무 오래 유지될 때 발생하는 성능 문제다',
+      '공격자가 미리 알고 있는 Session ID를 피해자에게 사용하도록 유도한 뒤, 피해자 로그인 후 그 Session ID로 세션을 탈취하는 공격이다. 로그인 성공 시 반드시 새 Session ID를 발급하여 방어한다',
+      'Session Fixation은 XSS와 동일한 공격이다',
+      'Session Fixation은 JWT 방식에서만 발생한다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'Session Fixation: ① 공격자가 임의 Session ID 획득 → ② 피해자에게 그 Session ID를 강제 설정(URL 파라미터, JS 등으로) → ③ 피해자가 해당 Session ID로 로그인 → ④ 공격자가 동일 Session ID로 피해자 계정 접근. 방어: **로그인 성공 직후 반드시 새 Session ID를 재발급**합니다(`req.session.regenerate()`). Express-session은 기본적으로 이를 처리하지만 명시적으로 확인 필요.',
+    hints: ['방어 핵심: 로그인 후 세션 ID 재발급'],
+    deepDive:
+      '```typescript\n// Express — Session Fixation 방어\napp.post("/login", async (req, res) => {\n  const user = await verifyUser(req.body)\n  if (!user) return res.status(401).json({ error: "인증 실패" })\n\n  // ✅ 로그인 성공 후 새 Session ID 재발급 (Session Fixation 방어)\n  req.session.regenerate((err) => {\n    if (err) return res.status(500).json({ error: "세션 오류" })\n    req.session.userId = user.id\n    req.session.role = user.role\n    res.json({ success: true })\n  })\n})\n\n// ❌ 잘못된 예 — 기존 Session ID 유지\napp.post("/login-bad", async (req, res) => {\n  const user = await verifyUser(req.body)\n  req.session.userId = user.id  // 기존 세션에 그냥 추가 → Session Fixation 취약\n  res.json({ success: true })\n})\n```\n\nNextAuth.js는 자동으로 로그인 시 새 세션을 생성하므로 Session Fixation에 안전합니다.',
+    relatedProblems: ['auth-q-007', 'auth-q-010'],
+  },
+  {
+    id: 'auth-q-030',
+    category: 'auth-security',
+    subcategory: 'auth-methods',
+    type: 'multiple-choice',
+    difficulty: 'medium',
+    title: 'MFA 인증 요소별 강도 비교',
+    description: '다음 MFA 인증 수단을 보안 강도가 강한 순서로 올바르게 나열한 것은?',
+    options: [
+      'SMS OTP > TOTP(인증 앱) > 하드웨어 보안 키(YubiKey) > Passkeys',
+      'Passkeys ≈ 하드웨어 보안 키(YubiKey) > TOTP(인증 앱) > SMS OTP',
+      'SMS OTP가 가장 강력하다. 통신사가 보안을 보장하기 때문이다',
+      '모든 MFA 수단은 동일한 보안 강도를 제공한다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'SMS OTP(가장 약함): SIM 스와핑, SS7 프로토콜 취약점으로 인터셉트 가능. 피싱 사이트에 코드 입력 가능. TOTP(인증 앱): SMS보다 안전, 피싱 사이트에 코드를 입력하면 실시간 탈취 가능(30초 이내). 하드웨어 보안 키(YubiKey): USB/NFC 물리적 키, 피싱 사이트에서 동작 안 함(Origin Binding). Passkeys: 하드웨어 키와 동등한 보안(Origin Binding) + 편의성 추가(생체 인식).',
+    hints: ['피싱 방어 여부가 핵심 — Origin Binding이 있는가'],
+    deepDive:
+      '인증 요소 분류 및 강도:\n\n| 수단 | 종류 | 피싱 방어 | 탈취 난이도 |\n|---|---|---|---|\n| 비밀번호만 | 지식 | ❌ | 낮음 |\n| SMS OTP | 소유 | ❌ | 중간(SIM 스와핑) |\n| TOTP 앱 | 소유 | ❌ | 높음 |\n| 하드웨어 키(FIDO2) | 소유 | ✅ | 매우 높음 |\n| Passkeys | 소유+생체 | ✅ | 매우 높음 |\n\nNIST(미국 국립표준기술원) 권장:\n• SMS OTP는 더 이상 권장하지 않음 (Deprecated)\n• TOTP 앱 이상 권장\n• 피싱이 우려되는 환경은 FIDO2 필수\n\n실무 도입 전략:\n1단계: SMS OTP → 2단계: TOTP 앱 → 3단계: Passkeys (점진적 전환)',
+    relatedProblems: ['auth-q-013', 'auth-q-028'],
+  },
 ]
