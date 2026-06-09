@@ -12,6 +12,7 @@ import { backendProblems } from './backend'
 import { authSecurityProblems } from './auth-security'
 import { infraBasicsProblems } from './infra-basics'
 import { codeTrainingProblems } from './code-training'
+import { cssProblems } from './css'
 import type { Problem, Category } from '@/types'
 
 export const allProblems: Problem[] = [
@@ -29,6 +30,7 @@ export const allProblems: Problem[] = [
   ...authSecurityProblems,
   ...infraBasicsProblems,
   ...codeTrainingProblems,
+  ...cssProblems,
 ]
 
 export const problemsByCategory: Record<Category, Problem[]> = {
@@ -46,6 +48,7 @@ export const problemsByCategory: Record<Category, Problem[]> = {
   'auth-security': authSecurityProblems,
   'infra-basics': infraBasicsProblems,
   'code-training': codeTrainingProblems,
+  css: cssProblems,
 }
 
 export const categoryMeta: Record<
@@ -136,6 +139,12 @@ export const categoryMeta: Record<
     color: 'bg-teal-500 text-white',
     emoji: '🏋️',
   },
+  css: {
+    label: 'CSS 챌린지',
+    description: '목표 화면을 보고 CSS를 작성하여 똑같이 만들기 — 피그마→코드 변환 훈련',
+    color: 'bg-pink-500 text-white',
+    emoji: '🎨',
+  },
 }
 
 export function getProblemById(id: string): Problem | undefined {
@@ -161,4 +170,5 @@ export {
   authSecurityProblems,
   infraBasicsProblems,
   codeTrainingProblems,
+  cssProblems,
 }
