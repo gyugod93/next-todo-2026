@@ -12,6 +12,7 @@ export type Category =
   | 'database'
   | 'backend'
   | 'auth-security'
+  | 'auth-advanced'
   | 'infra-basics'
   | 'code-training'
   | 'css'
@@ -56,7 +57,7 @@ export interface LeaderboardEntry {
   score: number
 }
 
-export type LessonCategory = 'ai-tools' | 'cs-basics' | 'design-patterns' | 'debugging' | 'realworld' | 'auth-security'
+export type LessonCategory = 'ai-tools' | 'cs-basics' | 'design-patterns' | 'debugging' | 'realworld' | 'auth-security' | 'auth-advanced'
 
 export interface LessonSection {
   title: string
@@ -118,5 +119,11 @@ export const lessonCategoryMeta: Record<
     description: 'JWT, OAuth 2.0, Session, XSS/CSRF, bcrypt, WebAuthn, Passkeys, 생체 인식',
     color: 'bg-red-600 text-white',
     emoji: '🔐',
+  },
+  'auth-advanced': {
+    label: '인증 심화',
+    description: 'NextAuth.js, SSO/SAML, OAuth 흐름, Refresh Token, JWT Blacklist, BFF, MSA 인증',
+    color: 'bg-orange-600 text-white',
+    emoji: '🔓',
   },
 }

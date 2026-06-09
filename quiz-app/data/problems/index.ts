@@ -10,6 +10,7 @@ import { realworldProblems } from './realworld'
 import { databaseProblems } from './database'
 import { backendProblems } from './backend'
 import { authSecurityProblems } from './auth-security'
+import { authAdvancedProblems } from './auth-advanced'
 import { infraBasicsProblems } from './infra-basics'
 import { codeTrainingProblems } from './code-training'
 import { cssProblems } from './css'
@@ -28,6 +29,7 @@ export const allProblems: Problem[] = [
   ...databaseProblems,
   ...backendProblems,
   ...authSecurityProblems,
+  ...authAdvancedProblems,
   ...infraBasicsProblems,
   ...codeTrainingProblems,
   ...cssProblems,
@@ -46,6 +48,7 @@ export const problemsByCategory: Record<Category, Problem[]> = {
   database: databaseProblems,
   backend: backendProblems,
   'auth-security': authSecurityProblems,
+  'auth-advanced': authAdvancedProblems,
   'infra-basics': infraBasicsProblems,
   'code-training': codeTrainingProblems,
   css: cssProblems,
@@ -127,6 +130,12 @@ export const categoryMeta: Record<
     color: 'bg-red-600 text-white',
     emoji: '🔐',
   },
+  'auth-advanced': {
+    label: '인증 심화',
+    description: 'NextAuth.js, SSO/SAML, OAuth 흐름, Refresh Token Rotation, JWT Blacklist, BFF, MSA 인증',
+    emoji: '🔓',
+    color: 'bg-orange-500',
+  },
   'infra-basics': {
     label: '인프라',
     description: 'Docker, CI/CD, Monolith vs MSA, Blue-Green, CDN, Load Balancer',
@@ -168,6 +177,7 @@ export {
   databaseProblems,
   backendProblems,
   authSecurityProblems,
+  authAdvancedProblems,
   infraBasicsProblems,
   codeTrainingProblems,
   cssProblems,
