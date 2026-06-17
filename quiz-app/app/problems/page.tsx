@@ -133,6 +133,7 @@ export default function ProblemsPage() {
               key={problem.id}
               problem={problem}
               solvedResult={solvedProblems[problem.id]}
+              from="/problems"
             />
           ))}
         </div>

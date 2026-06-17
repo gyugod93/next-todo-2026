@@ -292,4 +292,51 @@ export default async function DashboardPage() {
       'AbortController로 Race Condition 해결:\n```typescript\nuseEffect(() => {\n  if (!query) { setResults([]); return }\n  \n  const controller = new AbortController()\n  \n  fetch(`/api/search?q=${query}`, { signal: controller.signal })\n    .then(r => r.json())\n    .then(data => setResults(data))\n    .catch(err => {\n      if (err.name !== \'AbortError\') console.error(err)\n      // AbortError는 정상 취소이므로 무시\n    })\n  \n  return () => controller.abort() // 새 query로 바뀌면 이전 요청 취소\n}, [query])\n```\n\n추가로 debounce(300ms)를 함께 사용하면 타이핑 중 불필요한 요청 자체를 줄일 수 있습니다.',
     relatedProblems: ['rw-q-007'],
   },
+
+  // ─── 분석/마케팅 도구 ────────────────────────────────────────────────────────
+
+  {
+    id: 'rw-q-009',
+    category: 'realworld',
+    subcategory: 'analytics',
+    type: 'multiple-choice',
+    difficulty: 'easy',
+    title: 'Google Tag Manager(GTM) vs 직접 GA 스크립트 삽입',
+    description: 'Google Tag Manager(GTM)를 사용하는 이유로 올바른 것은?',
+    options: [
+      'GTM은 GA보다 더 정확한 데이터를 수집한다',
+      'GTM을 쓰면 GA 계정이 필요 없다',
+      'GTM은 컨테이너 스크립트 하나만 소스에 심으면, 이후 GA·페이스북 픽셀·카카오 픽셀 등 모든 트래킹 스크립트를 코드 배포 없이 브라우저 UI에서 추가·수정·제거할 수 있다',
+      'GTM은 서버사이드 렌더링 환경에서만 동작한다',
+    ],
+    correctAnswer: 2,
+    explanation:
+      '직접 GA 스크립트를 HTML에 넣으면 스크립트 추가·변경마다 코드 배포가 필요합니다. GTM은 컨테이너 스크립트(`gtag.js`와는 별개) 하나를 소스에 심고, GTM 웹 UI에서 태그(GA, 픽셀, Hotjar 등)·트리거(클릭, 페이지뷰)·변수를 구성합니다. 마케터가 개발자 없이 트래킹 코드를 관리할 수 있어 실무에서 표준으로 사용됩니다.',
+    hints: ['GTM = 컨테이너(껍데기), GA = 그 안에 담기는 태그 중 하나'],
+    deepDive:
+      '구조 이해:\n```\nHTML 소스\n  └─ GTM 컨테이너 스크립트 (한 번만 심음)\n       ├─ 태그: Google Analytics 4\n       ├─ 태그: Facebook Pixel\n       ├─ 태그: 카카오 픽셀\n       └─ 태그: Hotjar\n\n각 태그는 트리거 조건에 맞을 때 실행:\n• 트리거: 페이지뷰 / 특정 버튼 클릭 / URL 패턴\n• 변수: {{Page URL}}, {{Click Text}}, {{Data Layer}} 등\n```\n\nNext.js에서 GTM 설치:\n```tsx\n// app/layout.tsx\nimport Script from "next/script"\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID // "GTM-XXXXXXX"\n\n  return (\n    <html>\n      <head>\n        {/* GTM 스크립트 — strategy="afterInteractive"로 성능 영향 최소화 */}\n        <Script\n          id="gtm-script"\n          strategy="afterInteractive"\n          dangerouslySetInnerHTML={{\n            __html: `\n              (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({\'gtm.start\':\n              new Date().getTime(),event:\'gtm.js\'});var f=d.getElementsByTagName(s)[0],\n              j=d.createElement(s),dl=l!=\'dataLayer\'?\'&l=\'+l:\'\';j.async=true;j.src=\n              \'https://www.googletagmanager.com/gtm.js?id=\'+i+dl;f.parentNode.insertBefore(j,f);\n              })(window,document,\'script\',\'dataLayer\',\'${GTM_ID}\');\n            `,\n          }}\n        />\n      </head>\n      <body>\n        {/* GTM noscript — JS 비활성화 환경 */}\n        <noscript>\n          <iframe\n            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}\n            height="0" width="0"\n            style={{ display: "none", visibility: "hidden" }}\n          />\n        </noscript>\n        {children}\n      </body>\n    </html>\n  )\n}\n```\n\nDataLayer로 커스텀 이벤트 전송:\n```typescript\n// 버튼 클릭 → GTM → GA4로 이벤트 전달\nfunction trackEvent(eventName: string, params?: Record<string, unknown>) {\n  window.dataLayer = window.dataLayer || []\n  window.dataLayer.push({ event: eventName, ...params })\n}\n\n// 사용\ntrackEvent("purchase_complete", { item_id: "123", value: 29900 })',
+    relatedProblems: ['rw-q-010'],
+  },
+  {
+    id: 'rw-q-010',
+    category: 'realworld',
+    subcategory: 'analytics',
+    type: 'multiple-choice',
+    difficulty: 'medium',
+    title: 'GA4 이벤트 트래킹 — 페이지뷰·커스텀 이벤트',
+    description: 'Google Analytics 4(GA4)에서 "버튼 클릭" 이벤트를 추적하는 올바른 방법은?',
+    options: [
+      'GA4는 페이지뷰만 자동 수집하며 클릭 이벤트는 추적 불가능하다',
+      'gtag("event", 이벤트명, { 파라미터 }) 또는 GTM의 클릭 트리거로 커스텀 이벤트를 전송하고, GA4 대시보드의 이벤트 리포트에서 확인한다',
+      'GA4는 Universal Analytics(UA)와 동일하게 동작한다',
+      '이벤트 파라미터는 최대 1개만 전달 가능하다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'GA4는 이벤트 기반 데이터 모델입니다. 페이지뷰(page_view), 스크롤(scroll), 클릭(click) 등 일부는 자동 수집되고, 구매·가입·폼 제출 등 비즈니스 핵심 이벤트는 직접 `gtag("event", ...)` 또는 dataLayer.push()로 전송합니다. 파라미터는 최대 25개, 각 파라미터 값은 최대 100자입니다.',
+    hints: ['GA4 = 이벤트 기반', 'gtag() 또는 dataLayer 사용'],
+    deepDive:
+      'GA4 이벤트 구조:\n```typescript\n// 방법 1: gtag 직접 사용 (GTM 없을 때)\ndeclare function gtag(...args: unknown[]): void\n\ngtag("event", "purchase", {\n  transaction_id: "T_12345",\n  value: 29900,\n  currency: "KRW",\n  items: [\n    { item_id: "SKU_001", item_name: "티셔츠", price: 29900, quantity: 1 }\n  ]\n})\n\n// 방법 2: dataLayer (GTM 사용 시 권장)\nwindow.dataLayer.push({\n  event: "sign_up",          // GTM 트리거 이름\n  method: "email",           // GA4 이벤트 파라미터\n  user_id: "user_abc123"\n})\n```\n\nGA4 자동 수집 이벤트:\n• `page_view`: 페이지 이동 (SPA에선 history 변경)\n• `scroll`: 90% 스크롤 시\n• `click`: 외부 링크 클릭\n• `session_start`: 세션 시작\n• `first_visit`: 첫 방문\n\nNext.js SPA에서 페이지뷰 수동 전송:\n```typescript\n// app/layout.tsx — usePathname으로 라우트 변경 감지\n"use client"\nimport { usePathname } from "next/navigation"\nimport { useEffect } from "react"\n\nexport function GAPageView() {\n  const pathname = usePathname()\n\n  useEffect(() => {\n    // App Router는 페이지뷰를 자동으로 보내지 않을 수 있음\n    gtag("event", "page_view", {\n      page_path: pathname,\n    })\n  }, [pathname])\n\n  return null\n}\n```\n\nGA4 vs UA(Universal Analytics) 주요 차이:\n| | UA (종료) | GA4 (현재) |\n|---|---|---|\n| 모델 | 세션 기반 | 이벤트 기반 |\n| 목표 | Goal | Conversion Event |\n| 데이터 보관 | 최대 50개월 | 기본 2개월 |\n| BigQuery | 유료 | 무료 연동 |',
+    relatedProblems: ['rw-q-009'],
+  },
 ]
