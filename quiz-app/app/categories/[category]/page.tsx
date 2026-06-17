@@ -81,6 +81,7 @@ export default function CategoryPage() {
               key={problem.id}
               problem={problem}
               solvedResult={solvedProblems[problem.id]}
+              from={`/categories/${category}`}
             />
           ))}
         </div>

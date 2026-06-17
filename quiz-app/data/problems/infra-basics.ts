@@ -226,4 +226,52 @@ export const infraBasicsProblems: Problem[] = [
       '로드 밸런싱 알고리즘:\n• Round Robin: 순서대로 돌아가며 분산 (기본)\n• Least Connections: 현재 연결 수가 가장 적은 서버로\n• IP Hash: 같은 사용자는 항상 같은 서버로 (세션 유지에 유용)\n• Weighted Round Robin: 서버 성능에 따라 가중치 부여\n\n헬스체크:\n• 주기적으로 서버 상태 확인 (HTTP GET /health)\n• 실패 시 자동으로 풀에서 제거\n\n실무 환경:\n• Nginx (가장 많이 사용, 리버스 프록시도 겸함)\n• AWS ALB/NLB\n• Cloudflare Load Balancing\n\n```nginx\n# nginx.conf — 로드 밸런싱 설정\nupstream nestjs_app {\n  server app1:8080;\n  server app2:8080;\n  server app3:8080;\n}\n\nserver {\n  listen 80;\n  location /api {\n    proxy_pass http://nestjs_app;\n  }\n}\n```\n\nNestJS + JWT: Load Balancer 뒤에서도 Stateless JWT는 어느 서버에서나 검증 가능 (Session과 달리 서버 공유 불필요)',
     relatedProblems: ['infra-q-009', 'infra-q-007'],
   },
+
+  // ─── Secrets / 환경변수 보안 ──────────────────────────────────────────────────
+
+  {
+    id: 'infra-q-011',
+    category: 'infra-basics',
+    subcategory: 'environment',
+    type: 'multiple-choice',
+    difficulty: 'medium',
+    title: '.env vs Secret Manager — 언제 어떤 걸 쓸까?',
+    description:
+      '다음 중 .env 파일이 아닌 KMS/Secret Manager(AWS Secrets Manager, GCP Secret Manager 등)를 써야 하는 상황은?',
+    options: [
+      '로컬 개발 환경에서 MongoDB URI를 설정할 때',
+      '팀 전체가 공유하는 운영 DB 비밀번호, API 키를 관리하며 접근 이력 감사(audit)와 자동 교체(rotation)가 필요할 때',
+      'Next.js 프로젝트에서 NEXT_PUBLIC_SITE_URL을 설정할 때',
+      '.env.example 파일을 팀원과 공유할 때',
+    ],
+    correctAnswer: 1,
+    explanation:
+      '.env 파일은 개발 편의용입니다. 운영 환경에서 비밀 키가 여러 서버에 파일로 존재하면 키 유출 시 추적·교체가 어렵습니다. Secret Manager는 중앙에서 시크릿을 저장하고, 누가 언제 접근했는지 audit log를 남기며, 자동 rotation으로 주기적 교체를 지원합니다. 쿠팡 등 기업 보안 사고에서 .env·config 파일 유출이 큰 피해를 야기한 사례가 이를 보여줍니다.',
+    hints: ['.env = 개발 편의', 'Secret Manager = 운영 보안 + 감사 + 자동 교체'],
+    deepDive:
+      '비교표:\n\n| 항목 | .env 파일 | Secret Manager |\n|------|-----------|----------------|\n| 저장 위치 | 서버 파일시스템 | 암호화된 중앙 저장소 |\n| 접근 제어 | 파일 권한(chmod) | IAM 정책, RBAC |\n| Audit Log | ❌ | ✅ (누가/언제/어디서) |\n| 자동 Rotation | ❌ (수동 교체) | ✅ (주기적 자동 교체) |\n| 암호화 | ❌ (평문) | ✅ (KMS 키로 암호화) |\n| 적합 환경 | 로컬 개발 | 스테이징/운영 |\n\n주요 서비스:\n• AWS Secrets Manager: RDS 비밀번호 자동 rotation 내장\n• AWS Parameter Store: 무료 티어 있음, 단순 설정값에 적합\n• GCP Secret Manager: GKE·Cloud Run과 통합\n• HashiCorp Vault: 멀티 클라우드, 자체 호스팅\n• Doppler / Infisical: SaaS형 시크릿 관리 (스타트업 인기)\n\nNestJS에서 런타임에 시크릿 주입:\n```typescript\n// AWS SDK로 시크릿 로드\nimport { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager"\n\nasync function getSecret(name: string) {\n  const client = new SecretsManagerClient({ region: "ap-northeast-2" })\n  const { SecretString } = await client.send(new GetSecretValueCommand({ SecretId: name }))\n  return JSON.parse(SecretString!)\n}\n\n// 앱 시작 시 환경변수에 주입\nconst secrets = await getSecret("prod/myapp")\nprocess.env.DB_PASSWORD = secrets.DB_PASSWORD\n```',
+    relatedProblems: ['infra-q-005', 'infra-q-012'],
+  },
+  {
+    id: 'infra-q-012',
+    category: 'infra-basics',
+    subcategory: 'environment',
+    type: 'multiple-choice',
+    difficulty: 'medium',
+    title: 'KMS vs Secrets Manager — 역할 구분',
+    description: 'AWS KMS(Key Management Service)와 AWS Secrets Manager의 역할 차이로 올바른 것은?',
+    options: [
+      'KMS와 Secrets Manager는 같은 서비스이며 이름만 다르다',
+      'KMS는 암호화 키 자체를 관리하고, Secrets Manager는 KMS로 암호화된 시크릿(비밀번호, API 키 등)을 저장·교체·배포한다',
+      'KMS는 비밀번호를 저장하고, Secrets Manager는 S3 파일을 암호화한다',
+      'Secrets Manager 없이 KMS만으로 비밀번호를 앱에 직접 주입할 수 있다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'KMS(Key Management Service)는 암호화 마스터 키(CMK)를 생성·관리하는 서비스입니다. 이 키로 데이터를 직접 암호화하거나 다른 서비스(Secrets Manager, S3, EBS 등)의 암호화에 사용됩니다. Secrets Manager는 실제 시크릿 값(DB 비밀번호, API 키)을 저장하되, 내부적으로 KMS 키로 암호화합니다. 즉 KMS = 잠금장치 제조, Secrets Manager = 잠금장치로 잠근 금고.',
+    hints: ['KMS = 키 관리', 'Secrets Manager = 시크릿 값 관리 (내부에서 KMS 사용)'],
+    deepDive:
+      '계층 구조:\n```\nKMS (암호화 키 관리)\n  └─ Customer Managed Key (CMK)\n       └─ Secrets Manager (시크릿 값 저장)\n              ├─ prod/db-password  → "s3cr3t!"\n              ├─ prod/jwt-secret   → "xxxxxxxx"\n              └─ prod/openai-key   → "sk-..."\n```\n\n각 서비스 정리:\n\n🔑 AWS KMS:\n• 역할: 암호화 마스터 키 생성·보관·교체\n• 사용처: Secrets Manager, S3, EBS, RDS, CloudTrail 등\n• 직접 암호화 API 제공 (Encrypt/Decrypt 호출)\n• 키 교체 주기 설정 가능 (자동 연간 교체)\n\n🗝️ AWS Secrets Manager:\n• 역할: 실제 시크릿 값 저장·교체·배포\n• RDS 비밀번호 자동 rotation 내장\n• IAM 권한으로 접근 제어\n• Lambda, ECS, EC2에서 런타임 주입\n\n🗂️ AWS Systems Manager Parameter Store:\n• 역할: 설정값 + 시크릿 저장 (무료 티어 있음)\n• SecureString 타입으로 KMS 암호화\n• 시크릿 자동 rotation 없음 (단순 설정에 적합)\n\n실무 패턴:\n• 개발: .env.local\n• 스테이징: Parameter Store (비용 절감)\n• 운영: Secrets Manager (rotation + audit)\n• 암호화 키: KMS CMK (모든 환경)',
+    relatedProblems: ['infra-q-011', 'infra-q-005'],
+  },
 ]

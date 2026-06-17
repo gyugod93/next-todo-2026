@@ -5,6 +5,7 @@ import type { SolvedResult } from '@/types'
 interface Props {
   problem: Problem
   solvedResult?: SolvedResult
+  from?: string
 }
 
 const difficultyConfig = {
@@ -23,14 +24,18 @@ const typeConfig = {
   'css-visual': { label: 'CSS 챌린지', icon: '🎨' },
 }
 
-export default function ProblemCard({ problem, solvedResult }: Props) {
+export default function ProblemCard({ problem, solvedResult, from }: Props) {
   const diff = difficultyConfig[problem.difficulty]
   const type = typeConfig[problem.type]
   const isSolved = !!solvedResult
   const isCorrect = solvedResult?.correct
 
+  const href = from
+    ? `/problems/${problem.id}?from=${encodeURIComponent(from)}`
+    : `/problems/${problem.id}`
+
   return (
-    <Link href={`/problems/${problem.id}`}>
+    <Link href={href}>
       <div
         className={`
           group relative bg-gray-900 border rounded-xl p-5 transition-all duration-200

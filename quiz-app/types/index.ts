@@ -16,6 +16,9 @@ export type Category =
   | 'infra-basics'
   | 'code-training'
   | 'css'
+  | 'testing'
+  | 'performance'
+  | 'realtime'
 export type ProblemType = 'multiple-choice' | 'code-output' | 'bug-find' | 'code-complete' | 'code-fix' | 'self-check' | 'css-visual'
 
 export interface Problem {

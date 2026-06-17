@@ -14,6 +14,9 @@ import { authAdvancedProblems } from './auth-advanced'
 import { infraBasicsProblems } from './infra-basics'
 import { codeTrainingProblems } from './code-training'
 import { cssProblems } from './css'
+import { testingProblems } from './testing'
+import { performanceProblems } from './performance'
+import { realtimeProblems } from './realtime'
 import type { Problem, Category } from '@/types'
 
 export const allProblems: Problem[] = [
@@ -33,6 +36,9 @@ export const allProblems: Problem[] = [
   ...infraBasicsProblems,
   ...codeTrainingProblems,
   ...cssProblems,
+  ...testingProblems,
+  ...performanceProblems,
+  ...realtimeProblems,
 ]
 
 export const problemsByCategory: Record<Category, Problem[]> = {
@@ -52,6 +58,9 @@ export const problemsByCategory: Record<Category, Problem[]> = {
   'infra-basics': infraBasicsProblems,
   'code-training': codeTrainingProblems,
   css: cssProblems,
+  testing: testingProblems,
+  performance: performanceProblems,
+  realtime: realtimeProblems,
 }
 
 export const categoryMeta: Record<
@@ -154,6 +163,24 @@ export const categoryMeta: Record<
     color: 'bg-pink-500 text-white',
     emoji: '🎨',
   },
+  testing: {
+    label: '테스팅',
+    description: 'Vitest, React Testing Library, MSW, Playwright — 실무 테스트 전략',
+    color: 'bg-lime-600 text-white',
+    emoji: '🧪',
+  },
+  performance: {
+    label: '성능 최적화',
+    description: 'Core Web Vitals(LCP/INP/CLS), 번들 최적화, 렌더링 성능, 리소스 최적화',
+    color: 'bg-amber-500 text-white',
+    emoji: '⚡',
+  },
+  realtime: {
+    label: '실시간 통신',
+    description: 'WebSocket, SSE, Socket.io, NestJS Gateway — 실시간 기능 구현',
+    color: 'bg-sky-500 text-white',
+    emoji: '🔌',
+  },
 }
 
 export function getProblemById(id: string): Problem | undefined {
@@ -181,4 +208,7 @@ export {
   infraBasicsProblems,
   codeTrainingProblems,
   cssProblems,
+  testingProblems,
+  performanceProblems,
+  realtimeProblems,
 }

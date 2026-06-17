@@ -301,4 +301,52 @@ console.log(twoSumB([2, 7, 11, 15], 9))`,
       'Two Sum Map 패턴 — 단계별 추적:\n```typescript\n// nums=[2,7,11,15], target=9\n// i=0: need=9-2=7  seen={} → has(7)?No → seen={2:0}\n// i=1: need=9-7=2  seen={2:0} → has(2)?Yes! → [seen.get(2)!,1]=[0,1] ✅\n```\n\nMap을 활용한 O(n) 알고리즘 패턴 모음:\n```typescript\n// 1. 중복 감지\nfunction hasDuplicate(arr: number[]): boolean {\n  return new Set(arr).size !== arr.length\n}\n\n// 2. 두 배열 교집합 O(n+m)\nfunction intersection(a: number[], b: number[]): number[] {\n  const s = new Set(a)\n  return b.filter(x => s.has(x))\n}\n\n// 3. 그룹핑 O(n)\nfunction groupBy<T>(arr: T[], key: keyof T) {\n  return arr.reduce((map, item) => {\n    const k = item[key] as unknown as string\n    map.set(k, [...(map.get(k) ?? []), item])\n    return map\n  }, new Map<string, T[]>())\n}\n\n// 4. 슬라이딩 윈도우 + Map (고유 문자 k개인 최장 부분열)\nfunction longestKUnique(s: string, k: number): number {\n  const freq = new Map<string, number>()\n  let left = 0, max = 0\n  for (let r = 0; r < s.length; r++) {\n    freq.set(s[r], (freq.get(s[r]) ?? 0) + 1)\n    while (freq.size > k) {\n      freq.set(s[left], freq.get(s[left])! - 1)\n      if (freq.get(s[left]) === 0) freq.delete(s[left])\n      left++\n    }\n    max = Math.max(max, r - left + 1)\n  }\n  return max\n}\n```',
     relatedProblems: ['cs-q-008', 'cs-q-009'],
   },
+
+  // ─── 웹 접근성 ───────────────────────────────────────────────────────────────
+
+  {
+    id: 'cs-q-011',
+    category: 'cs-basics',
+    subcategory: 'accessibility',
+    type: 'multiple-choice',
+    difficulty: 'easy',
+    title: 'ARIA role — 스크린 리더에게 의미 전달',
+    description:
+      '다음 코드에서 `role="button"` 속성을 `<div>`에 추가하는 이유는?\n\n```html\n<div role="button" tabIndex={0} onClick={handleClick}>\n  제출\n</div>```',
+    options: [
+      'CSS 스타일을 버튼처럼 보이게 하기 위해',
+      '스크린 리더(보조 기술)가 이 요소를 버튼으로 인식하여 "제출, 버튼"이라고 읽을 수 있도록 의미론적 역할을 부여하기 위해',
+      'onClick 이벤트를 div에서 동작하게 하기 위해',
+      'SEO를 위해 검색 엔진에게 버튼임을 알리기 위해',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'ARIA(Accessible Rich Internet Applications) role 속성은 보조 기술(스크린 리더 등)에게 요소의 역할을 전달합니다. `<div>`는 시맨틱 의미가 없어 스크린 리더가 "제출"이라는 텍스트만 읽습니다. `role="button"`을 추가하면 "제출, 버튼"으로 읽어 키보드/음성 사용자가 맥락을 이해할 수 있습니다. 단, 가능하면 native `<button>` 태그를 쓰는 것이 최선입니다.',
+    hints: ['ARIA = 보조 기술에게 의미 전달', '최선책: native HTML 태그 사용'],
+    deepDive:
+      '주요 ARIA role 목록:\n```html\n<!-- 랜드마크 role (페이지 구조) -->\n<div role="banner">헤더</div>      <!-- = <header> -->\n<div role="navigation">내비게이션</div> <!-- = <nav> -->\n<div role="main">본문</div>        <!-- = <main> -->\n<div role="contentinfo">푸터</div>  <!-- = <footer> -->\n<div role="complementary">사이드바</div> <!-- = <aside> -->\n\n<!-- 위젯 role (인터랙션) -->\n<div role="button">버튼</div>      <!-- = <button> -->\n<div role="checkbox">체크박스</div> <!-- = <input type="checkbox"> -->\n<div role="dialog">모달</div>\n<div role="alert">에러 메시지</div>  <!-- 자동으로 읽힘 -->\n<div role="tablist">\n  <div role="tab">탭1</div>\n</div>\n<div role="tooltip">툴팁 내용</div>\n```\n\nARIA 3원칙:\n1. **No ARIA is better than bad ARIA** — 틀린 role이 없는 것보다 나쁨\n2. Native HTML 우선 — `<button>`, `<input>`, `<nav>` 등 시맨틱 태그 먼저\n3. 키보드 접근성 함께 구현 — role만으로 키보드 동작 안 됨, tabIndex/onKeyDown 필요\n\naria-* 속성과 함께:\n```html\n<!-- 상태 전달 -->\n<div role="button" aria-pressed="true">토글 버튼</div>\n<div role="checkbox" aria-checked="true">동의</div>\n<div role="dialog" aria-labelledby="modal-title" aria-modal="true">\n  <h2 id="modal-title">확인</h2>\n</div>\n\n<!-- 라벨 연결 -->\n<button aria-label="검색">🔍</button>  <!-- 아이콘만 있는 버튼 -->\n<input aria-describedby="hint-text" />\n<p id="hint-text">8자 이상 입력하세요</p>\n```\n\nReact에서:\n```tsx\n// aria-* 속성은 그대로 사용 (camelCase 변환 없음)\n<div role="button" aria-label="닫기" aria-expanded={isOpen} />\n```',
+    relatedProblems: ['cs-q-012'],
+  },
+  {
+    id: 'cs-q-012',
+    category: 'cs-basics',
+    subcategory: 'accessibility',
+    type: 'multiple-choice',
+    difficulty: 'easy',
+    title: 'tabIndex — 키보드 포커스 순서 제어',
+    description: '다음 tabIndex 값의 동작 차이로 올바른 것은?',
+    options: [
+      'tabIndex="0", tabIndex="-1", tabIndex="3"은 모두 동일하게 동작한다',
+      'tabIndex="0"은 Tab 순서에 포함(DOM 순서), tabIndex="-1"은 Tab으로는 못 가지만 JS로 focus() 가능, tabIndex="3"은 숫자 순서 우선 포커스된다',
+      'tabIndex="-1"은 요소를 완전히 숨기고 접근 불가로 만든다',
+      'tabIndex="0"은 키보드 포커스를 비활성화한다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      'tabIndex="0": 일반 Tab 순서에 포함됩니다(DOM 순서대로). 클릭 가능하지 않은 div/span 등을 키보드 접근 가능하게 만들 때 사용. tabIndex="-1": Tab으로는 접근 불가하지만 `element.focus()`로 프로그래밍 방식으로 포커스 이동 가능 (모달 열릴 때 첫 버튼에 자동 포커스 등). tabIndex="양수": 해당 숫자 순서대로 먼저 포커스되지만, 유지보수 어렵고 안티패턴으로 간주됩니다.',
+    hints: ['0 = Tab 순서 포함', '-1 = JS 전용', '양수 = 안티패턴'],
+    deepDive:
+      '실전 패턴:\n\n```tsx\n// 1. 커스텀 버튼: div를 Tab+Enter 접근 가능하게\nfunction CustomButton({ onClick, children }: Props) {\n  return (\n    <div\n      role="button"\n      tabIndex={0}\n      onClick={onClick}\n      onKeyDown={(e) => {\n        if (e.key === "Enter" || e.key === " ") {\n          e.preventDefault()\n          onClick()\n        }\n      }}\n    >\n      {children}\n    </div>\n  )\n}\n\n// 2. 모달 열릴 때 첫 요소에 자동 포커스 (tabIndex="-1" 활용)\nfunction Modal({ isOpen }: { isOpen: boolean }) {\n  const firstButtonRef = useRef<HTMLButtonElement>(null)\n\n  useEffect(() => {\n    if (isOpen) {\n      firstButtonRef.current?.focus()  // tabIndex 없어도 focus() 가능\n    }\n  }, [isOpen])\n\n  return (\n    <div role="dialog" aria-modal="true">\n      <button ref={firstButtonRef}>확인</button>\n    </div>\n  )\n}\n\n// 3. Focus Trap (모달 내부에서만 Tab 순환)\n// tabIndex="-1"로 모달 컨테이너를 focus 가능하게 만들고\n// Tab/Shift+Tab 키 이벤트를 가로채 내부에서만 순환\n```\n\n포커스 가시성:\n```css\n/* 포커스 인디케이터 절대 제거 금지 */\n/* ❌ */ :focus { outline: none; }\n\n/* ✅ 커스텀 스타일로 대체 */\n:focus-visible {\n  outline: 2px solid #0066cc;\n  outline-offset: 2px;\n}\n```\n\n키보드 접근성 체크리스트:\n• 모든 인터랙티브 요소: Tab으로 접근 가능?\n• 모달: 열릴 때 포커스 이동, 닫힐 때 원래 위치로 복귀?\n• 포커스 표시(outline): 제거하지 않았는가?\n• Enter/Space: 버튼 역할 요소에서 동작하는가?',
+    relatedProblems: ['cs-q-011'],
+  },
 ]

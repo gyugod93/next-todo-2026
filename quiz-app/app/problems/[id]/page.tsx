@@ -14,6 +14,7 @@ import CodeFix from '@/components/problems/CodeFix'
 import SelfCheck from '@/components/problems/SelfCheck'
 import CssVisual from '@/components/problems/CssVisual'
 import UserSetup from '@/components/UserSetup'
+import BackButton from '@/components/BackButton'
 import type { SolvedResult } from '@/types'
 
 const difficultyLabel = {
@@ -107,8 +108,10 @@ export default function ProblemPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-      {/* 브레드크럼 */}
+      {/* 뒤로가기 + 브레드크럼 */}
       <div className="flex items-center gap-2 text-sm text-gray-500">
+        <BackButton />
+        <span className="text-gray-700">|</span>
         <Link href="/" className="hover:text-gray-300 transition-colors">
           홈
         </Link>
@@ -120,7 +123,7 @@ export default function ProblemPage() {
           {meta.label}
         </Link>
         <span>/</span>
-        <span className="text-gray-400">{problem.title}</span>
+        <span className="text-gray-400 truncate">{problem.title}</span>
       </div>
 
       {/* 다시 풀기 배너 */}

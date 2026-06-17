@@ -553,4 +553,27 @@ const assertion = await navigator.credentials.get({
       '```typescript\n// ✅ 서버에서만 사용 가능\nconst dbUrl = process.env.DATABASE_URL  // 서버 컴포넌트/API 라우트에서만\nconst jwtSecret = process.env.JWT_SECRET\n\n// ✅ 클라이언트에서 사용 가능 (민감하지 않은 값만)\nconst apiUrl = process.env.NEXT_PUBLIC_API_URL\n\n// ❌ 절대 금지 — 민감 정보에 NEXT_PUBLIC_ 사용\n// NEXT_PUBLIC_JWT_SECRET=xxx  // 브라우저에 노출!\n// NEXT_PUBLIC_DB_PASSWORD=xxx\n\n// 서버 전용 환경변수 강제 검증 (서버 시작 시)\n// lib/env.ts\nimport { z } from "zod"\nconst envSchema = z.object({\n  DATABASE_URL: z.string().url(),\n  JWT_SECRET: z.string().min(32),\n  OPENAI_API_KEY: z.string().startsWith("sk-"),\n})\nexport const env = envSchema.parse(process.env)\n```\n\n.env 파일 관리:\n• `.env.local`: 로컬 개발용, git 제외 (.gitignore)\n• `.env.example`: 변수 이름만 포함한 예시 파일 (git 포함)\n• 운영 환경변수: Vercel/AWS의 환경변수 관리 서비스 사용\n• 절대 `.env` 파일을 git에 커밋하지 말 것',
     relatedProblems: ['auth-q-036'],
   },
+  {
+    id: 'auth-q-039',
+    category: 'auth-security',
+    subcategory: 'secrets',
+    type: 'multiple-choice',
+    difficulty: 'medium',
+    title: '시크릿 유출 방지 — config 하드코딩 vs .env vs Secret Manager',
+    description:
+      '소스 코드 config 파일에 API 키·DB 비밀번호를 하드코딩했다가 .env로 옮기고, 최종적으로 Secret Manager(KMS 기반)로 전환해야 하는 이유를 단계별로 올바르게 설명한 것은?',
+    options: [
+      'config 하드코딩도 충분히 안전하다. git은 비공개 저장소라면 외부에 노출되지 않는다',
+      'config 하드코딩 → git 히스토리에 비밀 키 영구 기록(삭제해도 git log에 남음). .env → git 제외로 개선되지만 서버 파일시스템에 평문 존재, 감사 불가. Secret Manager → 암호화 저장·접근 이력 audit·자동 rotation으로 기업 보안 기준 충족',
+      '.env와 Secret Manager는 동일하며 이름만 다르다',
+      'Secret Manager는 스타트업에는 과도하며 .env로 운영 환경도 충분히 안전하다',
+    ],
+    correctAnswer: 1,
+    explanation:
+      '3단계 보안 성숙도입니다. 1단계(config 하드코딩): git push 시 비밀 키가 원격 저장소 히스토리에 영구 기록됩니다. 비공개 저장소도 collaborator·GitHub 직원·토큰 탈취 시 노출됩니다. 2단계(.env 파일): git에서 제외되지만 서버 파일에 평문 저장, 배포 스크립트로 복사되며 누가 언제 봤는지 추적 불가. 3단계(Secret Manager): 암호화 저장, IAM 접근 제어, audit log, 자동 rotation으로 OWASP A02(Cryptographic Failures) 위협 대응. 쿠팡 등 실제 사고 사례에서 config 파일 유출이 대규모 피해로 이어진 선례가 있습니다.',
+    hints: ['git 히스토리는 삭제해도 남는다', 'Secret Manager = 암호화 + 감사 + 자동 교체'],
+    deepDive:
+      '실제 사고 패턴:\n```\n1. 개발자 A: config.ts에 API_KEY="sk-xxx" 하드코딩\n2. git commit & push → GitHub에 영구 기록\n3. 나중에 발견 → git에서 파일 삭제해도 git log에 남음\n4. GitHub secret scanning / 외부 크롤러가 이미 수집\n5. 키 즉시 revoke + 피해 조사 필요\n```\n\ngit 히스토리에서 시크릿 제거 (이미 커밋된 경우):\n```bash\n# BFG Repo-Cleaner 사용 (git filter-branch보다 빠름)\nbfg --replace-text secrets.txt\ngit push --force\n\n# 또는 git filter-repo\ngit filter-repo --path config.ts --invert-paths\n```\n⚠️ 히스토리 재작성 후에도 이미 캐시된 복사본이 있으므로 반드시 키 revoke 필요\n\n보안 성숙도 단계:\n```\n❌ 1단계: config.ts에 하드코딩\n   → git 히스토리에 영구 기록\n   → 코드 리뷰어 모두 노출\n\n⚠️ 2단계: .env 파일 (git 제외)\n   → 서버 파일시스템에 평문\n   → 접근 이력 없음\n   → 개발 환경 OK, 운영은 부족\n\n✅ 3단계: Secret Manager\n   → 암호화 저장 (KMS 키로)\n   → IAM 접근 제어\n   → CloudTrail Audit Log\n   → 자동 Rotation\n   → 운영 환경 필수\n```\n\nGitHub Secret Scanning:\n• GitHub은 공개 repo의 알려진 형식(AWS 키, Stripe 키 등)을 자동 스캔\n• 발견 시 키 발급사에 자동 통보 → 즉시 revoke\n• 비공개 repo도 "Secret scanning alerts" 기능 제공 (GitHub Advanced Security)\n\npre-commit으로 예방:\n```bash\n# .pre-commit-config.yaml\nrepos:\n  - repo: https://github.com/Yelp/detect-secrets\n    hooks:\n      - id: detect-secrets\n        args: [\'--baseline\', \'.secrets.baseline\']\n```',
+    relatedProblems: ['auth-q-038', 'infra-q-011', 'infra-q-012'],
+  },
 ]

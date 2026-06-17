@@ -122,7 +122,7 @@ export default function HomePage() {
               return (
                 <Link
                   key={p!.id}
-                  href={`/problems/${p!.id}`}
+                  href={`/problems/${p!.id}?from=${encodeURIComponent('/')}`}
                   className="bg-gray-900 border border-orange-500/20 hover:border-orange-500/40 rounded-xl px-4 py-3 flex items-center justify-between group transition-all"
                 >
                   <div className="flex items-center gap-3">
