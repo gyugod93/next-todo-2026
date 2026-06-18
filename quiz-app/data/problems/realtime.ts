@@ -11,6 +11,8 @@ export const realtimeProblems: Problem[] = [
     difficulty: 'easy',
     title: 'Polling vs Long Polling vs SSE vs WebSocket 비교',
     description: '실시간 기능 구현 방법 4가지를 상황에 맞게 선택하는 기준으로 올바른 것은?',
+    conceptExplanation:
+      '실시간 통신은 서버의 변경 사항을 클라이언트에 즉시 전달하는 기술입니다. 구현 방식에는 클라이언트가 주기적으로 서버에 요청하는 Polling, 서버가 응답을 보류하다가 데이터가 생기면 응답하는 Long Polling, 서버에서 클라이언트로 단방향 스트리밍하는 SSE, 클라이언트와 서버가 양방향으로 통신하는 WebSocket이 있으며 각각 적합한 사용 사례가 다릅니다.',
     options: [
       'WebSocket이 항상 가장 빠르므로 모든 실시간 기능에 WebSocket을 사용해야 한다',
       'Polling은 단순 주기적 조회, Long Polling은 응답 보류로 지연 감소, SSE는 서버→클라이언트 단방향 스트리밍, WebSocket은 양방향 실시간 통신에 각각 적합하다',
@@ -33,6 +35,8 @@ export const realtimeProblems: Problem[] = [
     difficulty: 'medium',
     title: 'SSE 단방향 특성 — 적합한 사용 사례',
     description: 'SSE(Server-Sent Events)가 WebSocket보다 적합한 사용 사례로 올바른 것은?',
+    conceptExplanation:
+      'SSE(Server-Sent Events)는 서버에서 클라이언트 방향으로만 데이터를 스트리밍하는 HTTP 기반 기술입니다. 브라우저의 EventSource API를 통해 연결하며, 연결이 끊기면 자동으로 재연결을 시도합니다. HTTP/2와 호환되어 방화벽 통과가 용이하고, 실시간 알림이나 AI 응답 스트리밍처럼 서버→클라이언트 단방향 흐름에 최적화되어 있습니다.',
     options: [
       '멀티플레이어 실시간 게임 — 플레이어 위치를 양방향으로 동기화',
       '실시간 알림, AI 응답 스트리밍, 실시간 대시보드처럼 서버→클라이언트 단방향 데이터 흐름인 경우',
@@ -55,6 +59,8 @@ export const realtimeProblems: Problem[] = [
     difficulty: 'medium',
     title: 'WebSocket 핸드셰이크 과정',
     description: 'WebSocket 연결 수립 과정(핸드셰이크)에 대한 설명으로 올바른 것은?',
+    conceptExplanation:
+      'WebSocket은 브라우저와 서버 사이에 지속적인 연결을 유지하며 실시간으로 데이터를 양방향으로 주고받는 프로토콜입니다. 최초 연결은 HTTP 프로토콜로 시작되어 101 Switching Protocols 응답을 통해 WebSocket 프로토콜로 업그레이드되며, 이후 연결이 유지되는 동안 낮은 오버헤드로 메시지를 자유롭게 교환할 수 있습니다.',
     options: [
       'WebSocket은 UDP 기반이므로 TCP 핸드셰이크 없이 즉시 연결된다',
       'HTTP Upgrade 요청으로 시작하여 서버가 101 Switching Protocols로 응답하면 WebSocket 프로토콜로 업그레이드된다',
@@ -80,6 +86,8 @@ export const realtimeProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Next.js App Router — SSE Route Handler 구현',
     description: 'Next.js App Router에서 SSE(Server-Sent Events)를 올바르게 구현하는 방법은?',
+    conceptExplanation:
+      'Next.js App Router의 Route Handler는 Web 표준 Request/Response API를 기반으로 동작합니다. SSE를 구현할 때는 ReadableStream을 반환하고 Content-Type을 text/event-stream으로 설정하며, "data: ...\\n\\n" 형식으로 각 이벤트를 인코딩하여 스트리밍합니다. Pages Router의 res.write() 방식과 달리 Web Streams API를 사용하는 것이 특징입니다.',
     options: [
       'SSE는 Next.js Pages Router에서만 지원하므로 App Router에서는 별도 라이브러리가 필요하다',
       'Route Handler에서 ReadableStream과 text/event-stream Content-Type을 사용해 SSE를 구현하고, Cache-Control: no-cache로 캐싱을 비활성화한다',
@@ -102,6 +110,8 @@ export const realtimeProblems: Problem[] = [
     difficulty: 'medium',
     title: 'EventSource API — 재연결 처리',
     description: 'EventSource API를 사용할 때 연결이 끊어진 경우 재연결 처리에 대한 설명으로 올바른 것은?',
+    conceptExplanation:
+      'EventSource는 브라우저에서 SSE 서버에 연결하는 내장 API입니다. new EventSource(url)로 연결하면 서버가 text/event-stream 형식으로 전송하는 메시지를 onmessage 핸들러로 수신합니다. 연결이 끊기면 브라우저가 자동으로 재연결을 시도하며, 서버가 이벤트에 id를 설정하면 재연결 시 Last-Event-ID 헤더로 마지막으로 받은 이벤트 위치를 알려줍니다.',
     options: [
       'EventSource는 자동 재연결 기능이 없으므로 직접 setTimeout으로 재연결 로직을 구현해야 한다',
       'EventSource는 연결이 끊기면 자동으로 재연결을 시도하며, 서버가 이벤트 id를 전송하면 Last-Event-ID 헤더로 이어받을 위치를 알 수 있다',
@@ -124,6 +134,8 @@ export const realtimeProblems: Problem[] = [
     difficulty: 'hard',
     title: 'React + SSE — 상태 동기화 패턴',
     description: 'React 컴포넌트에서 SSE 스트림을 구독하고 상태를 동기화하는 올바른 패턴은?',
+    conceptExplanation:
+      'React 컴포넌트에서 외부 데이터 소스(SSE·WebSocket·타이머 등)를 구독할 때는 useEffect 내에서 연결을 생성하고, 반드시 cleanup 함수에서 연결을 해제해야 합니다. 이를 지키지 않으면 컴포넌트가 언마운트된 후에도 연결이 유지되어 메모리 누수가 발생합니다. 커스텀 훅으로 분리하면 여러 컴포넌트에서 재사용할 수 있습니다.',
     options: [
       'SSE는 컴포넌트 외부에 전역 변수로 선언해야 리렌더링 시 재연결되지 않는다',
       'useEffect에서 EventSource를 생성하고, cleanup 함수에서 .close()를 호출하며, AbortController로 요청을 취소한다',
@@ -149,6 +161,8 @@ export const realtimeProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Socket.io rooms & namespaces — 채팅 구조',
     description: 'Socket.io에서 rooms와 namespaces의 차이와 실전 채팅 앱에서의 활용으로 올바른 것은?',
+    conceptExplanation:
+      'Socket.io는 WebSocket을 기반으로 한 실시간 통신 라이브러리로, 폴링 폴백·자동 재연결·룸 관리 등 편의 기능을 내장합니다. Namespace는 /chat, /admin처럼 서로 완전히 격리된 별도의 통신 채널이고, Room은 같은 Namespace 안에서 소켓을 논리적으로 그룹화하여 특정 그룹에만 메시지를 보낼 수 있게 해주는 단위입니다.',
     options: [
       'rooms와 namespaces는 동일한 개념이며 혼용해서 사용한다',
       'namespace는 별도 WebSocket 엔드포인트로 완전히 분리된 통신 채널이고, room은 같은 namespace 내에서 소켓을 그룹핑하는 논리적 단위다',
@@ -171,6 +185,8 @@ export const realtimeProblems: Problem[] = [
     difficulty: 'hard',
     title: 'NestJS @WebSocketGateway + @SubscribeMessage',
     description: 'NestJS에서 WebSocket Gateway를 올바르게 구현하는 방법은?',
+    conceptExplanation:
+      'NestJS Gateway는 WebSocket 서버를 NestJS의 모듈 시스템과 통합하는 클래스입니다. @WebSocketGateway() 데코레이터로 WebSocket 서버를 선언하고, @SubscribeMessage()로 특정 이벤트를 처리하는 메서드를 등록하며, @WebSocketServer()로 서버 인스턴스에 직접 접근할 수 있습니다. NestJS의 DI·Guard·Pipe 등 기존 기능과 함께 사용할 수 있습니다.',
     options: [
       '@WebSocketGateway는 @Controller와 동일하게 동작하며 HTTP 요청도 처리한다',
       '@WebSocketGateway로 게이트웨이를 선언하고, @SubscribeMessage로 특정 이벤트를 구독하며, @WebSocketServer()로 서버 인스턴스에 접근한다',
@@ -193,6 +209,8 @@ export const realtimeProblems: Problem[] = [
     difficulty: 'hard',
     title: 'WebSocket 인증 — JWT를 핸드셰이크에서 검증',
     description: 'NestJS Socket.io에서 WebSocket 연결 시 JWT 인증을 처리하는 올바른 방법은?',
+    conceptExplanation:
+      'WebSocket 연결은 초기 HTTP 핸드셰이크 이후 프로토콜이 전환되므로, HTTP 요청처럼 매 요청마다 Authorization 헤더를 보낼 수 없습니다. Socket.io는 핸드셰이크 단계에서 handshake.auth, handshake.headers, handshake.query를 통해 인증 정보를 전달받을 수 있으며, 연결 초기에 JWT를 검증하여 인증되지 않은 연결을 즉시 차단하는 것이 보안상 중요합니다.',
     options: [
       'WebSocket은 HTTP 헤더를 지원하지 않으므로 인증이 불가능하다',
       'handshake.auth 또는 handshake.headers에 JWT를 전달하고, handleConnection 또는 WsGuard에서 검증하여 비인증 연결을 즉시 차단한다',
@@ -218,6 +236,8 @@ export const realtimeProblems: Problem[] = [
     difficulty: 'hard',
     title: 'Exponential Backoff 재연결 전략',
     description: '실시간 연결이 끊어졌을 때 재연결 전략으로 가장 올바른 것은?',
+    conceptExplanation:
+      'Exponential Backoff(지수 백오프)는 요청 실패 시 재시도 간격을 1초, 2초, 4초, 8초처럼 지수적으로 늘려가는 전략입니다. 서버 장애 시 많은 클라이언트가 동시에 재연결을 시도하면 서버가 추가로 과부하(Thundering Herd 문제)를 받을 수 있는데, 재시도 간격에 Jitter(랜덤 지연)를 더하면 클라이언트들의 재시도 타이밍이 분산되어 이를 완화합니다.',
     options: [
       '연결이 끊기면 즉시 무한 반복으로 재연결을 시도한다',
       'Exponential Backoff: 재연결 간격을 1s, 2s, 4s, 8s처럼 지수적으로 늘리고 Jitter(랜덤)를 추가하여 서버 부하를 분산한다',
@@ -240,6 +260,8 @@ export const realtimeProblems: Problem[] = [
     difficulty: 'hard',
     title: 'React Query + SSE 조합 패턴',
     description: 'React Query와 SSE를 함께 사용하여 실시간 데이터를 처리하는 올바른 패턴은?',
+    conceptExplanation:
+      'React Query는 서버 상태의 캐싱·동기화·갱신을 관리하는 라이브러리이고, SSE는 서버 변경 사항을 클라이언트에 즉시 알리는 통신 방식입니다. 두 기술을 조합하면 React Query가 데이터 캐시를 담당하고 SSE가 변경 알림을 담당하는 역할 분리 패턴을 구현할 수 있으며, SSE 이벤트 수신 시 invalidateQueries나 setQueryData로 캐시를 업데이트합니다.',
     options: [
       'React Query는 polling 전용이므로 SSE와 함께 사용할 수 없다',
       'SSE 이벤트를 수신하면 queryClient.invalidateQueries()로 캐시를 무효화하거나 queryClient.setQueryData()로 직접 캐시를 업데이트하여 실시간 반영한다',
@@ -262,6 +284,8 @@ export const realtimeProblems: Problem[] = [
     difficulty: 'hard',
     title: '실시간 알림 시스템 설계 — DB Polling vs Change Stream vs 메시지 큐',
     description: '대규모 실시간 알림 시스템을 설계할 때 각 방식의 적합한 사용 사례는?',
+    conceptExplanation:
+      '실시간 알림 시스템은 서버에서 발생한 이벤트를 연결된 클라이언트에 전달하는 구조입니다. 구현 방법으로는 주기적으로 DB를 조회하는 Polling, MongoDB의 oplog를 구독하는 Change Stream, 서비스 간 메시지를 브로드캐스트하는 Redis Pub/Sub 또는 Kafka 등이 있으며, 각 방식은 규모와 복잡도 면에서 서로 다른 트레이드오프를 가집니다.',
     options: [
       '모든 규모에서 DB Polling이 가장 단순하고 안정적이므로 항상 DB Polling을 사용한다',
       'DB Polling은 소규모·단순 알림, MongoDB Change Stream은 DB 변경 기반 알림, 메시지 큐(Redis/Kafka)는 고가용성·마이크로서비스 환경에 각각 적합하다',

@@ -9,6 +9,8 @@ export const csBasicsProblems: Problem[] = [
     difficulty: 'medium',
     title: '이벤트 루프 실행 순서',
     description: '다음 코드의 출력 순서는?',
+    conceptExplanation:
+      '이벤트 루프는 JavaScript가 싱글 스레드임에도 비동기 작업을 처리할 수 있게 해주는 메커니즘입니다. 콜 스택이 비워지면 마이크로태스크 큐(Promise.then 등)를 먼저 모두 처리하고, 그 다음 매크로태스크 큐(setTimeout 등)에서 하나씩 꺼내 실행합니다.',
     code: `console.log('A')
 
 setTimeout(() => console.log('B'), 0)
@@ -37,6 +39,8 @@ console.log('E')`,
     difficulty: 'hard',
     title: 'async/await와 이벤트 루프',
     description: '다음 코드의 출력 순서는?',
+    conceptExplanation:
+      'async/await는 Promise 기반 비동기 코드를 동기 코드처럼 읽기 쉽게 작성할 수 있는 문법입니다. async 함수 내에서 await를 만나면 해당 Promise가 완료될 때까지 함수 실행을 일시 중단하고 호출자에게 제어권을 반환하며, await 이후의 코드는 마이크로태스크 큐에 등록됩니다.',
     code: `async function foo() {
   console.log('B')
   await Promise.resolve()
@@ -63,6 +67,8 @@ console.log('C')`,
     difficulty: 'medium',
     title: 'Reflow vs Repaint',
     description: '다음 CSS 속성 변경 중 Reflow(Layout)가 발생하는 것은?',
+    conceptExplanation:
+      '브라우저가 화면을 업데이트할 때 Reflow(Layout)는 요소의 크기나 위치가 바뀌어 주변 요소까지 재계산해야 하는 가장 비용이 큰 단계이고, Repaint는 색상·배경 등 시각적 속성만 변경되어 레이아웃 재계산 없이 픽셀만 다시 그리는 단계입니다. transform·opacity 변경은 GPU가 처리하는 Composite 단계만 발생하여 성능이 가장 우수합니다.',
     options: [
       'opacity: 0.5 → opacity: 1',
       'transform: translateX(10px)',
@@ -85,6 +91,8 @@ console.log('C')`,
     difficulty: 'hard',
     title: 'Critical Rendering Path 순서',
     description: '브라우저의 Critical Rendering Path 순서로 올바른 것은?',
+    conceptExplanation:
+      'Critical Rendering Path(CRP)는 브라우저가 HTML·CSS·JavaScript를 받아 화면에 픽셀을 그리기까지의 일련의 단계를 말합니다. HTML을 파싱해 DOM을 만들고 CSS를 파싱해 CSSOM을 만든 뒤, 두 트리를 결합한 Render Tree를 기반으로 레이아웃 계산과 페인팅을 수행합니다. CRP를 최적화하면 첫 화면 렌더링 속도를 개선할 수 있습니다.',
     options: [
       'HTML 파싱 → CSS 파싱 → Render Tree → Layout → Paint → Composite',
       'CSS 파싱 → HTML 파싱 → Render Tree → Paint → Layout → Composite',
@@ -107,6 +115,8 @@ console.log('C')`,
     difficulty: 'medium',
     title: '메모리 누수 찾기',
     description: '다음 React 컴포넌트에서 메모리 누수가 발생하는 이유는?',
+    conceptExplanation:
+      '메모리 누수(Memory Leak)는 프로그램이 더 이상 사용하지 않는 메모리를 해제하지 못해 메모리 사용량이 계속 증가하는 현상입니다. React에서는 컴포넌트가 언마운트된 후에도 타이머·이벤트 리스너·비동기 작업 등이 계속 실행되거나 참조가 남아 있을 때 메모리 누수가 발생합니다.',
     code: `function DataPoller({ userId }: { userId: string }) {
   const [data, setData] = useState(null)
 
@@ -142,6 +152,8 @@ console.log('C')`,
     difficulty: 'medium',
     title: 'Debounce vs Throttle 선택',
     description: '다음 시나리오에서 debounce와 throttle 중 적합한 것은?\n\n시나리오: 사용자가 검색창에 타이핑할 때마다 API를 호출하는 자동완성 기능',
+    conceptExplanation:
+      'Debounce와 Throttle은 이벤트 핸들러가 과도하게 실행되는 것을 제어하는 기법입니다. Debounce는 연속 이벤트가 발생한 뒤 마지막 이벤트로부터 일정 시간이 지난 후 딱 한 번 실행하는 방식이고, Throttle은 이벤트가 아무리 많이 발생해도 지정한 시간 간격마다 최대 한 번만 실행하는 방식입니다.',
     options: [
       'throttle — 일정 간격마다 API를 호출해야 하므로',
       'debounce — 타이핑이 멈춘 후 N ms 뒤에 API를 한 번만 호출하므로 불필요한 요청을 줄임',
@@ -167,6 +179,8 @@ console.log('C')`,
     difficulty: 'easy',
     title: 'Map vs Object — 언제 Map을 써야 하나',
     description: '다음 중 일반 Object 대신 Map을 사용해야 하는 경우로 가장 적절한 것은?',
+    conceptExplanation:
+      'Map은 키-값 쌍을 저장하는 자료구조로, 일반 Object와 달리 모든 타입(객체·함수·숫자)을 키로 사용할 수 있고, 삽입 순서를 보장하며, .size로 O(1)에 크기를 조회할 수 있습니다. 잦은 추가·삭제가 있거나 키 타입이 문자열이 아닌 경우 Object보다 Map이 적합합니다.',
     options: [
       'JSON으로 직렬화해서 API로 전송할 데이터를 저장할 때',
       '키의 개수를 자주 확인하고, 키가 문자열이 아닐 수 있으며, 삽입 순서를 보장해야 할 때',
@@ -192,6 +206,8 @@ console.log('C')`,
     difficulty: 'medium',
     title: 'Set 출력 결과 — 중복 제거와 집합 연산',
     description: '다음 코드의 출력 결과로 올바른 것은?',
+    conceptExplanation:
+      'Set은 중복 없는 값들의 컬렉션으로, 동일한 값을 여러 번 추가해도 하나만 저장합니다. .has() 메서드는 O(1) 해시 기반 검색을 제공하여 배열의 .includes()보다 대용량 데이터에서 훨씬 빠릅니다. 스프레드 연산자와 조합하면 교집합·합집합·차집합 등 집합 연산을 간결하게 구현할 수 있습니다.',
     code: `const a = new Set([1, 2, 3, 4])
 const b = new Set([3, 4, 5, 6])
 
@@ -227,6 +243,8 @@ console.log([...diff])  // C`,
     difficulty: 'medium',
     title: 'Map 빈도 계산 패턴 — 출력 결과',
     description: '다음 코드의 출력 결과로 올바른 것은?',
+    conceptExplanation:
+      '빈도 계산 패턴은 배열에서 각 요소가 몇 번 등장하는지 Map에 기록하는 알고리즘 기법입니다. Map.get()으로 현재 빈도를 읽고 +1하여 다시 저장하는 방식으로 O(n) 시간 복잡도로 빈도를 집계할 수 있으며, 정렬·중복 감지·최빈값 탐색 등 다양한 문제에 활용됩니다.',
     code: `const words = ['apple', 'banana', 'apple', 'cherry', 'banana', 'apple']
 const freq = new Map<string, number>()
 
@@ -265,6 +283,8 @@ console.log(result)`,
     difficulty: 'hard',
     title: 'Map Two Sum — O(n) vs O(n²) 비교',
     description: '두 구현의 시간복잡도와 출력 결과로 올바른 것은?',
+    conceptExplanation:
+      '시간 복잡도는 입력 크기에 따라 알고리즘 실행 시간이 어떻게 증가하는지 나타내는 척도입니다. O(n²)은 이중 반복문처럼 입력이 늘면 실행 시간이 제곱으로 늘어나는 방식이고, O(n)은 한 번 순회로 해결하는 선형 방식입니다. Map의 O(1) 조회를 활용하면 이중 반복문이 필요한 문제를 단일 순회 O(n)으로 개선할 수 있습니다.',
     code: `function twoSumA(nums: number[], target: number): number[] {
   for (let i = 0; i < nums.length; i++)
     for (let j = i + 1; j < nums.length; j++)
@@ -313,6 +333,8 @@ console.log(twoSumB([2, 7, 11, 15], 9))`,
     title: 'ARIA role — 스크린 리더에게 의미 전달',
     description:
       '다음 코드에서 `role="button"` 속성을 `<div>`에 추가하는 이유는?\n\n```html\n<div role="button" tabIndex={0} onClick={handleClick}>\n  제출\n</div>```',
+    conceptExplanation:
+      'ARIA(Accessible Rich Internet Applications)는 장애가 있는 사용자를 위한 보조 기술(스크린 리더 등)이 웹 콘텐츠를 올바르게 인식할 수 있도록 의미론적 정보를 추가하는 HTML 속성 명세입니다. role 속성은 요소의 역할(버튼·체크박스·다이얼로그 등)을 보조 기술에 전달하며, 시맨틱 HTML 태그로 표현할 수 없는 커스텀 UI 컴포넌트에 주로 사용됩니다.',
     options: [
       'CSS 스타일을 버튼처럼 보이게 하기 위해',
       '스크린 리더(보조 기술)가 이 요소를 버튼으로 인식하여 "제출, 버튼"이라고 읽을 수 있도록 의미론적 역할을 부여하기 위해',
@@ -335,6 +357,8 @@ console.log(twoSumB([2, 7, 11, 15], 9))`,
     difficulty: 'easy',
     title: 'tabIndex — 키보드 포커스 순서 제어',
     description: '다음 tabIndex 값의 동작 차이로 올바른 것은?',
+    conceptExplanation:
+      'tabIndex는 HTML 요소가 키보드의 Tab 키로 포커스를 받을 수 있는지와 그 순서를 제어하는 속성입니다. 기본적으로 <a>, <button>, <input> 등 인터랙티브 요소만 Tab 포커스를 받을 수 있으며, tabIndex를 사용하면 div·span 같은 비인터랙티브 요소도 키보드 접근이 가능하도록 만들 수 있습니다.',
     options: [
       'tabIndex="0", tabIndex="-1", tabIndex="3"은 모두 동일하게 동작한다',
       'tabIndex="0"은 Tab 순서에 포함(DOM 순서), tabIndex="-1"은 Tab으로는 못 가지만 JS로 focus() 가능, tabIndex="3"은 숫자 순서 우선 포커스된다',

@@ -11,6 +11,8 @@ export const backendProblems: Problem[] = [
     difficulty: 'easy',
     title: 'HTTP Method — CRUD 매핑과 idempotency',
     description: '다음 중 "멱등성(Idempotency)"을 가지는 HTTP 메서드가 아닌 것은?',
+    conceptExplanation:
+      '멱등성(Idempotency)이란 동일한 요청을 한 번 보내든 여러 번 보내든 서버의 상태가 동일하게 유지되는 성질입니다. HTTP 메서드마다 멱등성 여부가 다르며, 이는 API 설계와 네트워크 오류 재시도 전략에 영향을 줍니다.',
     options: ['GET', 'PUT', 'DELETE', 'POST'],
     correctAnswer: 3,
     explanation:
@@ -28,6 +30,8 @@ export const backendProblems: Problem[] = [
     difficulty: 'easy',
     title: 'HTTP Status Code — 의미 매핑',
     description: '다음 상황과 HTTP 상태 코드 매핑이 잘못된 것은?',
+    conceptExplanation:
+      'HTTP 상태 코드는 서버가 클라이언트 요청을 어떻게 처리했는지를 세 자리 숫자로 나타냅니다. 1xx는 정보, 2xx는 성공, 3xx는 리다이렉트, 4xx는 클라이언트 오류, 5xx는 서버 오류를 의미합니다. 정확한 상태 코드 사용은 API 설계의 기본입니다.',
     options: [
       '회원가입 성공 → 201 Created',
       '잘못된 요청 형식 (유효성 검사 실패) → 400 Bad Request',
@@ -50,6 +54,8 @@ export const backendProblems: Problem[] = [
     difficulty: 'easy',
     title: 'Path Params vs Query Params vs Request Body',
     description: '다음 중 올바른 API 설계가 아닌 것은?',
+    conceptExplanation:
+      'HTTP 요청에서 데이터를 전달하는 방법은 세 가지입니다. Path Parameter는 URL 경로에 포함되어 특정 리소스를 식별하고, Query Parameter는 URL 뒤에 ?key=value 형태로 붙어 필터링·정렬 등 선택적 조건을 전달하며, Request Body는 POST/PUT 등의 요청 본문에 데이터를 담습니다.',
     options: [
       'GET /users/:id — 특정 사용자 조회',
       'GET /users?page=1&limit=20 — 페이지네이션 목록',
@@ -72,6 +78,8 @@ export const backendProblems: Problem[] = [
     difficulty: 'medium',
     title: 'RESTful URL 설계 원칙',
     description: '다음 중 REST 설계 원칙을 올바르게 따른 URL은?',
+    conceptExplanation:
+      'REST(Representational State Transfer)는 HTTP를 기반으로 자원(Resource)을 표현하고 주고받는 아키텍처 스타일입니다. RESTful URL 설계에서는 URL에 명사(자원)를 표현하고, 행위는 HTTP 메서드(GET/POST/PUT/DELETE)로 나타내는 것이 핵심 원칙입니다.',
     options: [
       'POST /createUser',
       'GET /getUserById?id=123',
@@ -94,6 +102,8 @@ export const backendProblems: Problem[] = [
     difficulty: 'medium',
     title: 'HTTP Headers — Content-Type vs Accept vs Authorization',
     description: 'NestJS API에서 클라이언트가 "JSON 형식으로 응답을 원한다"고 서버에 알리는 헤더는?',
+    conceptExplanation:
+      'HTTP 헤더는 요청과 응답에 부가 정보를 담는 메타데이터입니다. Content-Type은 현재 보내는 데이터의 형식을 명시하고, Accept는 클라이언트가 받고 싶은 응답 형식을 서버에 알리며, Authorization은 인증 정보를 전달합니다.',
     options: [
       'Content-Type: application/json',
       'Accept: application/json',
@@ -119,6 +129,8 @@ export const backendProblems: Problem[] = [
     difficulty: 'easy',
     title: 'NestJS 삼각구조 — Module / Controller / Service',
     description: 'NestJS에서 "비즈니스 로직(DB 쿼리, 계산 등)"은 어디에 작성해야 하는가?',
+    conceptExplanation:
+      'NestJS는 Module, Controller, Service 세 요소를 중심으로 구성됩니다. Module은 관련 기능을 묶는 단위이고, Controller는 HTTP 요청을 받아 응답을 내보내는 역할을 하며, Service는 실제 비즈니스 로직과 데이터 처리를 담당합니다. 이 구조는 단일 책임 원칙(SRP)을 따릅니다.',
     options: [
       'Module — 의존성 등록과 비즈니스 로직을 함께 처리',
       'Controller — 요청을 받고 직접 DB 쿼리 실행',
@@ -141,6 +153,8 @@ export const backendProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Dependency Injection (DI) — 의존성 주입',
     description: 'NestJS에서 @Injectable() 데코레이터가 하는 역할은?',
+    conceptExplanation:
+      '의존성 주입(Dependency Injection)은 객체가 필요한 의존성을 직접 생성하지 않고 외부(IoC 컨테이너)에서 받아 사용하는 패턴입니다. NestJS는 IoC 컨테이너를 내장하고 있어, @Injectable()로 등록된 클래스를 필요한 곳에 자동으로 주입해 줍니다.',
     options: [
       '클래스를 HTTP 라우트 핸들러로 등록한다',
       '클래스를 NestJS IoC Container에 등록하여 다른 곳에서 주입 가능하게 한다',
@@ -163,6 +177,8 @@ export const backendProblems: Problem[] = [
     difficulty: 'hard',
     title: 'NestJS — Guard vs Interceptor vs Pipe vs Filter',
     description: 'NestJS 요청 처리 파이프라인에서 실행 순서로 올바른 것은?',
+    conceptExplanation:
+      'NestJS는 요청을 처리하는 파이프라인에 여러 레이어를 제공합니다. Guard는 요청 허용 여부를 결정하고, Interceptor는 요청/응답 전후에 로직을 삽입하며, Pipe는 입력 데이터의 유효성 검사와 변환을 담당하고, Exception Filter는 발생한 예외를 HTTP 응답으로 변환합니다.',
     options: [
       'Filter → Guard → Interceptor → Pipe → Controller',
       'Guard → Interceptor → Pipe → Controller → Filter(예외 발생 시)',
@@ -185,6 +201,8 @@ export const backendProblems: Problem[] = [
     difficulty: 'medium',
     title: 'DTO vs Entity vs Interface',
     description: 'NestJS + MongoDB(Mongoose) 프로젝트에서 DTO, Entity, Interface의 용도로 올바른 것은?',
+    conceptExplanation:
+      'DTO(Data Transfer Object)는 계층 간 데이터를 전달하는 객체로, API 요청/응답 형태를 정의하고 class-validator로 유효성 검사를 적용합니다. Entity(또는 Mongoose Schema)는 데이터베이스 저장 구조를 정의하는 모델이고, Interface는 TypeScript 타입 계약을 위한 순수 타입 정의입니다.',
     options: [
       'DTO = DB 스키마 정의, Entity = API 응답 형태, Interface = 유효성 검사',
       'DTO = API 요청/응답 데이터 형태 + 유효성 검사, Entity/Schema = DB 구조 정의, Interface = 순수 타입 정의',
@@ -207,6 +225,8 @@ export const backendProblems: Problem[] = [
     difficulty: 'medium',
     title: 'NestJS Decorator 동작 원리',
     description: '다음 NestJS 코드에서 @Get(":id")가 하는 역할은?',
+    conceptExplanation:
+      'Decorator는 TypeScript의 기능으로, 클래스·메서드·속성에 메타데이터를 부착하거나 동작을 변경하는 함수입니다. NestJS는 데코레이터를 광범위하게 활용하여 라우팅(@Get, @Post), 의존성 주입(@Injectable), 파라미터 바인딩(@Param, @Body) 등을 선언적으로 표현합니다.',
     code: `@Controller("users")
 export class UserController {
   @Get(":id")
@@ -236,6 +256,8 @@ export class UserController {
     difficulty: 'hard',
     title: 'NestJS 요청 라이프사이클 순서',
     description: 'NestJS에서 클라이언트 요청이 들어올 때 처리 순서로 올바른 것은?',
+    conceptExplanation:
+      'NestJS의 요청 라이프사이클은 요청이 들어온 후 응답이 나가기까지 여러 레이어를 순서대로 통과하는 흐름입니다. Middleware, Guard, Interceptor, Pipe, Controller, Service 등이 정해진 순서로 실행되며, 각 레이어는 독립적인 책임을 가집니다.',
     options: [
       'Controller → Guard → Pipe → Service → Response',
       'Middleware → Guard → Interceptor → Pipe → Controller → Interceptor → Response',
@@ -258,6 +280,8 @@ export class UserController {
     difficulty: 'hard',
     title: 'NestJS Exception Filter — 어디서 에러를 잡는가',
     description: '다음 코드에서 MongoDB CastError(잘못된 ObjectId)가 500으로 응답되는 이유는?',
+    conceptExplanation:
+      'Exception Filter는 NestJS에서 처리되지 않은 예외를 잡아 클라이언트에게 적절한 HTTP 응답으로 변환하는 레이어입니다. NestJS에 내장된 기본 필터는 HttpException 계열만 처리하며, 그 외 에러는 500으로 응답합니다. 커스텀 필터로 다양한 에러 타입을 처리할 수 있습니다.',
     code: `@Controller("users")
 export class UserController {
   @Get(":id")
@@ -298,6 +322,8 @@ async function bootstrap() {
     difficulty: 'medium',
     title: 'CommonJS vs ESM — require vs import',
     description: '다음 중 Node.js에서 CommonJS와 ESM의 차이로 올바른 것은?',
+    conceptExplanation:
+      'Node.js에는 두 가지 모듈 시스템이 있습니다. CommonJS(CJS)는 require()와 module.exports를 사용하는 전통적인 방식이고, ESM(ES Module)은 import/export 키워드를 사용하는 표준 방식입니다. 두 방식은 로딩 방식과 정적 분석 가능 여부 등에서 차이가 있습니다.',
     code: `// CommonJS
 const express = require("express")
 module.exports = { handler }
@@ -327,6 +353,8 @@ export { handler }`,
     difficulty: 'medium',
     title: 'Middleware 체인 — next() 호출',
     description: '다음 Express/NestJS Middleware에서 next()를 호출하지 않으면 어떤 일이 발생하는가?',
+    conceptExplanation:
+      'Middleware는 요청과 응답 사이에서 실행되는 함수로, 요청 처리 파이프라인에 공통 기능(로깅, 인증 등)을 삽입합니다. Express와 NestJS에서 미들웨어는 체인 구조로 연결되며, next() 함수를 호출해야 다음 미들웨어나 라우트 핸들러로 제어권이 넘어갑니다.',
     code: `function loggerMiddleware(req, res, next) {
   console.log(\`[\${req.method}] \${req.path}\`)
   // next() 호출 없음
@@ -356,6 +384,8 @@ app.get("/users", (req, res) => res.json({ users: [] }))`,
     difficulty: 'hard',
     title: 'Stream vs Buffer — 대용량 파일 처리',
     description: '10GB 파일을 클라이언트에게 전송할 때 Buffer 방식 대신 Stream을 사용해야 하는 이유는?',
+    conceptExplanation:
+      'Buffer는 데이터 전체를 메모리에 올려두는 방식이고, Stream은 데이터를 청크(chunk) 단위로 나눠 순차적으로 처리하는 방식입니다. Node.js의 Stream은 Readable, Writable, Duplex, Transform 네 종류가 있으며, 대용량 데이터를 메모리 효율적으로 다루는 데 핵심적인 개념입니다.',
     options: [
       'Stream이 코드가 더 짧기 때문이다',
       'Buffer는 전체 파일을 메모리에 올린 후 전송하여 메모리 부족이 발생하지만, Stream은 청크 단위로 읽으면서 바로 전송하여 메모리를 적게 사용한다',

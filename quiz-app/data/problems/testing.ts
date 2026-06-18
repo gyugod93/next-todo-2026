@@ -11,6 +11,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'easy',
     title: '테스트 피라미드 — 올바른 비율',
     description: '실무에서 권장하는 테스트 피라미드의 비율과 이유로 가장 올바른 것은?',
+    conceptExplanation:
+      '테스트 피라미드는 소프트웨어 테스트를 단위(Unit), 통합(Integration), E2E(End-to-End) 세 레이어로 구분하고 각 레이어의 적절한 비율을 나타내는 개념 모델입니다. 피라미드 아래로 갈수록 테스트 수가 많고 실행이 빠르며 비용이 낮습니다. 위로 갈수록 현실적인 환경에 가깝지만 느리고 유지보수 비용이 높습니다.',
     options: [
       'E2E 테스트를 가장 많이 작성해야 신뢰성이 높아진다',
       '단위 테스트(Unit) > 통합 테스트(Integration) > E2E 순으로 작성하고, 위로 갈수록 수가 적어진다',
@@ -33,6 +35,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Mock vs Stub vs Spy — 차이점',
     description: '다음 중 Mock, Stub, Spy의 차이를 올바르게 설명한 것은?',
+    conceptExplanation:
+      'Mock, Stub, Spy는 테스트에서 실제 의존성 대신 사용하는 테스트 대역(Test Double)의 세 가지 유형입니다. Stub은 미리 정해진 반환값을 제공하는 가짜 구현이고, Spy는 실제 구현을 유지하면서 호출 정보를 기록합니다. Mock은 호출 기대값을 사전에 설정하고 검증까지 포함하는 개념입니다.',
     options: [
       'Mock은 반환값을 지정하고, Stub은 호출 여부를 검증하고, Spy는 전체를 교체한다',
       'Stub은 사전 정의된 반환값만 제공하고, Spy는 실제 구현을 유지하며 호출 추적, Mock은 호출 기대값까지 검증한다',
@@ -55,6 +59,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'medium',
     title: '커버리지의 함정 — 100% 커버리지의 의미',
     description: '코드 커버리지 100%를 달성한 테스트에 대한 설명으로 가장 올바른 것은?',
+    conceptExplanation:
+      '코드 커버리지(Code Coverage)는 테스트 실행 시 전체 코드 중 실제로 실행된 코드의 비율을 나타내는 지표입니다. 라인, 구문, 분기, 함수 커버리지 등 여러 측정 방식이 있습니다. 커버리지는 테스트가 코드를 "실행했는지"는 알 수 있지만, "올바르게 검증했는지"는 보장하지 않습니다.',
     options: [
       '100% 커버리지는 버그가 없음을 보장한다',
       '커버리지 100%는 모든 코드가 실행되었음을 의미하지만, 올바르게 동작함을 보장하지는 않는다',
@@ -80,6 +86,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'easy',
     title: 'RTL 쿼리 우선순위 — getByRole이 왜 최우선인가',
     description: 'React Testing Library에서 요소를 찾는 쿼리의 권장 우선순위로 올바른 것은?',
+    conceptExplanation:
+      'React Testing Library(RTL)는 사용자가 실제로 애플리케이션과 상호작용하는 방식에 가깝게 테스트를 작성하도록 설계된 라이브러리입니다. 구현 세부사항이 아닌 사용자 관점으로 요소를 찾고 검증하는 것이 핵심 철학입니다. 접근성(Accessibility) 속성을 기반으로 요소를 선택하면 테스트와 접근성 개선을 동시에 달성할 수 있습니다.',
     options: [
       'getByTestId > getByRole > getByText > getByPlaceholderText',
       'getByRole > getByLabelText > getByPlaceholderText > getByText > getByTestId',
@@ -102,6 +110,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'medium',
     title: 'userEvent vs fireEvent — 차이와 선택 기준',
     description: 'React Testing Library에서 userEvent와 fireEvent의 차이로 올바른 것은?',
+    conceptExplanation:
+      'userEvent와 fireEvent는 RTL에서 사용자 이벤트를 시뮬레이션하는 두 가지 방법입니다. fireEvent는 지정한 이벤트 하나를 직접 발생시키는 저수준 API입니다. userEvent는 실제 브라우저에서 사용자가 행동할 때 발생하는 연쇄 이벤트 시퀀스를 재현하는 고수준 API입니다.',
     options: [
       'userEvent는 구식이고 fireEvent가 최신 권장 API다',
       'fireEvent는 실제 브라우저 이벤트 시퀀스를 시뮬레이션하고, userEvent는 단순한 이벤트 디스패치다',
@@ -124,6 +134,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'medium',
     title: 'waitFor vs findBy — 비동기 처리 선택',
     description: 'RTL에서 비동기 요소를 기다릴 때 waitFor와 findBy의 올바른 사용 방법은?',
+    conceptExplanation:
+      'waitFor와 findBy 계열 쿼리는 RTL에서 비동기적으로 DOM에 나타나는 요소를 기다리기 위한 도구입니다. findByXxx는 내부적으로 waitFor와 getByXxx를 결합한 단축 API입니다. 두 API 모두 지정한 타임아웃(기본 1000ms) 동안 폴링하며 조건이 충족될 때까지 기다립니다.',
     options: [
       'waitFor와 findBy는 동일하므로 아무거나 사용해도 된다',
       'findByText는 내부적으로 waitFor(() => getByText())이므로, 단순히 요소가 나타나길 기다릴 때는 findBy가 더 간결하다',
@@ -146,6 +158,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'hard',
     title: 'renderHook — 커스텀 훅 테스트',
     description: 'React Testing Library의 renderHook을 사용해 커스텀 훅을 테스트하는 방법으로 올바른 것은?',
+    conceptExplanation:
+      'renderHook은 React 커스텀 훅을 독립적으로 테스트하기 위해 RTL이 제공하는 유틸리티입니다. 훅은 React 컴포넌트 안에서만 실행될 수 있으므로, renderHook이 내부적으로 더미 컴포넌트를 생성하여 훅을 실행합니다. result.current를 통해 훅의 반환값에 접근하고 act()로 상태 변경을 래핑합니다.',
     options: [
       'renderHook은 클래스 컴포넌트에서만 사용 가능하다',
       'renderHook으로 훅을 렌더링하고, result.current로 반환값에 접근하며, act()로 상태 변경을 감싼다',
@@ -168,6 +182,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'hard',
     title: '구현 세부사항 테스트 금지 원칙',
     description: '다음 중 "구현 세부사항을 테스트하지 말라(Test Implementation Details)"는 RTL 원칙에 어긋나는 테스트는?',
+    conceptExplanation:
+      '"구현 세부사항을 테스트하지 말라"는 RTL의 핵심 철학으로, 컴포넌트 내부 상태·변수명·메서드 이름 등에 의존하는 테스트를 피하라는 원칙입니다. 구현 세부사항에 의존하면 리팩토링 시 동작이 바뀌지 않아도 테스트가 깨질 수 있습니다. 사용자가 실제로 보고 상호작용하는 것을 기준으로 테스트해야 리팩토링 내성이 생깁니다.',
     options: [
       'screen.getByRole("button", { name: /제출/ })로 버튼을 찾는 테스트',
       'component.state.isLoading === true를 직접 확인하는 테스트',
@@ -193,6 +209,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'medium',
     title: 'MSW Handler 구조 — http.get, http.post',
     description: 'MSW(Mock Service Worker) v2의 handler를 작성하는 올바른 방법은?',
+    conceptExplanation:
+      'MSW(Mock Service Worker)는 Service Worker를 이용해 네트워크 요청을 가로채고 모의 응답을 반환하는 API 목킹 라이브러리입니다. 실제 네트워크 계층에서 동작하므로 fetch, axios 등 어떤 HTTP 클라이언트도 별도 설정 없이 모킹할 수 있습니다. 브라우저와 Node.js 환경 모두에서 동일한 핸들러를 재사용할 수 있습니다.',
     options: [
       'msw.mock("/api/users", { method: "GET", response: usersData })로 작성한다',
       'http.get("/api/users", resolver) 형태로 작성하며, resolver는 HttpResponse를 반환한다',
@@ -215,6 +233,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'medium',
     title: 'MSW onUnhandledRequest 설정',
     description: 'MSW에서 handler가 없는 요청이 들어올 때의 동작을 설정하는 옵션으로, 실무에서 권장하는 설정은?',
+    conceptExplanation:
+      'MSW의 onUnhandledRequest 옵션은 등록된 핸들러가 없는 네트워크 요청이 발생했을 때의 동작을 제어합니다. 테스트에서 예상치 못한 실제 네트워크 요청이 나가면 테스트가 외부 의존성을 갖게 되므로 위험합니다. 이 옵션으로 누락된 모킹을 즉시 감지하거나, 특정 요청만 허용하는 정책을 설정할 수 있습니다.',
     options: [
       'onUnhandledRequest: "bypass" — 핸들러 없는 요청을 실제 서버로 전달 (기본값, 테스트에서 권장)',
       'onUnhandledRequest: "error" — 핸들러 없는 요청 시 에러를 던져 누락된 mock을 즉시 발견',
@@ -237,6 +257,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'hard',
     title: 'MSW로 네트워크 에러 시뮬레이션',
     description: 'MSW를 사용해 실제 네트워크 에러(연결 실패, 타임아웃)를 시뮬레이션하는 올바른 방법은?',
+    conceptExplanation:
+      '네트워크 에러는 HTTP 상태 코드로 표현되는 서버 에러(4xx, 5xx)와 달리, TCP 연결 실패나 타임아웃처럼 서버로부터 응답 자체를 받지 못하는 상황입니다. 이 경우 fetch Promise가 reject됩니다. 견고한 애플리케이션은 네트워크 에러 시나리오도 처리해야 하며, MSW로 이를 안전하게 시뮬레이션할 수 있습니다.',
     options: [
       'HttpResponse.json({ error: true }, { status: 500 })으로 네트워크 에러를 시뮬레이션한다',
       'http.NetworkError를 throw하거나 delay(Infinity)로 타임아웃을 시뮬레이션한다',
@@ -262,6 +284,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Playwright Locator 우선순위',
     description: 'Playwright에서 요소를 찾는 Locator의 권장 우선순위로 올바른 것은?',
+    conceptExplanation:
+      'Playwright Locator는 E2E 테스트에서 DOM 요소를 찾고 상호작용하는 API입니다. 요소가 나타날 때까지 자동으로 기다리는 auto-waiting 기능을 내장하여 flaky 테스트를 줄여줍니다. RTL과 동일하게 접근성 속성 기반의 선택자를 권장하며, CSS 선택자나 XPath보다 변경에 강한 테스트를 작성할 수 있습니다.',
     options: [
       'page.locator(".css-class") > page.getByRole() > page.getByTestId()',
       'page.getByRole() > page.getByLabel() > page.getByText() > page.getByTestId()',
@@ -284,6 +308,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'hard',
     title: 'page.waitForResponse — API 응답 대기 패턴',
     description: 'Playwright에서 특정 API 응답을 기다려야 할 때 올바른 패턴은?',
+    conceptExplanation:
+      '비동기 E2E 테스트에서 Race Condition은 사용자 액션과 이후 기다리는 이벤트 간의 타이밍 문제로 발생합니다. 액션 이후에 waitForResponse를 호출하면 응답이 이미 도달한 경우를 놓칠 수 있습니다. Playwright의 권장 패턴은 액션 시작과 대기를 Promise.all로 동시에 선언하여 순서에 상관없이 안전하게 처리하는 것입니다.',
     options: [
       'page.waitForTimeout(2000)으로 2초를 기다린다',
       'Promise.all로 action과 waitForResponse를 동시에 시작하여 race condition을 방지한다',
@@ -309,6 +335,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Vitest vs Jest — 핵심 차이점',
     description: 'Vitest와 Jest의 차이점으로 올바른 것은?',
+    conceptExplanation:
+      'Vitest는 Vite 기반 프로젝트를 위해 설계된 테스트 프레임워크로, Vite의 변환 파이프라인을 그대로 재사용하여 별도 설정 없이 ESM과 TypeScript를 지원합니다. Jest는 Facebook이 만든 범용 JavaScript 테스트 프레임워크로 오랜 생태계와 넓은 호환성을 가집니다. 두 프레임워크의 API가 매우 유사하여 Jest에서 Vitest로 마이그레이션이 수월합니다.',
     options: [
       'Vitest는 브라우저 테스트 전용이고 Jest는 Node.js 전용이다',
       'Vitest는 ESM 네이티브 지원과 Vite 설정 공유가 장점이며, vi.mock()은 jest.mock()과 동일한 역할을 한다',
@@ -331,6 +359,8 @@ export const testingProblems: Problem[] = [
     difficulty: 'hard',
     title: 'Vitest setupFiles 활용',
     description: 'Vitest의 setupFiles에서 전역 설정을 할 때 올바른 활용 방법은?',
+    conceptExplanation:
+      'Vitest의 setupFiles는 각 테스트 파일이 실행되기 전에 한 번씩 실행되는 전역 설정 파일입니다. 전역 mock 등록, 브라우저 API 폴리필, 라이브러리 초기화(jest-dom, MSW) 등 모든 테스트에 공통으로 필요한 설정을 여기에 작성합니다. globalSetup은 테스트 스위트 전체에서 딱 한 번만 실행되는 것과 구분됩니다.',
     options: [
       'setupFiles는 각 테스트 파일 실행 후에 실행되어 정리(cleanup) 작업에 사용한다',
       'setupFiles는 각 테스트 파일 실행 전에 한 번 실행되며, 전역 mock 등록, 환경 설정, 라이브러리 초기화에 사용한다',

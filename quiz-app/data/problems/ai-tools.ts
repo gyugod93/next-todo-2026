@@ -9,6 +9,8 @@ export const aiToolsProblems: Problem[] = [
     difficulty: 'easy',
     title: 'CLAUDE.md의 역할',
     description: 'Claude Code가 프로젝트를 열 때 자동으로 읽는 CLAUDE.md 파일에 대한 설명으로 올바른 것은?',
+    conceptExplanation:
+      'CLAUDE.md는 Claude Code AI 에이전트에게 프로젝트 맥락과 행동 지침을 제공하는 마크다운 파일입니다. 팀 코딩 컨벤션, 금지 패턴, 아키텍처 결정 등을 기록하면 AI가 세션 전반에 걸쳐 일관된 방식으로 코드를 생성합니다. 전역(~/.claude/)과 프로젝트 단위로 계층적으로 적용됩니다.',
     options: [
       'Claude API 인증 키를 저장하는 파일이다',
       '프로젝트별 AI 지침서로, 팀 컨벤션과 금지 패턴을 기록해 AI가 자동으로 준수하게 한다',
@@ -31,6 +33,8 @@ export const aiToolsProblems: Problem[] = [
     difficulty: 'medium',
     title: 'PreToolUse 훅에서 실행을 차단하려면?',
     description: 'Claude Code의 PreToolUse 훅에서 특정 Bash 명령 실행을 차단하려면 exit code를 어떻게 반환해야 하는가?',
+    conceptExplanation:
+      'Claude Code의 Hooks는 AI가 도구를 실행하기 전·후에 자동으로 실행되는 셸 스크립트입니다. PreToolUse 훅은 도구가 실행되기 직전에 호출되어 허용 여부를 결정할 수 있습니다. exit code를 통해 Claude Code에게 실행 계속(0), 차단(2) 등의 신호를 보냅니다.',
     options: ['exit 0', 'exit 1', 'exit 2', 'exit 3'],
     correctAnswer: 2,
     explanation:
@@ -48,6 +52,8 @@ export const aiToolsProblems: Problem[] = [
     difficulty: 'medium',
     title: 'MCP(Model Context Protocol)란?',
     description: 'MCP에 대한 설명으로 올바른 것은?',
+    conceptExplanation:
+      'MCP(Model Context Protocol)는 AI 모델과 외부 도구·데이터 소스를 표준화된 방식으로 연결하기 위해 Anthropic이 오픈소스로 공개한 프로토콜입니다. USB처럼 AI와 도구 사이의 통신 규격을 통일하여, 한 번 만든 MCP 서버를 여러 AI 클라이언트에서 재사용할 수 있습니다. Tools, Resources, Prompts 세 가지 기능 유형을 제공합니다.',
     options: [
       'Anthropic이 독점 관리하는 Claude 전용 플러그인 시스템이다',
       'AI 모델과 외부 도구(DB, API 등)를 연결하는 오픈 표준 프로토콜로, Claude 외 다른 AI도 사용 가능하다',
@@ -70,6 +76,8 @@ export const aiToolsProblems: Problem[] = [
     difficulty: 'easy',
     title: '슬래시 커맨드 파일 위치',
     description: 'Claude Code에서 /commit, /review-pr 같은 커스텀 슬래시 커맨드를 만들려면 파일을 어디에 저장해야 하는가?',
+    conceptExplanation:
+      '슬래시 커맨드(Slash Command)는 Claude Code에서 /커맨드명 형식으로 호출하는 재사용 가능한 프롬프트 단축키입니다. 반복적인 작업(커밋 메시지 작성, PR 리뷰, 리팩토링 등)을 표준화된 커맨드로 만들어 팀 전체에서 일관된 AI 워크플로우를 사용할 수 있습니다. $ARGUMENTS 플레이스홀더로 호출 시 인자를 전달받을 수 있습니다.',
     options: [
       '~/.claude/settings.json의 commands 배열에 추가',
       '.claude/commands/ 디렉토리에 마크다운 파일로 저장',
@@ -92,6 +100,8 @@ export const aiToolsProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Chain-of-Thought 프롬프팅',
     description: '복잡한 문제에서 AI의 정확도를 높이는 Chain-of-Thought(CoT) 프롬프팅의 핵심 원리는?',
+    conceptExplanation:
+      'Chain-of-Thought(CoT) 프롬프팅은 AI 모델에게 최종 답변만 출력하는 대신 중간 추론 과정을 단계별로 명시적으로 서술하도록 유도하는 프롬프트 기법입니다. 복잡한 논리 추론이나 다단계 문제에서 정확도가 크게 향상됩니다. "단계별로 생각해보세요"처럼 간단한 지시문만 추가해도 효과가 나타납니다.',
     options: [
       '짧고 간결한 프롬프트를 여러 번 반복해서 답을 평균내는 기법',
       'AI에게 중간 추론 과정을 단계별로 명시적으로 서술하게 요청하는 기법',
@@ -116,6 +126,8 @@ export const aiToolsProblems: Problem[] = [
     difficulty: 'easy',
     title: 'AWS Bedrock이란?',
     description: 'AWS Bedrock에 대한 설명으로 올바른 것은?',
+    conceptExplanation:
+      'AWS Bedrock은 Anthropic Claude, Meta Llama, Mistral 등 다양한 파운데이션 모델을 서버 설정 없이 API로 호출할 수 있는 AWS의 완전 관리형 AI 서비스입니다. 모델 인프라를 AWS가 관리하며, IAM·VPC·CloudTrail 등 AWS 보안 체계와 통합되어 엔터프라이즈 환경에 적합합니다. 단일 API로 여러 벤더의 모델을 교체·비교할 수 있는 것이 장점입니다.',
     options: [
       'Anthropic이 AWS 서버에 배포한 Claude 전용 서비스다',
       'AWS가 운영하는 관리형 AI 서비스로, Claude · Llama · Mistral 등 여러 Foundation Model을 단일 API로 호출할 수 있다',
@@ -138,6 +150,8 @@ export const aiToolsProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Bedrock 인증 — IAM vs API Key',
     description: '다음 코드에서 Bedrock 호출 방식으로 올바른 것은?',
+    conceptExplanation:
+      'Bedrock은 AWS 서비스이므로 Anthropic API와 별도의 인증 체계를 사용합니다. Anthropic API는 API Key로 인증하지만, Bedrock은 AWS IAM 자격증명과 AWS Signature v4로 인증합니다. 두 방식은 엔드포인트, 모델 ID 형식, 요청 구조도 다르므로 사용하는 SDK와 설정을 구분해야 합니다.',
     code: `// 방법 A — Anthropic SDK
 import Anthropic from "@anthropic-ai/sdk"
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -174,6 +188,8 @@ const client = new BedrockRuntimeClient({
     difficulty: 'hard',
     title: 'Bedrock 모델 ID와 Cross-Region Inference',
     description: 'Bedrock에서 모델 호출 시 발생하는 ThrottlingException을 줄이기 위한 방법은?',
+    conceptExplanation:
+      'ThrottlingException은 AWS Bedrock의 리전별 모델 처리량(TPM/RPM) 한도를 초과했을 때 발생하는 에러입니다. Cross-Region Inference Profile은 여러 AWS 리전의 처리 용량을 하나의 모델 ID로 자동 분산하여 사용할 수 있는 기능입니다. 고정된 처리량이 필요한 서비스는 Provisioned Throughput을 예약하는 방법도 있습니다.',
     options: [
       'API Key를 여러 개 발급받아 로테이션한다',
       'Cross-Region Inference Profile을 사용해 여러 AWS 리전의 처리 용량을 자동으로 분산한다',
@@ -197,6 +213,8 @@ const client = new BedrockRuntimeClient({
     difficulty: 'hard',
     title: 'AI SDK Tool Use 흐름',
     description: '다음 코드에서 AI가 tool_use를 요청했을 때 올바른 다음 단계는?',
+    conceptExplanation:
+      'Tool Use(도구 사용)는 AI 모델이 외부 함수나 API를 호출하여 실시간 데이터나 계산 결과를 활용할 수 있도록 하는 기능입니다. AI가 응답에 tool_use 블록을 포함하면 애플리케이션이 해당 함수를 실행하고 결과를 tool_result로 돌려줍니다. AI는 이 결과를 받아 최종 자연어 답변을 생성하는 반복 흐름으로 동작합니다.',
     code: `const response = await client.messages.create({
   model: 'claude-sonnet-4-6',
   max_tokens: 1024,

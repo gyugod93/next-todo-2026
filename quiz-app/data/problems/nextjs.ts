@@ -9,6 +9,7 @@ export const nextjsProblems: Problem[] = [
     difficulty: 'easy',
     title: 'Server Component 제약',
     description: 'Next.js App Router에서 Server Component가 할 수 없는 것은?',
+    conceptExplanation: 'Server Component는 Next.js App Router에서 기본 컴포넌트 유형으로, 서버에서만 실행되어 클라이언트로 HTML을 전송합니다. JavaScript 번들에 포함되지 않아 번들 크기를 줄이고, DB에 직접 접근하거나 서버 전용 환경변수를 안전하게 사용할 수 있습니다. 다만 브라우저 API나 React의 클라이언트 상태(useState, useEffect)는 사용할 수 없습니다.',
     options: [
       'DB 직접 쿼리',
       'useState / useEffect 사용',
@@ -73,6 +74,7 @@ Server Component가 기본이어야 하는 이유:
     difficulty: 'medium',
     title: 'ISR vs SSR 선택 기준',
     description: '쇼핑몰 상품 페이지 (데이터가 1시간마다 갱신)에 가장 적합한 방식은?',
+    conceptExplanation: 'ISR(Incremental Static Regeneration)은 정적 생성(SSG)의 장점인 빠른 응답 속도와 SSR의 장점인 데이터 최신성을 결합한 렌더링 방식입니다. 빌드 시 페이지를 정적으로 생성하되, 지정한 시간(revalidate)이 지나면 백그라운드에서 페이지를 재생성합니다. 실시간 갱신이 필요하지 않지만 주기적으로 데이터가 바뀌는 페이지에 적합합니다.',
     options: [
       'CSR — 클라이언트에서 매번 fetch',
       'SSG — 빌드 시 한 번만 생성',
@@ -132,6 +134,7 @@ revalidatePath('/products') // 특정 이벤트에 즉시 재검증`,
     difficulty: 'medium',
     title: '동적 렌더링 트리거',
     description: 'Next.js에서 페이지를 동적 렌더링(Dynamic Rendering)으로 전환하는 것은?',
+    conceptExplanation: '동적 렌더링(Dynamic Rendering)은 빌드 시 미리 생성하는 정적 렌더링과 달리 요청이 들어올 때마다 서버에서 페이지를 새로 렌더링하는 방식입니다. 요청 시점의 정보(쿠키, 헤더, 검색 파라미터)에 접근하거나 캐시를 사용하지 않도록 설정하면 Next.js가 자동으로 동적 렌더링으로 전환합니다.',
     options: [
       'export const revalidate = 3600',
       'cookies() 또는 headers() 함수 사용',
@@ -199,6 +202,7 @@ export default function Page() {
     difficulty: 'medium',
     title: 'fetch 캐싱 옵션',
     description: '매 요청마다 항상 최신 데이터를 가져와야 할 때 사용해야 하는 옵션은?',
+    conceptExplanation: 'Next.js는 fetch API를 확장하여 서버 사이드 캐싱 기능을 제공합니다. cache 옵션과 next.revalidate 옵션으로 데이터를 얼마나 오래 캐싱할지 제어할 수 있습니다. Next.js 15부터는 fetch의 기본 동작이 캐시를 사용하지 않는 no-store로 변경되어, 캐싱을 원할 때 명시적으로 옵션을 설정해야 합니다.',
     code: `// A
 fetch(url, { cache: 'force-cache' })
 // B
@@ -266,6 +270,7 @@ fetch(url, { next: { tags: ['products'] } })  // 태그 지정`,
     difficulty: 'medium',
     title: 'Layout vs Template',
     description: 'Next.js의 layout.tsx와 template.tsx의 핵심 차이점은?',
+    conceptExplanation: 'Next.js App Router에서 layout.tsx와 template.tsx는 모두 여러 페이지에 걸쳐 공유되는 UI를 정의하는 파일입니다. layout.tsx는 네비게이션 간에 인스턴스가 유지되어 상태와 스크롤 위치가 보존되는 반면, template.tsx는 매 네비게이션마다 새 인스턴스를 생성하여 상태가 초기화됩니다.',
     options: [
       'layout은 서버에서만, template은 클라이언트에서만 렌더링된다',
       'layout은 네비게이션 시 상태 유지, template은 매 네비게이션마다 새 인스턴스 생성',
@@ -319,6 +324,7 @@ _folder         — Private: 라우팅에서 제외`,
     difficulty: 'hard',
     title: 'Parallel Routes 사용 사례',
     description: 'Next.js Parallel Routes(@folder 문법)의 주요 사용 사례로 가장 적합한 것은?',
+    conceptExplanation: 'Parallel Routes는 @폴더명 문법을 사용해 같은 URL에서 여러 독립적인 섹션을 동시에 렌더링하는 Next.js의 라우팅 기능입니다. 슬롯(slot)이라고도 불리며, layout에서 props로 각 슬롯을 받아 배치합니다. 각 슬롯은 독립적으로 로딩·에러 처리를 할 수 있어 대시보드처럼 여러 섹션이 있는 페이지에 적합합니다.',
     options: [
       '페이지 빌드 속도를 높이기 위해',
       '같은 URL에서 독립적인 여러 섹션을 동시에 렌더링 (예: 대시보드)',
@@ -379,6 +385,7 @@ app/
     difficulty: 'medium',
     title: 'generateStaticParams 역할',
     description: 'generateStaticParams 함수의 역할은?',
+    conceptExplanation: 'generateStaticParams는 동적 라우트([id] 형태의 경로)에서 빌드 시 미리 정적 페이지를 생성할 경로 목록을 반환하는 함수입니다. Pages Router의 getStaticPaths와 동일한 역할을 합니다. 반환된 params 값들에 대해 빌드 시 HTML을 미리 생성하므로, 요청 시 즉시 응답할 수 있어 성능이 향상됩니다.',
     code: `// app/posts/[id]/page.tsx
 export async function generateStaticParams() {
   const posts = await fetchPosts()
@@ -447,6 +454,7 @@ export async function generateStaticParams() {
     difficulty: 'hard',
     title: 'Server Action 보안 취약점',
     description: '아래 Server Action 코드의 보안 문제는?',
+    conceptExplanation: 'Server Actions는 클라이언트에서 서버 함수를 직접 호출할 수 있는 Next.js의 기능으로, 파일 상단 또는 함수에 "use server" 디렉티브를 붙여 정의합니다. 내부적으로 POST 엔드포인트로 노출되므로 일반 API와 동일한 보안 기준이 적용됩니다. 인증(로그인 여부)과 인가(권한 여부) 확인 없이는 누구나 호출할 수 있어 취약해집니다.',
     code: `'use server'
 
 export async function deletePost(postId: string) {
@@ -528,6 +536,7 @@ const deletePostAction = createProtectedAction(
     difficulty: 'easy',
     title: 'notFound() 동작',
     description: 'notFound()를 호출하면 어떻게 되나요?',
+    conceptExplanation: 'notFound()는 Next.js에서 특정 리소스가 존재하지 않을 때 404 응답을 반환하는 함수입니다. 호출하면 현재 렌더링을 중단하고 가장 가까운 not-found.tsx 파일을 렌더링하면서 HTTP 404 상태코드를 반환합니다. error.tsx가 예기치 않은 오류를 처리하는 것과 달리, not-found.tsx는 "리소스를 찾을 수 없음"이라는 의도된 상황을 처리합니다.',
     code: `import { notFound } from 'next/navigation'
 
 export default async function Page({ params }) {
@@ -600,6 +609,7 @@ async function Page({ params }) {
     difficulty: 'easy',
     title: 'next/image 필수 props',
     description: 'next/image 컴포넌트에서 width/height 대신 fill을 쓸 때 부모 요소에 필요한 CSS는?',
+    conceptExplanation: 'next/image는 Next.js가 제공하는 이미지 최적화 컴포넌트로, 자동 WebP/AVIF 변환, lazy loading, srcset 생성 등을 처리합니다. fill 속성을 사용하면 이미지가 부모 요소를 가득 채우도록 렌더링되며, 내부적으로 position: absolute가 적용됩니다. 따라서 부모 요소에 positioned 컨텍스트(position: relative/absolute/fixed)가 반드시 필요합니다.',
     code: `<div style={{ position: 'relative', height: '300px' }}>
   <Image
     src="/hero.jpg"
@@ -668,6 +678,7 @@ LCP(Largest Contentful Paint): 페이지에서 가장 큰 콘텐츠가 렌더링
     difficulty: 'hard',
     title: 'Middleware 제약사항',
     description: 'Next.js Middleware에서 할 수 없는 것은?',
+    conceptExplanation: 'Next.js Middleware는 요청이 처리되기 전에 실행되는 함수로, 리다이렉트·헤더 수정·쿠키 설정 등을 담당합니다. Edge Runtime 환경에서 실행되어 전 세계 CDN 엣지 서버에서 응답 속도를 극소화합니다. 단, Edge Runtime은 경량화된 환경이므로 Node.js 전용 모듈(Prisma, fs 등)을 사용할 수 없습니다.',
     options: [
       '쿠키 읽기/쓰기',
       '다른 URL로 리다이렉트',
@@ -734,6 +745,7 @@ export const config = {
     difficulty: 'medium',
     title: 'generateMetadata 동작',
     description: 'generateMetadata가 페이지 컴포넌트와 같은 데이터를 fetch할 때 어떻게 동작하나요?',
+    conceptExplanation: 'generateMetadata는 Next.js에서 페이지의 메타데이터(title, description, OG 태그 등)를 동적으로 생성하는 함수입니다. 같은 페이지의 컴포넌트와 동일한 데이터를 fetch할 때, Next.js의 Request Memoization이 동일한 URL의 fetch를 자동으로 중복 제거하여 실제 네트워크 요청은 한 번만 발생합니다.',
     code: `export async function generateMetadata({ params }) {
   const post = await getPost(params.id) // fetch 호출
   return { title: post.title }
@@ -823,6 +835,7 @@ export async function generateMetadata(
     difficulty: 'hard',
     title: 'revalidateTag vs revalidatePath',
     description: '블로그 글을 수정했을 때 관련 페이지들의 캐시를 한번에 무효화하는 가장 적합한 방법은?',
+    conceptExplanation: 'revalidateTag와 revalidatePath는 Next.js에서 캐시를 즉시 무효화(On-demand Revalidation)하는 함수입니다. revalidatePath는 특정 URL 경로의 캐시를 무효화하고, revalidateTag는 fetch 시 지정한 태그와 연결된 모든 캐시를 한번에 무효화합니다. 여러 페이지에 걸쳐 있는 관련 데이터를 일괄 갱신할 때는 태그 기반 방식이 더 효율적입니다.',
     code: `// Server Action: 글 수정
 export async function updatePost(postId: string, data: PostData) {
   await db.posts.update({ where: { id: postId }, data })
@@ -899,6 +912,7 @@ async function getPost(id: string) {
     difficulty: 'hard',
     title: 'Intercepting Routes 동작',
     description: 'Next.js Intercepting Routes의 (.) 문법이 하는 일은?',
+    conceptExplanation: 'Intercepting Routes는 특정 컨텍스트(예: 목록 페이지)에서 링크를 클릭할 때 URL은 변경하되 현재 레이아웃 안에서 다른 렌더링을 하는 Next.js의 라우팅 기능입니다. (.)은 같은 레벨, (..)은 한 레벨 위, (...)은 앱 루트 레벨의 라우트를 인터셉트합니다. Instagram 같은 사진 모달처럼 소프트 네비게이션과 공유 가능한 URL을 동시에 구현할 때 활용합니다.',
     code: `// 폴더 구조:
 // app/feed/page.tsx
 // app/feed/@modal/(.)photo/[id]/page.tsx
@@ -978,6 +992,7 @@ export function Modal({ children }) {
     difficulty: 'hard',
     title: 'Server Actions와 Form 통합',
     description: 'Server Actions를 form의 action으로 사용할 때의 장점이 아닌 것은?',
+    conceptExplanation: 'HTML form의 action 속성에 Server Action을 직접 지정하면 JavaScript 없이도 폼이 동작하는 Progressive Enhancement를 구현할 수 있습니다. FormData를 인자로 받아 서버에서 DB 작업까지 처리하므로 클라이언트에 별도의 API 호출 코드가 필요 없습니다. 단, FormData는 런타임에만 타입을 알 수 있어 TypeScript의 정적 타입 검증이 적용되지 않습니다.',
     code: `// app/actions.ts
 'use server'
 export async function createPost(formData: FormData) {

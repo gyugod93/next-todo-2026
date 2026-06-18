@@ -9,6 +9,8 @@ export const javascriptProblems: Problem[] = [
     difficulty: 'medium',
     title: '클로저와 루프',
     description: '아래 코드를 실행하면 1초 뒤에 무엇이 출력될까요?',
+    conceptExplanation:
+      '클로저는 함수가 선언될 당시의 외부 스코프 변수를 기억하는 특성입니다. 내부 함수는 외부 함수의 변수에 계속 접근할 수 있습니다. var 키워드는 블록 스코프가 없는 함수 스코프 변수로, 루프 내에서 단일 바인딩을 공유합니다.',
     code: `for (var i = 0; i < 3; i++) {
   setTimeout(function () {
     console.log(i)
@@ -69,6 +71,8 @@ for (var i = 0; i < 3; i++) {
     difficulty: 'hard',
     title: 'Promise와 마이크로태스크 큐',
     description: '아래 코드의 출력 순서를 고르세요.',
+    conceptExplanation:
+      '이벤트 루프는 JavaScript의 비동기 처리 메커니즘입니다. 콜 스택(동기 코드), 마이크로태스크 큐(Promise.then 등), 매크로태스크 큐(setTimeout 등) 순서로 실행됩니다. 마이크로태스크는 매크로태스크보다 항상 먼저 처리됩니다.',
     code: `console.log('1')
 setTimeout(() => console.log('2'), 0)
 Promise.resolve().then(() => console.log('3'))
@@ -121,6 +125,8 @@ queueMicrotask(() => console.log('custom microtask'))`,
     difficulty: 'easy',
     title: 'Nullish Coalescing vs OR',
     description: '아래 코드의 출력값은?',
+    conceptExplanation:
+      'Nullish Coalescing 연산자(??)는 왼쪽 피연산자가 null 또는 undefined일 때만 오른쪽 값을 반환합니다. OR 연산자(||)는 왼쪽이 falsy 값(0, 빈 문자열, false 등)이면 오른쪽을 반환한다는 점에서 차이가 있습니다.',
     code: `const a = 0 ?? 'default'
 const b = 0 || 'default'
 const c = null ?? 'fallback'
@@ -179,6 +185,8 @@ const city = user?.address?.city ?? '알 수 없음'`,
     difficulty: 'easy',
     title: '옵셔널 체이닝 동작',
     description: '아래 코드의 출력값은?',
+    conceptExplanation:
+      '옵셔널 체이닝(?.)은 객체 프로퍼티 접근 시 중간에 null 또는 undefined가 있으면 에러 없이 undefined를 반환하는 연산자입니다. 깊이 중첩된 객체나 함수 호출에서 안전하게 접근할 수 있게 해줍니다.',
     code: `const user = {
   profile: null,
   getName: () => 'Alice',
@@ -242,6 +250,8 @@ const name = user?.name  // user가 필수라면 ?. 쓰지 말 것
     difficulty: 'hard',
     title: 'TDZ (Temporal Dead Zone)',
     description: '아래 코드를 실행하면 어떻게 될까요?',
+    conceptExplanation:
+      '호이스팅은 변수와 함수 선언이 코드 실행 전에 스코프 최상단으로 끌어올려지는 JavaScript 동작입니다. var는 선언과 동시에 undefined로 초기화되지만, let과 const는 선언만 호이스팅되고 초기화 전까지 TDZ(일시적 사각지대)에 놓여 접근할 수 없습니다.',
     code: `console.log(a) // (1)
 console.log(b) // (2)
 
@@ -299,6 +309,8 @@ let y = 10     // TDZ 끝 (초기화)
     difficulty: 'easy',
     title: 'typeof 함정',
     description: '아래 코드의 출력값은?',
+    conceptExplanation:
+      'typeof 연산자는 피연산자의 타입을 문자열로 반환합니다. JavaScript에는 초기 설계상 버그가 남아 있어 일부 타입은 예상과 다른 결과를 반환합니다. 정확한 타입 판별을 위해서는 typeof 외에 추가적인 방법을 함께 사용해야 하는 경우가 있습니다.',
     code: `console.log(typeof null)
 console.log(typeof undefined)
 console.log(typeof [])
@@ -366,6 +378,8 @@ typeOf(null) // 'null'`,
     difficulty: 'medium',
     title: 'Spread와 중첩 객체',
     description: '아래 코드의 출력값은?',
+    conceptExplanation:
+      '참조 타입(객체, 배열)은 변수에 값 자체가 아닌 메모리 주소(참조)를 저장합니다. Spread 연산자로 복사하면 최상위 프로퍼티만 복사되는 얕은 복사(shallow copy)가 이루어집니다. 중첩된 객체는 원본과 동일한 참조를 공유하게 됩니다.',
     code: `const obj1 = { a: 1, nested: { b: 2 } }
 const obj2 = { ...obj1 }
 
@@ -428,6 +442,8 @@ function deepClone(obj, visited = new WeakMap()) {
     difficulty: 'medium',
     title: 'Promise.all vs Promise.allSettled',
     description: 'Promise.all과 Promise.allSettled의 차이를 가장 잘 설명한 것은?',
+    conceptExplanation:
+      'Promise는 비동기 작업의 성공 또는 실패를 나타내는 객체입니다. 여러 Promise를 조합하는 방법에는 Promise.all, Promise.allSettled, Promise.race, Promise.any 등이 있으며, 각각 에러 처리와 결과 수집 방식이 다릅니다.',
     options: [
       'Promise.all이 더 빠르다',
       'Promise.all은 하나라도 reject되면 즉시 실패하지만, Promise.allSettled는 모든 결과를 기다린다',
@@ -484,6 +500,8 @@ async function fetchAll(ids: number[]) {
     difficulty: 'hard',
     title: 'Generator next() 동작',
     description: '아래 코드의 출력값은?',
+    conceptExplanation:
+      '제너레이터(Generator)는 function* 키워드로 정의하며, yield 키워드를 통해 실행을 일시 중단하고 값을 반환할 수 있는 특수한 함수입니다. next() 메서드를 호출할 때마다 다음 yield까지 실행되며, { value, done } 형태의 객체를 반환합니다.',
     code: `function* gen() {
   yield 1
   yield 2
@@ -564,6 +582,8 @@ for (const n of range(1, 5)) {
     difficulty: 'medium',
     title: '구조 분해 기본값',
     description: '아래 코드의 출력값은?',
+    conceptExplanation:
+      '구조 분해 할당(Destructuring)은 배열이나 객체의 값을 변수로 쉽게 추출하는 문법입니다. 구조 분해 시 기본값을 지정할 수 있으며, 이 기본값은 해당 위치의 값이 정확히 undefined일 때만 적용됩니다.',
     code: `const [a = 10, b = 20] = [1, undefined]
 const { x = 5, y = 5 } = { x: 0, y: null }
 
@@ -632,6 +652,8 @@ const { [key]: value } = user  // value = user.name`,
     difficulty: 'hard',
     title: 'WeakMap의 핵심 특성',
     description: 'WeakMap과 Map의 차이로 올바른 것은?',
+    conceptExplanation:
+      'WeakMap은 키로 반드시 객체만 사용할 수 있는 컬렉션입니다. 일반 Map과 달리 키 객체에 대한 참조가 약한(weak) 참조이기 때문에, 다른 참조가 없어지면 가비지 컬렉터가 해당 항목을 자동으로 수거할 수 있습니다. 또한 이터레이션이 불가능합니다.',
     options: [
       'WeakMap은 Map보다 성능이 항상 빠르다',
       'WeakMap의 키는 객체만 가능하며, 해당 객체에 다른 참조가 없으면 GC 대상이 된다',
@@ -704,6 +726,8 @@ registry.register(targetObj, 'myCache')`,
     difficulty: 'medium',
     title: '프로토타입 체인',
     description: '아래 코드에서 dog.speak()의 출력값은?',
+    conceptExplanation:
+      '프로토타입 체인은 JavaScript 객체가 다른 객체로부터 프로퍼티와 메서드를 상속받는 메커니즘입니다. 모든 객체는 내부적으로 [[Prototype]] 링크를 가지며, 프로퍼티를 찾을 때 체인을 따라 상위 객체를 탐색합니다. ES6 class 문법은 이 프로토타입 체인을 기반으로 동작하는 문법적 설탕입니다.',
     code: `function Animal(name) {
   this.name = name
 }
@@ -785,6 +809,8 @@ class Dog extends Animal {
     difficulty: 'hard',
     title: 'async/await 에러 처리 패턴',
     description: '아래 코드에서 fetchUser가 reject될 때 어떻게 되나요?',
+    conceptExplanation:
+      'async/await는 Promise를 기반으로 동작하는 비동기 코드 작성 문법입니다. async 함수는 항상 Promise를 반환하며, await 키워드는 Promise가 완료될 때까지 함수 실행을 일시 중단합니다. await 지점에서 reject가 발생하면 동기 코드의 throw처럼 처리됩니다.',
     code: `async function getUser(id) {
   const user = await fetchUser(id)
   const posts = await fetchPosts(user.id) // fetchUser 실패 시?
@@ -863,6 +889,8 @@ const [userResult, postsResult] = await Promise.allSettled([
     difficulty: 'hard',
     title: 'Proxy 핸들러 동작',
     description: 'Proxy get 핸들러를 활용한 아래 코드에서 user.name의 결과는?',
+    conceptExplanation:
+      'Proxy는 대상 객체를 감싸서 기본 동작(프로퍼티 읽기, 쓰기, 함수 호출 등)을 가로채고 커스텀 동작을 정의할 수 있는 객체입니다. 핸들러 객체의 트랩(trap) 함수를 통해 각 동작을 재정의할 수 있습니다.',
     code: `const handler = {
   get(target, key) {
     return key in target
@@ -950,6 +978,8 @@ counter.a++  // counter.a = 1 (없으면 0으로 시작)`,
     difficulty: 'medium',
     title: 'Private 클래스 필드',
     description: '아래 코드의 출력값은?',
+    conceptExplanation:
+      'JavaScript 클래스의 private 필드는 # 접두사로 선언하며, 클래스 외부에서는 접근 자체가 불가능한 진짜 캡슐화를 제공합니다. TypeScript의 private 키워드와 달리 런타임에도 접근이 차단되며, 문법 수준에서 강제됩니다.',
     code: `class BankAccount {
   #balance = 0   // private 필드
 

@@ -10,6 +10,8 @@ export const debuggingProblems: Problem[] = [
     title: 'Network 탭에서 CORS 차단 확인',
     description:
       'API 요청이 실패했을 때 Network 탭에서 CORS로 차단된 요청을 구별하는 Status 코드는?',
+    conceptExplanation:
+      'CORS(Cross-Origin Resource Sharing)는 브라우저가 다른 출처(Origin)의 리소스 요청을 제한하는 보안 정책입니다. 서버가 응답 헤더에 Access-Control-Allow-Origin을 포함하지 않으면 브라우저가 응답을 차단합니다. CORS는 브라우저에서만 적용되며, 서버 간 통신에는 영향을 주지 않습니다.',
     options: ['404', '500', '0 (failed)', '403'],
     correctAnswer: 2,
     explanation:
@@ -28,6 +30,8 @@ export const debuggingProblems: Problem[] = [
     title: 'console 고급 메서드 선택',
     description:
       '배열로 된 사용자 목록을 디버깅할 때 가장 가독성이 좋은 console 메서드는?',
+    conceptExplanation:
+      '브라우저 개발자 도구의 console 객체는 단순 로그 출력 외에도 다양한 형식으로 데이터를 시각화하는 메서드를 제공합니다. 각 메서드는 서로 다른 상황에 최적화되어 있으며 올바른 메서드를 선택하면 디버깅 효율이 크게 높아집니다. 테이블, 그룹, 타이머, 스택 추적 등 상황에 맞는 메서드를 활용하는 것이 실무 디버깅의 핵심입니다.',
     code: `const users = [
   { id: 1, name: '김철수', role: 'admin', age: 28 },
   { id: 2, name: '이영희', role: 'user', age: 24 },
@@ -57,6 +61,8 @@ export const debuggingProblems: Problem[] = [
     difficulty: 'medium',
     title: 'UnhandledPromiseRejection 원인 찾기',
     description: '다음 코드에서 "UnhandledPromiseRejection" 에러가 발생하는 이유는?',
+    conceptExplanation:
+      'UnhandledPromiseRejection은 reject된 Promise를 아무것도 처리(.catch() 또는 try/catch)하지 않았을 때 발생하는 런타임 에러입니다. async 함수는 내부에서 에러가 발생하면 reject된 Promise를 반환합니다. 이 Promise를 무시하면 에러 처리 없이 조용히 실패하여 디버깅이 어려워집니다.',
     code: `async function loadUserData(userId: string) {
   const user = await fetchUser(userId)
   const posts = await fetchPosts(userId)
@@ -90,6 +96,8 @@ useEffect(() => {
     difficulty: 'medium',
     title: 'Error Boundary가 잡지 못하는 에러',
     description: '다음 중 React Error Boundary가 잡을 수 없는 에러는?',
+    conceptExplanation:
+      'Error Boundary는 자식 컴포넌트 트리에서 발생한 JavaScript 에러를 잡아 대체 UI를 렌더링하는 React의 에러 처리 메커니즘입니다. getDerivedStateFromError로 에러를 감지하고 componentDidCatch로 로깅하는 클래스 컴포넌트로 구현합니다. 렌더링 사이클 내의 에러만 처리하며, 이벤트 핸들러나 비동기 코드의 에러는 잡지 못합니다.',
     code: `class ErrorBoundary extends Component {
   state = { hasError: false }
   static getDerivedStateFromError() {
@@ -122,6 +130,8 @@ useEffect(() => {
     subcategory: 'performance-debugging',
     title: 'CLS(Cumulative Layout Shift) 원인',
     description: '다음 코드 중 CLS(레이아웃 이동) 점수를 악화시키는 것은?',
+    conceptExplanation:
+      'CLS(Cumulative Layout Shift)는 페이지 로드 중 요소가 예기치 않게 위치를 변경하는 정도를 측정하는 Core Web Vitals 지표입니다. 크기를 미리 알 수 없는 요소(크기 없는 이미지, 동적 삽입 콘텐츠, 웹폰트 교체)가 주요 원인입니다. 레이아웃 이동 발생 전에 공간을 미리 확보해두는 것이 해결의 핵심 원리입니다.',
     type: 'bug-find',
     difficulty: 'medium',
     code: `// A: 이미지 컴포넌트
@@ -163,6 +173,8 @@ function AdSection() {
     difficulty: 'hard',
     title: 'Next.js Hydration 에러 원인',
     description: '다음 컴포넌트에서 Hydration 에러가 발생하는 이유는?',
+    conceptExplanation:
+      'Hydration(하이드레이션)은 서버에서 생성된 HTML에 React가 이벤트 핸들러와 상태를 붙여 인터랙티브하게 만드는 과정입니다. 이 과정에서 React는 서버에서 렌더링된 결과와 클라이언트에서 렌더링한 결과가 동일한지 비교합니다. 두 결과가 다르면 Hydration 에러가 발생하며, 주로 실행 시점에 따라 값이 달라지는 코드가 원인입니다.',
     code: `// app/components/WelcomeMessage.tsx
 export function WelcomeMessage() {
   return (

@@ -11,6 +11,8 @@ export const performanceProblems: Problem[] = [
     difficulty: 'easy',
     title: 'Core Web Vitals 3가지 — LCP, INP, CLS',
     description: '2024년 기준 Google Core Web Vitals 3가지 지표와 측정 대상으로 올바른 것은?',
+    conceptExplanation:
+      'Core Web Vitals는 Google이 정의한 웹 페이지 사용자 경험의 핵심 측정 지표 모음입니다. 로딩 성능, 상호작용 반응성, 시각적 안정성을 각각 하나의 지표로 측정합니다. 이 지표들은 Google 검색 랭킹에도 영향을 주며, 매년 기준이 개정될 수 있습니다.',
     options: [
       'LCP(로딩 성능), FID(입력 지연), CLS(시각적 안정성) — 2023년부터 변경 없음',
       'LCP(로딩 성능), INP(상호작용 반응성), CLS(시각적 안정성) — INP가 2024년 3월에 FID를 대체',
@@ -33,6 +35,8 @@ export const performanceProblems: Problem[] = [
     difficulty: 'medium',
     title: 'INP vs FID — 2024년 교체 이유',
     description: 'Google이 2024년 3월에 FID를 INP로 교체한 이유로 가장 올바른 것은?',
+    conceptExplanation:
+      'INP(Interaction to Next Paint)는 페이지에서 발생하는 모든 사용자 상호작용의 반응 속도를 측정하는 지표입니다. 이전 지표인 FID(First Input Delay)는 첫 번째 입력의 지연만 측정했습니다. INP는 클릭, 탭, 키 입력 전체를 대상으로 하여 실제 사용 경험을 더 정확하게 반영합니다.',
     options: [
       'INP가 측정하기 더 쉽기 때문에 개발자 경험을 위해 교체했다',
       'FID는 첫 입력 이벤트만 측정하여 실제 사용 경험을 충분히 반영하지 못했고, INP는 페이지 전체 상호작용 반응성을 측정한다',
@@ -55,6 +59,8 @@ export const performanceProblems: Problem[] = [
     difficulty: 'medium',
     title: 'CLS 원인 — 레이아웃 이동 방지',
     description: 'CLS(Cumulative Layout Shift)가 발생하는 주요 원인과 해결 방법으로 올바른 것은?',
+    conceptExplanation:
+      'CLS(Cumulative Layout Shift)는 페이지 로딩 중에 요소가 예기치 않게 위치를 바꾸는 정도를 나타내는 시각적 안정성 지표입니다. 점수가 낮을수록 안정적이며, 0.1 이하가 Good 기준입니다. 이미지, 광고, 웹폰트 등이 로드되면서 다른 콘텐츠를 밀어내는 현상이 CLS를 유발합니다.',
     options: [
       'JavaScript 실행이 느릴 때 CLS가 발생하며, 코드 분할로 해결한다',
       '이미지에 width/height 미지정, 동적으로 삽입되는 광고/배너, 웹폰트 로딩이 주요 원인이며, 공간을 미리 예약해서 해결한다',
@@ -77,6 +83,8 @@ export const performanceProblems: Problem[] = [
     difficulty: 'hard',
     title: 'LCP 최적화 — fetchpriority와 preload',
     description: 'LCP(Largest Contentful Paint) 점수를 높이기 위한 가장 효과적인 방법은?',
+    conceptExplanation:
+      'LCP(Largest Contentful Paint)는 뷰포트 내에서 가장 큰 콘텐츠 요소(이미지, 텍스트 블록 등)가 화면에 렌더링되기까지 걸리는 시간을 측정합니다. 2.5초 이하가 Good 기준이며, 이 요소가 빠르게 나타날수록 사용자가 페이지를 빠르게 인식합니다. 리소스 우선순위 설정이 LCP 개선의 핵심입니다.',
     options: [
       'LCP 이미지를 lazy loading으로 설정하여 초기 로딩을 줄인다',
       'LCP 요소가 이미지라면 fetchpriority="high"와 <link rel="preload">를 함께 사용하여 브라우저가 우선 로드하게 한다',
@@ -102,6 +110,8 @@ export const performanceProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Code Splitting — dynamic import와 React.lazy',
     description: 'React/Next.js에서 코드 스플리팅을 적용하는 올바른 방법은?',
+    conceptExplanation:
+      '코드 스플리팅(Code Splitting)은 하나의 큰 JavaScript 번들을 여러 청크로 나누어 필요할 때만 로드하는 기법입니다. 초기 로딩 시 불필요한 코드를 다운로드하지 않아 첫 페이지 로드 속도가 빨라집니다. 동적 import() 구문을 사용하면 번들러가 자동으로 청크를 분리합니다.',
     options: [
       'import 구문을 파일 맨 아래에 작성하면 자동으로 코드 스플리팅이 된다',
       'dynamic import(import())와 React.lazy/Suspense를 사용하거나, Next.js의 next/dynamic으로 컴포넌트를 필요할 때 로드한다',
@@ -124,6 +134,8 @@ export const performanceProblems: Problem[] = [
     difficulty: 'hard',
     title: 'Tree Shaking — named export가 유리한 이유',
     description: '번들러의 Tree Shaking에서 named export가 default export보다 유리한 이유는?',
+    conceptExplanation:
+      'Tree Shaking은 번들러가 정적 분석을 통해 실제로 사용되지 않는 코드를 최종 번들에서 제거하는 최적화 기법입니다. 나무를 흔들어 죽은 잎사귀를 떨어뜨리는 것에서 유래한 이름입니다. ES Module의 정적 import/export 구조 덕분에 번들러가 빌드 시점에 사용 여부를 분석할 수 있습니다.',
     options: [
       'named export가 문법이 더 짧아서 파일 크기가 줄어들기 때문이다',
       'named export는 사용하는 함수만 번들에 포함시킬 수 있지만, default export는 전체 모듈이 포함될 수 있어 사용하지 않는 코드도 번들에 들어갈 수 있다',
@@ -146,6 +158,8 @@ export const performanceProblems: Problem[] = [
     difficulty: 'medium',
     title: '@next/bundle-analyzer로 번들 분석',
     description: 'Next.js 프로젝트에서 번들 크기 문제를 발견하고 분석하는 올바른 방법은?',
+    conceptExplanation:
+      '번들 분석(Bundle Analysis)은 최종 빌드 결과물에 어떤 모듈이 얼마나 많은 용량을 차지하는지 시각적으로 파악하는 과정입니다. 트리맵(Treemap) 형태로 각 청크와 모듈의 크기를 비교할 수 있습니다. 예상보다 큰 라이브러리나 중복 포함된 모듈을 찾아 최적화 대상을 식별합니다.',
     options: [
       '브라우저 DevTools Network 탭에서 파일 크기만 보면 충분하다',
       '@next/bundle-analyzer를 설정하고 ANALYZE=true next build로 실행하면 각 모듈의 크기와 의존성을 시각적으로 확인할 수 있다',
@@ -171,6 +185,8 @@ export const performanceProblems: Problem[] = [
     difficulty: 'hard',
     title: 'React.memo — 언제 쓰고 언제 낭비인가',
     description: 'React.memo를 사용해야 하는 상황과 오히려 낭비가 되는 상황으로 올바른 것은?',
+    conceptExplanation:
+      'React.memo는 함수형 컴포넌트를 감싸서 props가 변경되지 않으면 리렌더링을 건너뛰는 고차 컴포넌트입니다. 내부적으로 이전 props와 새 props를 얕은 비교(shallow comparison)하여 동일하면 이전 렌더링 결과를 재사용합니다. 클래스 컴포넌트의 PureComponent와 유사한 역할을 합니다.',
     options: [
       'React.memo는 모든 컴포넌트에 적용해야 최대 성능을 발휘한다',
       '부모가 자주 리렌더링되고 컴포넌트의 렌더링 비용이 높으며 props가 실제로 변하지 않을 때 효과적이고, 단순한 컴포넌트에는 오버헤드만 추가된다',
@@ -193,6 +209,8 @@ export const performanceProblems: Problem[] = [
     difficulty: 'hard',
     title: 'useMemo/useCallback — 실제 효과와 오용',
     description: 'useMemo와 useCallback의 실제 효과와 잘못된 사용 패턴으로 올바른 것은?',
+    conceptExplanation:
+      'useMemo는 비용이 큰 계산 결과를 캐싱하고, useCallback은 함수 참조를 안정적으로 유지하기 위한 React 훅입니다. 두 훅 모두 의존성 배열(dependency array)을 받아, 의존성이 변경될 때만 값을 재계산합니다. 메모이제이션 자체에도 비교 비용이 발생하므로 무분별하게 사용하면 오히려 성능이 저하될 수 있습니다.',
     options: [
       'useMemo와 useCallback은 항상 성능을 향상시키므로 가능한 많이 사용해야 한다',
       'useMemo는 비싼 계산을 캐싱하고 useCallback은 함수 참조를 안정화하지만, 의존성이 자주 바뀌면 오히려 오버헤드가 된다',
@@ -215,6 +233,8 @@ export const performanceProblems: Problem[] = [
     difficulty: 'medium',
     title: 'React Profiler — 렌더링 병목 찾기',
     description: 'React DevTools Profiler를 사용해 렌더링 성능 문제를 찾는 올바른 방법은?',
+    conceptExplanation:
+      'React DevTools Profiler는 컴포넌트별 렌더링 시간과 빈도를 기록하고 시각화하는 개발 도구입니다. 플레임그래프(Flamegraph)로 렌더링 트리를 시각화하고, 어떤 컴포넌트가 왜 리렌더링됐는지 원인을 파악할 수 있습니다. 성능 최적화 전에 반드시 프로파일링으로 병목을 먼저 확인해야 합니다.',
     options: [
       'console.log를 각 컴포넌트에 추가해서 렌더링 횟수를 세는 것이 가장 정확하다',
       'React DevTools Profiler로 Record 후 Flamegraph에서 렌더링 시간이 긴 컴포넌트를 찾고, "Why did this render?" 기능으로 원인을 파악한다',
@@ -240,6 +260,8 @@ export const performanceProblems: Problem[] = [
     difficulty: 'easy',
     title: 'next/image 최적화 — WebP/AVIF, sizes 속성',
     description: 'Next.js의 next/image 컴포넌트를 올바르게 사용하는 방법은?',
+    conceptExplanation:
+      'next/image는 Next.js가 제공하는 이미지 최적화 컴포넌트로, 자동으로 WebP/AVIF 변환, 지연 로딩, 크기 최적화를 수행합니다. sizes 속성은 뷰포트 너비에 따라 이미지가 얼마나 크게 표시되는지 브라우저에게 알려주는 힌트입니다. 브라우저는 이 정보를 바탕으로 srcset에서 최적의 이미지 크기를 선택합니다.',
     options: [
       'sizes 속성은 이미지의 표시 크기를 고정하는 옵션이다',
       'sizes 속성으로 뷰포트별 이미지 표시 크기를 알려주면 브라우저가 적절한 srcset 이미지를 선택하고, Next.js는 WebP/AVIF를 자동으로 제공한다',
@@ -262,6 +284,8 @@ export const performanceProblems: Problem[] = [
     difficulty: 'medium',
     title: '폰트 최적화 — FOUT/FOIT와 next/font',
     description: 'FOUT, FOIT의 차이와 next/font로 폰트를 최적화하는 방법으로 올바른 것은?',
+    conceptExplanation:
+      'FOUT(Flash of Unstyled Text)는 웹폰트가 로드되기 전 폴백 폰트로 텍스트가 표시되다가 교체되는 현상이고, FOIT(Flash of Invisible Text)는 폰트 로드 전 텍스트가 아예 보이지 않는 현상입니다. 두 현상 모두 사용자 경험과 CLS 점수에 부정적인 영향을 줍니다. font-display CSS 속성으로 두 현상 사이의 균형을 조절할 수 있습니다.',
     options: [
       'FOUT와 FOIT는 동일한 현상이며, 둘 다 폰트가 너무 빠르게 로드될 때 발생한다',
       'FOUT(스타일 없는 텍스트 번쩍임)는 폴백 폰트 → 실제 폰트 교체로 발생하고, FOIT(보이지 않는 텍스트)는 폰트 로드 전 텍스트가 숨겨지며, next/font는 CSS 변수를 사용해 레이아웃 이동 없이 폰트를 최적화한다',
@@ -284,6 +308,8 @@ export const performanceProblems: Problem[] = [
     difficulty: 'hard',
     title: 'HTTP 캐싱 — Cache-Control 전략',
     description: 'Next.js App Router에서 정적 자산과 API 응답의 Cache-Control을 올바르게 설정하는 방법은?',
+    conceptExplanation:
+      'HTTP Cache-Control 헤더는 브라우저와 CDN이 리소스를 얼마나 오래 캐시할지 제어하는 지시어입니다. max-age, no-cache, no-store 등의 디렉티브를 조합해 캐싱 전략을 세밀하게 설정합니다. 올바른 캐싱 전략은 서버 부하를 줄이고 사용자에게 빠른 응답을 제공하는 핵심 성능 최적화 방법입니다.',
     options: [
       'Cache-Control: no-cache를 설정하면 브라우저가 캐시를 저장하지 않는다',
       '정적 자산은 immutable + 긴 max-age, API 응답은 stale-while-revalidate 전략을 사용하고, no-cache는 "캐시하지 않음"이 아니라 "매번 서버에 확인"을 의미한다',
@@ -306,6 +332,8 @@ export const performanceProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Prefetch vs Preload vs Preconnect',
     description: 'HTML <link> 태그의 rel="prefetch", rel="preload", rel="preconnect"의 차이로 올바른 것은?',
+    conceptExplanation:
+      'preload, prefetch, preconnect는 브라우저가 리소스를 미리 준비하도록 힌트를 주는 HTML 링크 관계(rel) 속성입니다. 각각 현재 페이지용 우선 로드, 다음 페이지용 사전 다운로드, 외부 도메인 사전 연결이라는 다른 목적을 가집니다. 적절히 사용하면 페이지 전환과 리소스 로딩 속도를 크게 개선할 수 있습니다.',
     options: [
       'prefetch, preload, preconnect는 모두 동일하게 리소스를 미리 다운로드한다',
       'preload는 현재 페이지에 필요한 리소스를 높은 우선순위로 미리 로드하고, prefetch는 다음 페이지를 위해 낮은 우선순위로 준비하며, preconnect는 외부 도메인에 미리 TCP/TLS 연결을 맺는다',

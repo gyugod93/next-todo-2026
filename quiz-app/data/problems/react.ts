@@ -9,6 +9,7 @@ export const reactProblems: Problem[] = [
     difficulty: 'medium',
     title: 'useState 스냅샷',
     description: '버튼을 한 번 클릭하면 count는 얼마가 될까요?',
+    conceptExplanation: 'useState는 React 컴포넌트에서 상태(데이터)를 관리하는 Hook입니다. 상태가 변경되면 컴포넌트가 다시 렌더링됩니다. React는 이벤트 핸들러가 실행되는 시점의 상태 값을 "스냅샷"으로 고정하여, 핸들러 내부에서 상태를 여러 번 변경해도 그 시점의 값을 기준으로 계산합니다.',
     code: `function Counter() {
   const [count, setCount] = useState(0)
 
@@ -66,6 +67,7 @@ setCount(prev => prev + 1) // prev = 7, 결과 8 큐에 추가
     difficulty: 'hard',
     title: 'useEffect 무한 루프 원인',
     description: '아래 코드가 무한 리렌더링을 일으키는 이유는?',
+    conceptExplanation: 'useEffect는 컴포넌트가 렌더링된 후 사이드 이펙트(데이터 패칭, 구독 등)를 실행하는 Hook입니다. 의존성 배열에 나열된 값이 변경될 때마다 effect가 재실행됩니다. React는 의존성 비교 시 Object.is()를 사용하므로, 객체나 배열은 내용이 같아도 참조가 다르면 변경된 것으로 판단합니다.',
     code: `function UserList() {
   const [users, setUsers] = useState([])
   const filters = { active: true }
@@ -128,6 +130,7 @@ Object.is([], [])         // false ← 참조가 다름!
     difficulty: 'medium',
     title: 'useMemo vs useCallback',
     description: 'useMemo와 useCallback의 차이를 가장 잘 설명한 것은?',
+    conceptExplanation: 'useMemo와 useCallback은 모두 메모이제이션(Memoization)을 위한 Hook으로, 의존성이 변경될 때만 값을 재계산합니다. 메모이제이션은 이전에 계산한 결과를 저장해두고 같은 입력에는 저장된 결과를 재사용하는 최적화 기법입니다. 두 Hook의 차이는 메모이제이션 대상이 "계산된 값"인지 "함수 자체"인지에 있습니다.',
     options: [
       'useMemo는 계산 결과(값)를 메모이제이션하고, useCallback은 함수 자체를 메모이제이션한다',
       'useMemo는 렌더링을 막고, useCallback은 이벤트만 처리한다',
@@ -181,6 +184,7 @@ const fullName = firstName + ' ' + lastName`,
     difficulty: 'medium',
     title: 'React.memo가 실패하는 경우',
     description: 'Parent가 리렌더링될 때 Child도 리렌더링될까요?',
+    conceptExplanation: 'React.memo는 컴포넌트를 감싸 props가 변경되지 않으면 리렌더링을 건너뛰는 고차 컴포넌트입니다. props를 얕은 비교(shallow comparison)로 판단하므로, 원시값은 값을 비교하지만 함수나 객체는 참조를 비교합니다. 부모가 리렌더링될 때마다 함수가 새로 생성되면 참조가 달라져 React.memo의 효과가 사라집니다.',
     code: `const Child = React.memo(function Child({ onClick }) {
   return <button onClick={onClick}>클릭</button>
 })
@@ -255,6 +259,7 @@ function Parent() {
     difficulty: 'medium',
     title: 'useRef와 리렌더링',
     description: '버튼을 3번 클릭하면 화면에 표시되는 숫자는?',
+    conceptExplanation: 'useRef는 렌더링과 무관하게 값을 저장하거나 DOM 요소에 직접 접근하기 위한 Hook입니다. useRef로 생성된 ref 객체의 .current 값을 변경해도 컴포넌트 리렌더링이 발생하지 않습니다. 화면에 표시될 필요 없는 값(타이머 ID, 이전 값 등)을 저장할 때 적합합니다.',
     code: `function Component() {
   const count = useRef(0)
 
@@ -320,6 +325,7 @@ function Timer() {
     difficulty: 'medium',
     title: 'Hooks 규칙 위반',
     description: '아래 코드의 문제는?',
+    conceptExplanation: 'React Hooks는 두 가지 규칙을 반드시 따라야 합니다. 첫째, 반복문·조건문·중첩 함수 안이 아닌 컴포넌트 최상위 레벨에서만 호출해야 합니다. 둘째, React 함수 컴포넌트나 커스텀 Hook 안에서만 호출해야 합니다. React는 Hook의 호출 순서로 각 상태를 추적하기 때문에 순서가 달라지면 상태가 잘못 연결됩니다.',
     code: `function Component({ isLoggedIn }) {
   if (isLoggedIn) {
     const [user, setUser] = useState(null)
@@ -379,6 +385,7 @@ useState(0)    → 슬롯 1 ← React는 이게 'user' 상태라고 착각!
     difficulty: 'medium',
     title: 'key prop과 상태 초기화',
     description: '버튼을 클릭하면 Input 컴포넌트에 어떤 일이 발생하나요?',
+    conceptExplanation: 'key prop은 React가 리스트나 동일 위치의 컴포넌트를 구별하는 식별자입니다. React는 재조정(Reconciliation) 과정에서 key가 같으면 동일한 컴포넌트로 인식해 기존 인스턴스를 재사용하고, key가 다르면 다른 컴포넌트로 간주해 언마운트 후 새로 마운트합니다. 이 특성을 활용해 컴포넌트를 강제로 초기화할 수 있습니다.',
     code: `function Input() {
   const [value, setValue] = useState('')
   return <input value={value} onChange={e => setValue(e.target.value)} />
@@ -439,6 +446,7 @@ React는 렌더링마다 이전 트리와 새 트리를 비교(diffing)합니다
     difficulty: 'hard',
     title: 'Context와 React.memo',
     description: 'count 버튼 클릭 시 Child가 리렌더링될까요?',
+    conceptExplanation: 'Context는 컴포넌트 트리 전체에 데이터를 전달하는 방법으로, props drilling 없이 깊은 곳의 컴포넌트도 데이터를 받을 수 있습니다. Provider의 value가 변경되면 해당 Context를 구독하는(useContext를 사용하는) 모든 컴포넌트가 리렌더링됩니다. React.memo는 props 변경만 차단하고, Context 변경으로 인한 리렌더링은 막지 못합니다.',
     code: `const ThemeContext = createContext(null)
 
 function App() {
@@ -504,6 +512,7 @@ const CounterContext = createContext(null) // 자주 변함
     difficulty: 'medium',
     title: 'useReducer를 선택하는 기준',
     description: 'useReducer를 useState보다 선택해야 하는 상황은?',
+    conceptExplanation: 'useReducer는 복잡한 상태 로직을 관리하기 위한 Hook으로, Redux 패턴처럼 action을 dispatch하면 reducer 함수가 새로운 상태를 반환합니다. 여러 상태가 서로 연관되어 함께 변경되거나 상태 전환 로직이 복잡할 때 useState보다 적합합니다. 상태 변경 로직을 컴포넌트 외부의 reducer 함수로 분리해 테스트와 유지보수가 용이합니다.',
     options: [
       '상태가 단순한 string이나 number일 때',
       '다음 상태가 이전 상태와 action에 복잡하게 의존하고, 여러 상태가 함께 바뀔 때',
@@ -568,6 +577,7 @@ const [error, setError] = useState(null)
     difficulty: 'medium',
     title: 'Suspense fallback 동작',
     description: 'HeavyComponent가 로드되는 동안 무엇이 표시되나요?',
+    conceptExplanation: 'Suspense는 자식 컴포넌트가 준비될 때까지 대기 중임을 React에 알리는 컴포넌트입니다. 자식이 로딩 중일 때 fallback prop에 지정한 UI를 표시하고, 준비가 완료되면 실제 컴포넌트로 교체합니다. React.lazy()와 함께 코드 스플리팅에 사용하거나, 비동기 데이터 패칭 중 로딩 UI를 보여줄 때 활용합니다.',
     code: `const HeavyComponent = lazy(() => import('./HeavyComponent'))
 
 function App() {
@@ -629,6 +639,7 @@ export default function Dashboard() {
     difficulty: 'hard',
     title: 'useTransition 사용 목적',
     description: 'useTransition의 startTransition으로 감싼 상태 업데이트의 특성은?',
+    conceptExplanation: 'useTransition은 React 18의 Concurrent Features 중 하나로, 상태 업데이트의 우선순위를 설정하는 Hook입니다. startTransition으로 감싼 업데이트는 "비긴급"으로 표시되어 타이핑이나 클릭 같은 긴급한 업데이트에 양보합니다. isPending 값으로 트랜지션이 진행 중인지 확인해 로딩 상태를 표시할 수 있습니다.',
     options: [
       '즉시 실행되어 UI 업데이트가 빠르다',
       '우선순위가 낮아 타이핑 등 긴급한 업데이트에 양보한다',
@@ -694,6 +705,7 @@ return (
     difficulty: 'hard',
     title: 'React 18 자동 배치',
     description: 'React 18에서 handleClick 호출 시 리렌더링은 몇 번 발생할까요?',
+    conceptExplanation: '배칭(Batching)은 여러 개의 상태 업데이트를 하나로 묶어 단 한 번의 리렌더링으로 처리하는 최적화 기법입니다. React 17까지는 이벤트 핸들러 내부에서만 배칭이 적용됐지만, React 18부터는 비동기 함수, setTimeout, Promise 콜백 내부에서도 자동 배칭이 적용됩니다. 이를 통해 불필요한 리렌더링 횟수를 줄일 수 있습니다.',
     code: `function Component() {
   const [a, setA] = useState(0)
   const [b, setB] = useState(0)
@@ -761,6 +773,7 @@ function ScrollToBottom() {
     difficulty: 'hard',
     title: 'useDeferredValue 동작 방식',
     description: 'useDeferredValue를 사용할 때 나타나는 동작으로 올바른 것은?',
+    conceptExplanation: 'useDeferredValue는 값의 "지연된 버전"을 반환하는 React 18의 Hook입니다. 긴급한 업데이트(예: 타이핑)가 먼저 처리되고, 브라우저에 여유가 생기면 지연된 값을 업데이트합니다. props나 외부 라이브러리에서 받은 값처럼 직접 setState를 제어할 수 없는 상황에서 useTransition 대신 사용합니다.',
     code: `function SearchPage() {
   const [query, setQuery] = useState('')
   const deferredQuery = useDeferredValue(query)
@@ -834,6 +847,7 @@ function SearchPage() {
     difficulty: 'hard',
     title: 'useTransition isPending 활용',
     description: '탭 전환 중 isPending을 활용한 패턴의 장점은?',
+    conceptExplanation: 'useTransition의 isPending은 startTransition으로 시작된 비긴급 업데이트가 아직 완료되지 않은 상태임을 나타내는 불리언 값입니다. 탭 전환처럼 무거운 렌더링이 필요한 경우, 현재 UI를 유지하면서 백그라운드에서 새 콘텐츠를 준비하고 isPending으로 진행 상태를 시각적으로 표시할 수 있습니다.',
     code: `function TabContainer() {
   const [tab, setTab] = useState('home')
   const [isPending, startTransition] = useTransition()
@@ -908,6 +922,7 @@ function App() {
     difficulty: 'hard',
     title: 'useOptimistic 패턴',
     description: 'useOptimistic을 사용하는 주된 목적은?',
+    conceptExplanation: 'useOptimistic은 React 19에 도입된 Hook으로, 낙관적 업데이트(Optimistic Update) 패턴을 구현합니다. 낙관적 업데이트란 서버 응답을 기다리지 않고 "요청이 성공할 것"이라 가정하여 UI를 미리 업데이트하는 기법입니다. 서버 요청이 실패하면 UI는 자동으로 이전 상태로 롤백됩니다.',
     code: `function LikeButton({ postId, initialLikes }) {
   const [likes, setLikes] = useState(initialLikes)
   const [optimisticLikes, addOptimisticLike] = useOptimistic(
@@ -982,6 +997,7 @@ async function handleSubmit(formData) {
     difficulty: 'hard',
     title: 'use() Hook 특성',
     description: 'React 19의 use() Hook이 기존 Hook들과 다른 점은?',
+    conceptExplanation: 'use()는 React 19에 추가된 새로운 Hook으로, Promise나 Context를 컴포넌트 내에서 직접 읽을 수 있게 합니다. 기존 Hook과 달리 조건문이나 반복문 안에서도 호출할 수 있습니다. Promise를 use()로 읽으면 Promise가 대기 중일 때 가장 가까운 Suspense의 fallback을 자동으로 표시합니다.',
     code: `// 기존 방식
 function UserProfile({ userId }) {
   const [user, setUser] = useState(null)

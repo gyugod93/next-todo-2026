@@ -556,46 +556,41 @@ export class UserController {
     category: 'code-training',
     subcategory: 'refactoring',
     type: 'self-check',
-    difficulty: 'hard',
+    difficulty: 'medium',
     title: '거대한 useEffect를 Custom Hook으로 추출하기',
     description:
-      '아래 컴포넌트의 useEffect가 너무 많은 일을 합니다. 웹소켓 연결 로직을 Custom Hook으로 추출하여 컴포넌트를 단순하게 만들어보세요.',
-    code: `// 현재 코드 — 리팩토링 대상
-function ChatRoom({ roomId }: { roomId: string }) {
+      '아래 `useChatRoom` 훅의 뼈대를 완성하세요.\n\n✅ 채울 것:\n① `useEffect` 내부 — WebSocket 연결, `ws.onopen` / `ws.onclose` / `ws.onerror` / `ws.onmessage` 핸들러 설정, cleanup 함수 return\n② `sendMessage` 내부 — `wsRef`를 통해 JSON 메시지 전송\n\n반환값 `{ messages, isConnected, sendMessage }` 는 이미 정해져 있습니다.',
+    code: `// 이 함수를 완성하세요
+function useChatRoom(roomId: string) {
   const [messages, setMessages] = useState<Message[]>([])
   const [isConnected, setIsConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
 
   useEffect(() => {
-    const ws = new WebSocket(\`wss://api.example.com/chat/\${roomId}\`)
-    wsRef.current = ws
+    // ← 여기: WebSocket 연결 + 이벤트 핸들러 설정
+    // ws.onopen, ws.onclose, ws.onerror, ws.onmessage 구현
+    // cleanup 함수 return 필요
 
-    ws.onopen = () => setIsConnected(true)
-    ws.onclose = () => setIsConnected(false)
-    ws.onerror = () => setIsConnected(false)
-    ws.onmessage = (e) => {
-      const msg = JSON.parse(e.data)
-      setMessages(prev => [...prev, msg])
-    }
-
-    return () => {
-      ws.close()
-      wsRef.current = null
-    }
   }, [roomId])
 
   const sendMessage = (text: string) => {
-    wsRef.current?.send(JSON.stringify({ text, roomId }))
+    // ← 여기: wsRef를 통해 메시지 전송
   }
 
-  return (
-    <div>
-      <p>{isConnected ? '연결됨' : '연결 중...'}</p>
-      <MessageList messages={messages} />
-      <MessageInput onSend={sendMessage} />
-    </div>
-  )
-}`,
+  return { messages, isConnected, sendMessage }
+}
+
+// ChatRoom 컴포넌트는 아래처럼 단순해져야 합니다 (참고용)
+// function ChatRoom({ roomId }: { roomId: string }) {
+//   const { messages, isConnected, sendMessage } = useChatRoom(roomId)
+//   return (
+//     <div>
+//       <p>{isConnected ? '연결됨' : '연결 중...'}</p>
+//       <MessageList messages={messages} />
+//       <MessageInput onSend={sendMessage} />
+//     </div>
+//   )
+// }`,
     correctAnswer: `// Custom Hook으로 추출
 function useChatRoom(roomId: string) {
   const [messages, setMessages] = useState<Message[]>([])
@@ -655,42 +650,35 @@ function ChatRoom({ roomId }: { roomId: string }) {
     category: 'code-training',
     subcategory: 'refactoring',
     type: 'self-check',
-    difficulty: 'hard',
+    difficulty: 'medium',
     title: '반복되는 API fetch 로직 — 공통 유틸로 추출',
     description:
-      '아래 코드에서 동일한 패턴의 API 호출이 반복됩니다. 에러 처리, 토큰 추가, 응답 파싱을 공통으로 처리하는 fetcher 함수를 작성해보세요.',
-    code: `// 반복되는 패턴
-async function getUser(id: string) {
-  const token = localStorage.getItem('token')
-  const res = await fetch(\`/api/users/\${id}\`, {
-    headers: { Authorization: \`Bearer \${token}\` }
-  })
-  if (!res.ok) throw new Error(\`HTTP \${res.status}\`)
+      '아래 `fetcher` 함수의 뼈대에서 빈칸 3곳을 채우세요.\n\n✅ 채울 것:\n① `skipAuth`가 false일 때 `localStorage`에서 토큰을 꺼내 `Authorization` 헤더 추가\n② `res.status === 401`이면 토큰 제거 후 `/login`으로 리다이렉트\n③ `res.ok`가 아니면 에러 throw',
+    code: `type FetchOptions = RequestInit & { skipAuth?: boolean }
+
+async function fetcher<T>(url: string, options: FetchOptions = {}): Promise<T> {
+  const { skipAuth = false, ...fetchOptions } = options
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...fetchOptions.headers,
+  }
+
+  // ← 여기 1: skipAuth가 false일 때 localStorage에서 토큰 꺼내서 Authorization 헤더 추가
+
+
+  const res = await fetch(url, { ...fetchOptions, headers })
+
+  // ← 여기 2: 401이면 토큰 제거 + 로그인으로 리다이렉트
+
+  // ← 여기 3: res.ok가 아니면 에러 throw
+
   return res.json()
 }
 
-async function getPosts() {
-  const token = localStorage.getItem('token')
-  const res = await fetch('/api/posts', {
-    headers: { Authorization: \`Bearer \${token}\` }
-  })
-  if (!res.ok) throw new Error(\`HTTP \${res.status}\`)
-  return res.json()
-}
-
-async function createPost(data: PostData) {
-  const token = localStorage.getItem('token')
-  const res = await fetch('/api/posts', {
-    method: 'POST',
-    headers: {
-      Authorization: \`Bearer \${token}\`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  })
-  if (!res.ok) throw new Error(\`HTTP \${res.status}\`)
-  return res.json()
-}`,
+// 사용 예시 (참고용)
+// const user = await fetcher<User>(\`/api/users/\${id}\`)
+// const newPost = await fetcher<Post>('/api/posts', { method: 'POST', body: JSON.stringify(data) })`,
     correctAnswer: `// 공통 fetcher 유틸
 type FetchOptions = RequestInit & { skipAuth?: boolean }
 
@@ -750,22 +738,31 @@ const newPost = await fetcher<Post>('/api/posts', {
     difficulty: 'medium',
     title: 'API 응답 타입 안전하게 설계하기',
     description:
-      '아래처럼 any가 가득한 코드를 TypeScript 타입으로 안전하게 만들어보세요. API 응답 wrapper 타입과 실제 데이터 타입을 설계하세요.',
-    code: `// 현재 — any 투성이
-async function getUser(id: string): Promise<any> {
-  const res = await fetcher(\`/api/users/\${id}\`)
-  return res // 타입: any
+      '아래 뼈대에서 빈칸 3곳을 채워 `any` 없는 타입 안전한 코드를 완성하세요.\n\n✅ 채울 것:\n① `ApiResponse<T>` — `{ data: T, message: string, statusCode: number }` 구조를 제네릭으로 정의\n② `PaginatedResponse<T>` — `data` 배열, `total`, `page`, `limit` 포함\n③ `getUser` 반환 타입의 `any`를 올바른 타입으로 교체',
+    code: `// ← 여기 1: API 응답 공통 wrapper 타입을 제네릭으로 정의하세요
+// 서버 응답이 { data: T, message: string, statusCode: number } 구조일 때
+interface ApiResponse<T> {
+  /* 빈칸 */
 }
 
-async function getPosts(): Promise<any[]> {
-  const res = await fetcher('/api/posts')
-  return res.data // 타입: any
+// ← 여기 2: 페이지네이션 응답 타입 (data 배열, total, page, limit)
+interface PaginatedResponse<T> {
+  /* 빈칸 */
 }
 
-// 사용하는 쪽에서 오타도 에러 없음
-const user = await getUser('1')
-console.log(user.naem)  // 오타인데 에러 없음!
-user.nonExistentField   // 존재하지 않는 필드도 에러 없음!`,
+// 도메인 타입 (이미 정의됨)
+interface User {
+  id: string
+  name: string
+  email: string
+  role: 'admin' | 'user'
+}
+
+// ← 여기 3: 반환 타입의 any를 올바른 타입으로 수정하세요
+async function getUser(id: string): Promise<any> {  // any → ?
+  const res = await fetcher<ApiResponse<User>>(\`/api/users/\${id}\`)
+  return res.data
+}`,
     correctAnswer: `// 공통 API 응답 wrapper 타입
 interface ApiResponse<T> {
   data: T
@@ -828,16 +825,50 @@ user.nonExistentField           // TS 에러: 없는 필드`,
     category: 'code-training',
     subcategory: 'mongoose',
     type: 'self-check',
-    difficulty: 'hard',
+    difficulty: 'medium',
     title: 'Mongoose Schema 설계 — 블로그 시스템',
     description:
-      '블로그 시스템에서 User, Post, Comment 간의 관계를 Mongoose Schema로 설계해보세요.\n\n요구사항:\n• User는 여러 Post를 작성할 수 있다\n• Post는 여러 Comment를 가질 수 있다\n• Comment는 User가 작성한다\n• Post 목록 조회 시 작성자 이름이 필요하다\n• Comment는 최대 100개로 제한된다 (Embedding 고려)',
-    code: `// 힌트: Mongoose Schema 기본 구조
-import { Schema, model, Types } from 'mongoose'
+      '아래 Schema 뼈대에서 빈칸 3곳을 채우세요.\n\n✅ 채울 것:\n① `email` 필드 옵션 — `unique: true`, `lowercase: true` 처리 포함\n② `authorId` 필드 옵션 — `User`를 참조(`ref`)하는 `ObjectId`\n③ `comments` 배열 검증 — 최대 100개 제한 (`validate` 함수 부분)',
+    code: `import { Schema, model, Types, Document } from 'mongoose'
 
-// User, Post, Comment Schema를 설계하세요
-// 각각 어떤 필드가 필요한지,
-// 관계를 Embedding으로 할지 Referencing으로 할지 결정하세요`,
+interface IUser extends Document {
+  name: string
+  email: string
+  createdAt: Date
+}
+
+const UserSchema = new Schema<IUser>({
+  name: { type: String, required: true },
+  // ← 여기 1: email 필드 — unique, lowercase 처리 필요
+  email: { /* 빈칸 */ },
+}, { timestamps: true })
+
+export const User = model<IUser>('User', UserSchema)
+
+// Comment는 Post에 Embedding
+interface IComment {
+  authorId: Types.ObjectId
+  content: string
+}
+
+const CommentSchema = new Schema<IComment>({
+  // ← 여기 2: authorId — User를 참조(ref)하는 ObjectId
+  authorId: { /* 빈칸 */ },
+  content: { type: String, required: true, maxlength: 500 },
+}, { timestamps: true })
+
+const PostSchema = new Schema({
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+  authorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  comments: {
+    // ← 여기 3: CommentSchema 배열, 최대 100개 제한 추가
+    type: [CommentSchema],
+    validate: [/* 빈칸 */, '댓글은 최대 100개']
+  },
+}, { timestamps: true })
+
+export const Post = model('Post', PostSchema)`,
     correctAnswer: `import { Schema, model, Types, Document } from 'mongoose'
 
 // User Schema
@@ -920,30 +951,37 @@ const posts = await Post.find({})
     category: 'code-training',
     subcategory: 'nestjs',
     type: 'self-check',
-    difficulty: 'hard',
+    difficulty: 'medium',
     title: 'NestJS Module 구조 설계 — 기능별 분리',
     description:
-      '아래 하나의 파일에 모든 로직이 들어있는 코드를 NestJS 모듈 구조로 분리해보세요.\n\n요구사항: UserModule, AuthModule을 분리하고 AuthModule이 UserModule에 의존하도록 구성하세요.',
-    code: `// 현재 — 모든 게 한 파일에 (나쁜 예)
-@Controller('auth')
-export class AppController {
+      '아래 모듈 뼈대에서 빈칸 3곳을 채우세요.\n\n✅ 채울 것:\n① `UserModule` — `AuthModule`에서 `UserService`를 쓰려면 `@Module` 데코레이터에 무엇이 필요한가?\n② `AuthModule.imports` — `UserService`를 주입받으려면 무엇을 import해야 하는가?\n③ `AuthService` 생성자 — `UserModule`에서 export된 서비스를 주입받는 파라미터 추가',
+    code: `// user.module.ts
+@Module({
+  imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])],
+  providers: [UserService],
+  // ← 여기 1: AuthModule에서 UserService를 쓰려면 무엇이 필요한가?
+})
+export class UserModule {}
+
+// auth.module.ts
+@Module({
+  imports: [
+    // ← 여기 2: UserService를 주입받으려면 무엇을 import해야 하는가?
+    JwtModule.register({ secret: process.env.JWT_SECRET, signOptions: { expiresIn: '15m' } }),
+    PassportModule,
+  ],
+  providers: [AuthService, JwtStrategy],
+  controllers: [AuthController],
+})
+export class AuthModule {}
+
+// auth.service.ts
+@Injectable()
+export class AuthService {
   constructor(
+    // ← 여기 3: UserModule에서 export된 서비스를 주입받으세요
     private jwtService: JwtService,
-    @InjectModel('User') private userModel: Model<User>
   ) {}
-
-  @Post('login')
-  async login(@Body() dto: LoginDto) {
-    const user = await this.userModel.findOne({ email: dto.email })
-    const valid = await bcrypt.compare(dto.password, user.password)
-    if (!valid) throw new UnauthorizedException()
-    return { token: this.jwtService.sign({ sub: user._id }) }
-  }
-
-  @Get('users')
-  getUsers() {
-    return this.userModel.find()
-  }
 }`,
     correctAnswer: `// ✅ user.module.ts
 @Module({
@@ -1026,34 +1064,25 @@ export class AuthService {
     difficulty: 'medium',
     title: '코드 쪼개기 — 비대한 컴포넌트 분리',
     description:
-      '아래 컴포넌트는 300줄이 넘습니다. 어떤 기준으로 어떻게 쪼갤지 설계하고 분리된 구조를 코드로 작성해보세요.',
-    code: `// DashboardPage.tsx — 너무 많은 일을 하는 컴포넌트
+      '아래 분리 뼈대에서 빈칸 3곳을 채우세요.\n\n✅ 채울 것:\n① `useDashboardStats` — `useState` + `useEffect`로 stats 조회, `return { stats }`\n② `useUserManagement` — `users`, `selectedUser` 상태, `filter`별 조회, 핸들러 포함\n③ `DashboardPage` — 두 훅을 사용해 컴포넌트를 조립',
+    code: `// ← 여기 1: 통계 데이터 훅 구현 (useState + useEffect로 stats 조회)
+function useDashboardStats() {
+  /* 빈칸 — stats 상태, 데이터 패칭, return { stats } */
+}
+
+// ← 여기 2: 유저 관리 훅 구현 (users, selectedUser, filter별 조회, 핸들러)
+function useUserManagement(filter: string) {
+  /* 빈칸 */
+}
+
+// 컴포넌트는 아래처럼 분리됩니다 (UI만 담당)
+function StatsCards({ stats }: { stats: any }) { return <div>{/* 통계 UI */}</div> }
+function UserTable({ users, onSelect }: any) { return <div>{/* 테이블 UI */}</div> }
+
+// ← 여기 3: DashboardPage — 훅 연결 + 컴포넌트 조립만 담당
 export default function DashboardPage() {
-  // 상태: 통계, 유저 목록, 필터, 모달, 폼 등 20개 이상
-  const [stats, setStats] = useState(null)
-  const [users, setUsers] = useState([])
   const [filter, setFilter] = useState('all')
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState(null)
-  const [formData, setFormData] = useState({...})
-  // ... 15개 더
-
-  // 데이터 패칭
-  useEffect(() => { /* 통계 조회 */ }, [])
-  useEffect(() => { /* 유저 조회 */ }, [filter])
-
-  // 이벤트 핸들러 10개 이상
-  const handleFilterChange = ...
-  const handleUserSelect = ...
-  const handleFormSubmit = ...
-  // ... 7개 더
-
-  // JSX — 탭, 테이블, 모달, 폼이 한 곳에 다 있음
-  return (
-    <div>
-      {/* 300줄의 JSX */}
-    </div>
-  )
+  /* 빈칸 — 두 훅 사용해서 조립 */
 }`,
     correctAnswer: `// 분리 기준: 관심사(역할)별로 쪼개기
 
@@ -1119,10 +1148,10 @@ export default function DashboardPage() {
     category: 'code-training',
     subcategory: 'typescript',
     type: 'self-check',
-    difficulty: 'medium',
+    difficulty: 'hard',
     title: 'TypeScript — 실무 유틸리티 타입 직접 구현',
     description:
-      '아래 유틸리티 타입을 직접 구현해보세요. TypeScript 내장 유틸리티 타입의 원리를 이해하는 훈련입니다.',
+      '각 `/* 구현 */` 자리에 Mapped Type 또는 Conditional Type 표현식을 채우세요. 내장 유틸리티 타입(`Partial`, `Required` 등) 사용은 금지입니다.\n\n✅ 채울 것:\n① `MyPartial<T>` — 모든 필드를 optional로\n② `MyRequired<T>` — 모든 필드를 required로\n③ `MyReadonly<T>` — 모든 필드를 readonly로\n④ `MyPick<T, K>` — T에서 K 키만 선택\n⑤ `MyExclude<T, U>` — T에서 U에 해당하는 타입 제거',
     code: `// 아래를 직접 구현해보세요 (내장 타입 사용 금지)
 
 // 1. MyPartial<T> — 모든 필드를 optional로 만들기
@@ -1195,18 +1224,51 @@ type MyReturnType<T extends (...args: any) => any> =
     difficulty: 'hard',
     title: 'NestJS 전체 인증 흐름 직접 작성',
     description:
-      '회원가입 → 로그인 → 보호된 라우트 접근까지 NestJS + Mongoose + JWT 전체 흐름을 직접 구현해보세요.\n\n필요한 것: AuthController, AuthService, JwtStrategy, CreateUserDto, LoginDto',
-    code: `// 힌트: 필요한 패키지
-// @nestjs/jwt, @nestjs/passport, passport-jwt
-// class-validator, bcrypt
+      '아래 `JwtStrategy`와 `AuthService` 뼈대에서 빈칸 3곳을 채우세요.\n\n✅ 채울 것:\n① `JwtStrategy` 생성자 — Bearer 토큰을 `Authorization` 헤더에서 추출하는 `jwtFromRequest` 설정\n② `JwtStrategy.validate` — `payload.sub`(userId)로 유저 조회, 없으면 `UnauthorizedException`\n③ `AuthService.login` — `bcrypt.compare`로 비밀번호 검증, 실패 시 `UnauthorizedException`, 성공 시 `accessToken` 반환',
+    code: `// jwt.strategy.ts — 토큰을 검증하고 req.user에 유저 정보를 주입합니다
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor(private userService: UserService) {
+    super({
+      // ← 여기 1: Bearer 토큰을 Authorization 헤더에서 추출하는 설정
+      jwtFromRequest: /* 빈칸 */,
+      secretOrKey: process.env.JWT_SECRET,
+    })
+  }
 
-// 구현해야 할 엔드포인트
-// POST /auth/signup   — 회원가입
-// POST /auth/login    — 로그인 (JWT 반환)
-// GET  /auth/me       — 내 정보 (JWT 필요)
+  async validate(payload: { sub: string; email: string }) {
+    // ← 여기 2: payload.sub(userId)로 유저 조회, 없으면 UnauthorizedException
+  }
+}
 
-// JwtStrategy가 어떻게 req.user를 채우는지
-// Guard가 어떻게 라우트를 보호하는지 이해하면서 작성해보세요`,
+// auth.service.ts
+@Injectable()
+export class AuthService {
+  constructor(
+    private userService: UserService,
+    private jwtService: JwtService,
+  ) {}
+
+  async login(dto: LoginDto) {
+    const user = await this.userService.findByEmail(dto.email)
+    // ← 여기 3: 비밀번호 검증(bcrypt.compare) + 실패 시 UnauthorizedException
+    // 성공 시 jwtService.sign으로 accessToken 반환
+  }
+
+  async signup(dto: CreateUserDto) {
+    const hashed = await bcrypt.hash(dto.password, 10)
+    return this.userService.create({ ...dto, password: hashed })
+  }
+}
+
+// auth.controller.ts (참고 — 건드리지 않아도 됨)
+@Controller('auth')
+export class AuthController {
+  constructor(private authService: AuthService) {}
+  @Post('signup') signup(@Body() dto: CreateUserDto) { return this.authService.signup(dto) }
+  @Post('login')  login(@Body() dto: LoginDto)       { return this.authService.login(dto) }
+  @Get('me') @UseGuards(JwtAuthGuard) me(@Request() req) { return req.user }
+}`,
     correctAnswer: `// auth.dto.ts
 export class CreateUserDto {
   @IsString() @MinLength(2) name: string

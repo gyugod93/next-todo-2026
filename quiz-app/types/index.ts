@@ -29,6 +29,7 @@ export interface Problem {
   difficulty: Difficulty
   title: string
   description: string
+  conceptExplanation?: string
   code?: string
   options?: string[]
   correctAnswer: string | number
