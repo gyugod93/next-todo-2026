@@ -11,6 +11,8 @@ export const authAdvancedProblems: Problem[] = [
     difficulty: 'easy',
     title: 'NextAuth.js — jwt vs database 세션 전략',
     description: 'NextAuth.js에서 `session: { strategy: "jwt" }`와 `session: { strategy: "database" }`의 차이로 올바른 것은?',
+    conceptExplanation:
+      'NextAuth.js는 세션 데이터를 어디에 저장할지 결정하는 두 가지 전략을 제공합니다. `jwt` 전략은 세션 데이터를 암호화된 JWT로 만들어 Cookie에 저장하며 서버 DB 조회가 없습니다(Stateless). `database` 전략은 세션을 DB에 저장하고 클라이언트는 세션 ID만 Cookie로 가집니다(Stateful). 전략 선택은 서버 확장성과 즉시 세션 무효화 필요 여부에 따라 달라집니다.',
     options: [
       '두 전략 모두 세션 데이터를 서버 DB에 저장한다',
       '`jwt` 전략은 세션 데이터를 암호화된 Cookie에 저장하고 DB 조회 없이 검증하며, `database` 전략은 서버 DB에 세션을 저장하고 매 요청마다 DB를 조회한다',
@@ -33,6 +35,8 @@ export const authAdvancedProblems: Problem[] = [
     difficulty: 'medium',
     title: 'NextAuth JWT callback — 최초 로그인 vs 이후 호출 분기',
     description: '다음 JWT callback 코드에서 `if (user)` 분기가 실행되는 시점은?',
+    conceptExplanation:
+      'NextAuth의 `jwt` 콜백은 토큰이 생성되거나 갱신될 때마다 호출됩니다. 콜백에 전달되는 `user` 인자는 `authorize()` 함수가 성공적으로 user 객체를 반환한 최초 로그인 시점에만 존재합니다. 이후 세션 조회나 갱신 시에는 `user`가 `undefined`가 되므로, `if (user)` 조건문으로 최초 로그인과 이후 호출을 구분하여 커스텀 필드를 토큰에 저장하는 패턴이 필요합니다.',
     code: `jwt: async ({ token, user }) => {
   if (user) {
     return { ...token, id: user.id, role: user.role }
@@ -61,6 +65,8 @@ export const authAdvancedProblems: Problem[] = [
     difficulty: 'medium',
     title: 'NextAuth session callback의 역할',
     description: '다음 코드에서 session callback이 없다면 어떤 문제가 발생하는가?',
+    conceptExplanation:
+      'NextAuth에서 `jwt` 콜백과 `session` 콜백은 서로 다른 역할을 합니다. `jwt` 콜백은 JWT 토큰을 조작하고, `session` 콜백은 클라이언트에 노출할 세션 객체를 조작합니다. 두 객체는 독립적이므로 `jwt` 콜백에서 토큰에 커스텀 필드를 추가해도, `session` 콜백에서 명시적으로 복사하지 않으면 클라이언트의 `useSession()`에서 해당 필드를 읽을 수 없습니다.',
     code: `// jwt callback에서 role을 토큰에 저장
 jwt: async ({ token, user }) => {
   if (user) return { ...token, role: (user as any).role }
@@ -95,6 +101,8 @@ jwt: async ({ token, user }) => {
     difficulty: 'hard',
     title: 'update() 호출이 JWT callback을 재실행하는 이유',
     description: '다음 RoleGuard 코드에서 pathname이 변경될 때마다 `update()`를 호출하는 이유는?',
+    conceptExplanation:
+      'NextAuth의 `update()` 함수는 `/api/auth/session`에 PATCH 요청을 보내 서버의 JWT callback을 다시 실행시키고 갱신된 세션을 클라이언트에 반영합니다. JWT 방식은 서버가 클라이언트에 세션 변경 사항을 Push할 수 없으므로, 클라이언트가 능동적으로 갱신을 요청해야 합니다. 이를 이용해 페이지 이동 시마다 서버에서 최신 사용자 상태(권한 변경, 계정 비활성화 등)를 재확인하는 패턴을 구현할 수 있습니다.',
     code: `export default function RoleGuard() {
   const { data: session, update } = useSession()
   const pathname = usePathname()
@@ -133,6 +141,8 @@ jwt: async ({ token, user }) => {
     difficulty: 'hard',
     title: 'forceLogout 플래그 전파 흐름',
     description: '관리자가 트레이너를 삭제(useYn=\'N\')했을 때 해당 트레이너가 강제 로그아웃되는 전체 흐름에서 순서가 올바른 것은?',
+    conceptExplanation:
+      'JWT 방식은 Stateless이기 때문에 서버가 발급한 토큰을 직접 삭제하거나 무효화할 수 없습니다. 이를 우회하기 위해 DB에 `forceLogout` 또는 `useYn` 같은 플래그를 저장하고, 클라이언트가 세션 갱신을 요청할 때 서버에서 해당 플래그를 확인하여 세션에 강제 로그아웃 신호를 담아 반환하는 패턴을 사용합니다. 이 방식은 즉각적이지 않고 클라이언트의 다음 갱신 요청 시점에 적용됩니다.',
     options: [
       'JWT 토큰 삭제 → DB 업데이트 → 클라이언트 리다이렉트',
       'DB에 useYn=\'N\' 저장 → 트레이너의 update() 호출 → JWT callback에서 DB 재검증 → token.forceLogout=true → session.user.forceLogout=true → signOut()',
@@ -155,6 +165,8 @@ jwt: async ({ token, user }) => {
     difficulty: 'medium',
     title: 'withAuth middleware — authorized 콜백',
     description: '다음 middleware 코드에서 `authorized` 콜백이 `false`를 반환하면 어떻게 되는가?',
+    conceptExplanation:
+      'NextAuth의 `withAuth`는 Next.js Middleware에서 사용하는 인증 래퍼 함수입니다. `authorized` 콜백은 현재 요청이 인증된 접근인지 결정하며, `token`(JWT 토큰 정보)을 인자로 받아 `true` 또는 `false`를 반환합니다. `true`를 반환하면 첫 번째 인자로 전달한 middleware 함수가 실행되고, `false`를 반환하면 미들웨어 함수를 건너뛰고 로그인 페이지로 리다이렉트됩니다.',
     code: `export default withAuth(
   (req) => {
     const requestHeaders = new Headers(req.headers)
@@ -192,6 +204,8 @@ jwt: async ({ token, user }) => {
     difficulty: 'medium',
     title: 'next-auth.d.ts — TypeScript 모듈 확장',
     description: '다음 코드가 필요한 이유로 올바른 것은?',
+    conceptExplanation:
+      'TypeScript의 Declaration Merging(선언 병합)은 이미 정의된 외부 라이브러리의 타입을 `declare module` 문법으로 확장할 수 있는 기능입니다. NextAuth.js의 `Session`, `JWT` 등 기본 타입에는 커스텀 필드(role, forceLogout 등)가 없으므로, 이 필드들을 사용하면 TypeScript 타입 오류가 발생합니다. `.d.ts` 파일에서 해당 인터페이스를 병합 선언하여 커스텀 필드의 타입을 정의할 수 있습니다.',
     code: `// next-auth.d.ts
 declare module 'next-auth' {
   interface Session {
@@ -235,6 +249,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'easy',
     title: 'SSO(Single Sign-On) 핵심 개념',
     description: 'SSO(Single Sign-On)의 정의와 대표적인 사용 사례로 올바른 것은?',
+    conceptExplanation:
+      'SSO(Single Sign-On)는 중앙 인증 서버(IdP, Identity Provider)에서 한 번만 로그인하면 연동된 여러 서비스(SP, Service Provider)에 재인증 없이 접근할 수 있는 인증 방식입니다. 사용자는 하나의 자격 증명만 관리하면 되고, 보안 팀은 퇴직자 계정을 IdP 한 곳에서 비활성화하면 모든 연동 서비스 접근이 차단되는 중앙 집중식 관리가 가능합니다.',
     options: [
       'SSO는 여러 비밀번호를 하나의 마스터 비밀번호로 관리하는 비밀번호 매니저다',
       'SSO는 한 번의 로그인으로 여러 독립적인 서비스에 재인증 없이 접근할 수 있는 인증 방식이다. 기업 환경에서 사내 시스템들(HR, 그룹웨어, ERP)을 단일 인증으로 통합할 때 주로 사용된다',
@@ -257,6 +273,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'hard',
     title: 'SAML vs OIDC 비교',
     description: 'SAML 2.0과 OIDC(OpenID Connect)를 비교한 것으로 올바른 것은?',
+    conceptExplanation:
+      'SAML(Security Assertion Markup Language) 2.0은 2005년에 만들어진 XML 기반 SSO 표준 프로토콜입니다. 기업 레거시 시스템 및 엔터프라이즈 환경과의 호환성이 높습니다. OIDC(OpenID Connect)는 2014년에 만들어진 OAuth 2.0 기반의 현대적인 인증 프로토콜로 JSON/JWT를 사용하며, 모바일 앱과 SPA에 적합합니다. 두 프로토콜은 모두 SSO 구현에 사용되나 기술 스택과 적합한 환경이 다릅니다.',
     options: [
       'SAML은 모바일 앱에 최적화되어 있고, OIDC는 레거시 엔터프라이즈 시스템에 적합하다',
       'SAML은 XML 기반으로 기업 레거시 시스템과 호환성이 높고, OIDC는 JWT/JSON 기반으로 모던 웹/모바일에 적합하며 구현이 더 간단하다',
@@ -279,6 +297,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'medium',
     title: 'Magic Link vs Email OTP — 차이와 보안',
     description: 'Magic Link와 Email OTP의 차이 및 보안 특성으로 올바른 것은?',
+    conceptExplanation:
+      'Magic Link는 서버가 단기 토큰을 포함한 URL을 이메일로 전송하고, 사용자가 링크를 클릭하면 자동으로 로그인되는 비밀번호 없는 인증 방식입니다. Email OTP(One-Time Password)는 서버가 짧은 숫자 코드(보통 6자리)를 이메일로 전송하고 사용자가 직접 입력하는 방식입니다. 두 방식 모두 이메일 계정 보안에 의존하며, 토큰/코드는 1회용으로 짧은 유효 시간이 핵심 보안 요소입니다.',
     options: [
       'Magic Link는 비밀번호가 링크에 포함되어 있어 안전하지 않다',
       'Magic Link는 클릭 한 번으로 로그인되는 일회용 URL이고, Email OTP는 짧은 숫자 코드를 입력하는 방식이다. 둘 다 이메일 계정 보안에 의존하며 짧은 유효시간(5~15분)이 핵심 보안 요소다',
@@ -301,6 +321,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'hard',
     title: 'Refresh Token Rotation 심화',
     description: 'Refresh Token Rotation 패턴에서 탈취된 Refresh Token을 감지하는 원리로 올바른 것은?',
+    conceptExplanation:
+      'Refresh Token Rotation은 Access Token 갱신 시마다 이전 Refresh Token을 무효화하고 새로운 Refresh Token을 함께 발급하는 보안 패턴입니다. 정상 사용자는 항상 최신 Refresh Token을 가지게 됩니다. 이미 사용된 이전 Refresh Token으로 갱신을 시도하면 서버가 탈취를 감지하고 해당 사용자의 모든 세션을 강제 종료할 수 있습니다.',
     options: [
       'Refresh Token에 IP 주소가 저장되어 IP가 바뀌면 감지된다',
       '갱신 시 이전 Refresh Token을 무효화하고 새 Refresh Token을 발급한다. 공격자가 탈취한 토큰으로 갱신을 시도하면 이미 사용된 토큰이므로 감지되고, 해당 사용자의 모든 세션을 강제 종료할 수 있다',
@@ -323,6 +345,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'hard',
     title: 'JWT Blacklist — 강제 로그아웃 구현',
     description: 'JWT(Stateless) 방식에서 즉각적인 강제 로그아웃을 구현하는 Blacklist 패턴으로 올바른 것은?',
+    conceptExplanation:
+      'JWT는 Stateless 방식이기 때문에 서버가 발급한 토큰을 취소하거나 무효화하는 표준 방법이 없습니다. JWT Blacklist는 이 한계를 극복하기 위해 로그아웃된 토큰을 Redis 같은 빠른 저장소에 기록하고, 모든 요청에서 해당 목록을 확인하여 무효화된 토큰을 거부하는 패턴입니다. 토큰 만료 시각(exp)과 동일한 TTL로 Redis에 저장하면 만료된 토큰이 자동으로 정리됩니다.',
     options: [
       'JWT는 Stateless이므로 강제 로그아웃 구현이 원천적으로 불가능하다',
       '로그아웃 시 해당 JWT를 Redis Blacklist에 저장하고, 모든 API 요청에서 Blacklist 조회 후 포함된 토큰은 거부한다. TTL을 토큰 만료 시간과 동일하게 설정하여 자동 정리한다',
@@ -345,6 +369,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'medium',
     title: '로그인 기법 선택 기준',
     description: '다음 시나리오별로 가장 적합한 인증 방식을 매칭한 것으로 올바른 것은?',
+    conceptExplanation:
+      '인증 방식은 서비스의 특성, 사용자 유형(B2C/B2B), 보안 요구 수준, 기술 스택에 따라 최적의 선택이 달라집니다. OAuth/OIDC는 소셜 로그인, SSO는 기업 내부 시스템 통합, Magic Link/OTP는 비밀번호 없는 인증, MFA/Passkeys는 높은 보안 요구 서비스에 주로 사용됩니다. 실제 서비스에서는 하나의 방식만 고집하지 않고 상황에 따라 조합하여 사용합니다.',
     options: [
       'A) B2C 서비스 소셜 로그인 → SAML, B) 기업 내부 시스템 통합 → Magic Link, C) 금융 서비스 → 비밀번호만',
       'A) B2C 서비스 소셜 로그인 → OAuth/OIDC (Google, Kakao), B) 기업 내부 시스템 통합 → SSO (Okta/SAML/OIDC), C) 금융 서비스 → 비밀번호 + TOTP MFA 또는 Passkeys',
@@ -367,6 +393,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'hard',
     title: 'Session Fixation 공격',
     description: 'Session Fixation 공격과 방어 방법으로 올바른 것은?',
+    conceptExplanation:
+      'Session Fixation(세션 고정) 공격은 공격자가 미리 알고 있는 세션 ID를 피해자에게 사용하도록 유도한 뒤, 피해자가 그 세션 ID로 로그인하면 동일한 세션 ID로 피해자의 계정에 접근하는 공격입니다. 방어 핵심은 로그인 성공 직후 반드시 새로운 세션 ID를 재발급하는 것입니다. 이렇게 하면 공격자가 사전에 알고 있던 세션 ID가 무효화됩니다.',
     options: [
       'Session Fixation은 세션이 너무 오래 유지될 때 발생하는 성능 문제다',
       '공격자가 미리 알고 있는 Session ID를 피해자에게 사용하도록 유도한 뒤, 피해자 로그인 후 그 Session ID로 세션을 탈취하는 공격이다. 로그인 성공 시 반드시 새 Session ID를 발급하여 방어한다',
@@ -389,6 +417,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'medium',
     title: 'MFA 인증 요소별 강도 비교',
     description: '다음 MFA 인증 수단을 보안 강도가 강한 순서로 올바르게 나열한 것은?',
+    conceptExplanation:
+      'MFA(Multi-Factor Authentication)는 두 가지 이상의 인증 요소를 조합하여 보안을 강화하는 방식입니다. 인증 요소는 지식(알고 있는 것), 소유(가지고 있는 것), 생체(본인 특성)로 나뉩니다. 각 MFA 수단은 피싱, SIM 스와핑 등 특정 공격에 대한 저항성이 다르며, 피싱 사이트에서 동작하지 않는 Origin Binding 여부가 보안 강도를 구분하는 핵심 기준입니다.',
     options: [
       'SMS OTP > TOTP(인증 앱) > 하드웨어 보안 키(YubiKey) > Passkeys',
       'Passkeys ≈ 하드웨어 보안 키(YubiKey) > TOTP(인증 앱) > SMS OTP',
@@ -414,6 +444,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'hard',
     title: 'OAuth 2.0 PKCE — SPA 코드 탈취 방어',
     description: 'SPA(Single Page App)에서 Authorization Code Flow에 PKCE를 적용하는 이유는?',
+    conceptExplanation:
+      'PKCE(Proof Key for Code Exchange)는 OAuth 2.0 Authorization Code Flow의 보안 확장 기법입니다. SPA는 Client Secret을 안전하게 보관할 수 없어 기존 Code Flow를 사용하면 Authorization Code 탈취 시 무방비합니다. PKCE는 클라이언트가 요청마다 고유한 Code Verifier를 생성하고 그 해시값(Code Challenge)을 인증 요청에 포함시켜, 토큰 교환 시 원본 Verifier를 제출해야만 토큰을 발급받을 수 있게 합니다.',
     options: [
       'PKCE는 모바일 앱에서만 사용되며 SPA와는 무관하다',
       'SPA는 Client Secret을 안전하게 보관할 수 없어 Authorization Code를 탈취당했을 때 무방비하다. PKCE는 Code Verifier/Challenge로 Code를 발급한 클라이언트만 토큰으로 교환할 수 있게 하여 탈취를 무력화한다',
@@ -436,6 +468,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'hard',
     title: 'Client Credentials Flow — 서버간(M2M) 인증',
     description: 'Client Credentials Flow가 사용되는 상황과 Authorization Code Flow와의 차이는?',
+    conceptExplanation:
+      'OAuth 2.0의 Client Credentials Flow는 사람(사용자) 없이 서버-서버(Machine-to-Machine) 간 통신에 사용되는 Grant Type입니다. 클라이언트가 자신의 자격 증명(client_id, client_secret)만으로 직접 Access Token을 발급받으며, 사용자 동의 화면이 없고 Refresh Token도 발급되지 않습니다. 마이크로서비스 간 API 호출, cron job, CI/CD 파이프라인 등에 주로 사용됩니다.',
     options: [
       'Client Credentials Flow는 사용자 로그인에 사용한다',
       'Client Credentials Flow는 사용자(사람) 없이 서버간(Machine-to-Machine) 통신에 사용된다. client_id와 client_secret만으로 Access Token을 발급받으며 Refresh Token이 없다',
@@ -458,6 +492,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'hard',
     title: 'JWT Claims 심화 — jti, aud, iss 활용',
     description: '다음 JWT payload에서 각 claim의 역할로 올바른 것은?',
+    conceptExplanation:
+      'JWT Claims는 Payload에 담기는 키-값 쌍으로, IANA에 표준 이름이 등록된 Registered Claims와 사용자 정의 Claims로 나뉩니다. `iss`(Issuer)는 토큰 발급자, `sub`(Subject)는 대상 사용자, `aud`(Audience)는 이 토큰을 사용할 수 있는 서비스 목록, `jti`(JWT ID)는 토큰의 고유 식별자입니다. 특히 `jti`는 Blacklist에서 토큰을 전체 저장하는 대신 ID만 저장하는 효율적인 방법으로 활용됩니다.',
     code: '{\n  "iss": "https://auth.myapp.com",\n  "sub": "user_123",\n  "aud": ["api.myapp.com", "admin.myapp.com"],\n  "exp": 1717200000,\n  "iat": 1717196400,\n  "nbf": 1717196400,\n  "jti": "550e8400-e29b-41d4-a716-446655440000",\n  "role": "admin"\n}',
     options: [
       'iss는 사용자 ID, aud는 서버 이름, jti는 만료 시간이다',
@@ -481,6 +517,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'hard',
     title: 'BFF(Backend for Frontend) 인증 패턴',
     description: 'BFF 패턴에서 인증 토큰을 관리하는 방식으로 올바른 것은?',
+    conceptExplanation:
+      'BFF(Backend for Frontend)는 프론트엔드 전용 중간 서버 계층으로, 클라이언트(브라우저)와 실제 API 서버 사이에 위치합니다. 인증 측면에서 BFF는 Access Token, Refresh Token 같은 민감한 자격 증명을 서버 메모리나 httpOnly Cookie에 보관하여 브라우저 JavaScript가 직접 접근하지 못하게 합니다. Next.js의 서버 컴포넌트와 Server Action이 이 BFF 역할을 담당합니다.',
     options: [
       'BFF는 백엔드 코드를 프론트엔드에서 실행하는 기술이다',
       'BFF는 프론트엔드 전용 중간 서버로, Access Token을 서버(BFF) 메모리나 httpOnly Cookie에 보관하여 브라우저(클라이언트 JS)에 토큰이 노출되지 않게 한다. 브라우저와 BFF 간은 세션/Cookie, BFF와 API 서버 간은 Bearer Token으로 통신한다',
@@ -503,6 +541,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'hard',
     title: 'Token Introspection — 중앙 검증 vs 자체 검증',
     description: 'OAuth Token Introspection과 JWT 자체 검증(Self-contained)의 차이로 올바른 것은?',
+    conceptExplanation:
+      'JWT 자체 검증은 서버가 비밀 키로 서명을 확인하기만 하면 되므로 DB 조회 없이 빠르게 인증할 수 있는 방식입니다. Token Introspection(RFC 7662)은 리소스 서버가 Authorization Server의 전용 엔드포인트에 토큰을 제출하여 실시간으로 유효성을 확인하는 방식입니다. 자체 검증은 빠르지만 즉시 무효화가 어렵고, Introspection은 실시간 상태 확인이 가능하지만 네트워크 오버헤드가 있습니다.',
     options: [
       'Token Introspection은 JWT의 다른 이름이다',
       'JWT는 서명 검증만으로 자체 검증(DB 조회 없음)하지만 즉시 무효화가 어렵다. Token Introspection은 매 요청마다 Authorization Server에 토큰 유효성을 조회하여 즉시 무효화가 가능하지만 네트워크 오버헤드가 있다',
@@ -525,6 +565,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'hard',
     title: 'Refresh Token 저장 전략 — 보안 비교',
     description: 'Refresh Token을 저장하는 세 가지 방법의 보안 비교로 올바른 것은?',
+    conceptExplanation:
+      'Refresh Token은 장기간 유효한 민감한 자격 증명이므로 저장 위치가 보안에 큰 영향을 미칩니다. localStorage는 JavaScript에서 자유롭게 읽을 수 있어 XSS 공격에 취약하며, Refresh Token 저장에 부적합합니다. httpOnly Cookie는 JavaScript 접근이 차단되어 XSS를 방어합니다. 서버 DB에 해시하여 저장하면 서버에서 직접 무효화가 가능하며, 두 방법을 조합하면 가장 높은 보안 수준을 달성합니다.',
     options: [
       'localStorage가 구현이 가장 쉬우므로 권장된다',
       'httpOnly Cookie(XSS 방어)와 서버 DB 저장(즉시 무효화)이 각각 장점이 있으며, 최고 보안은 두 가지 조합이다. localStorage는 XSS에 취약하여 Refresh Token 저장에 적합하지 않다',
@@ -547,6 +589,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'hard',
     title: 'MSA 인증 — API Gateway 패턴',
     description: '마이크로서비스 아키텍처(MSA)에서 인증을 처리하는 API Gateway 패턴으로 올바른 것은?',
+    conceptExplanation:
+      'MSA(마이크로서비스 아키텍처)에서 각 서비스마다 독립적으로 인증을 구현하면 코드 중복과 관리 부담이 커집니다. API Gateway 패턴은 외부 요청의 단일 진입점인 Gateway에서 JWT 검증을 중앙화하고, 검증된 사용자 정보를 헤더에 담아 내부 서비스로 전달하는 방식입니다. 내부 서비스는 Gateway를 신뢰하여 별도 인증 로직 없이 헤더의 사용자 정보를 바로 사용할 수 있습니다.',
     options: [
       'MSA에서는 각 마이크로서비스가 독립적으로 비밀번호를 관리해야 한다',
       'API Gateway가 모든 요청의 JWT를 검증하고 사용자 정보를 헤더에 추가하여 내부 서비스로 전달한다. 내부 서비스는 Gateway를 신뢰하여 별도 인증 없이 헤더의 사용자 정보를 사용한다',
@@ -569,6 +613,8 @@ declare module 'next-auth/jwt' {
     difficulty: 'medium',
     title: 'OAuth 2.0 Scope 설계 — 최소 권한 원칙',
     description: 'OAuth scope를 설계할 때 올바른 원칙은?',
+    conceptExplanation:
+      'OAuth Scope는 클라이언트가 요청하는 권한의 범위를 나타내는 문자열입니다. `read:users`, `write:orders` 처럼 리소스별, 동작별로 세분화하여 정의합니다. 최소 권한 원칙(Principle of Least Privilege)은 클라이언트에게 필요한 최소한의 scope만 부여하여, 토큰이 탈취되더라도 공격자가 접근할 수 있는 리소스의 범위를 최소화하는 보안 원칙입니다.',
     options: [
       'scope는 단순히 API 경로 이름이므로 아무렇게나 정해도 된다',
       'scope는 최소 권한 원칙에 따라 읽기/쓰기를 분리하고 리소스별로 세분화해야 한다. 클라이언트에는 필요한 최소한의 scope만 부여하여 토큰 탈취 시 피해를 최소화한다',

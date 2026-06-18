@@ -11,6 +11,8 @@ export const databaseProblems: Problem[] = [
     difficulty: 'easy',
     title: 'Collection vs Table',
     description: 'MongoDB에서 RDBMS의 "테이블(Table)"에 해당하는 개념은?',
+    conceptExplanation:
+      'MongoDB는 관계형 데이터베이스(RDBMS)와 다른 용어 체계를 사용합니다. RDBMS의 핵심 구성 요소(Database, Table, Row, Column)는 MongoDB에서 각각 대응하는 개념으로 바뀝니다. MongoDB는 스키마가 고정되지 않는 유연한 구조를 가집니다.',
     options: ['Document', 'Collection', 'Field', 'Schema'],
     correctAnswer: 1,
     explanation:
@@ -28,6 +30,8 @@ export const databaseProblems: Problem[] = [
     difficulty: 'easy',
     title: 'Document vs Row',
     description: 'MongoDB Document에 대한 설명으로 올바른 것은?',
+    conceptExplanation:
+      'Document는 MongoDB에서 데이터를 저장하는 기본 단위입니다. JSON과 유사한 BSON(Binary JSON) 형식으로 저장되며, RDBMS의 Row(행)에 해당합니다. 중첩 객체와 배열을 포함할 수 있어 복잡한 데이터를 하나의 단위로 표현할 수 있습니다.',
     options: [
       'Document는 반드시 동일한 필드 구조를 가져야 한다',
       'Document는 JSON 형태의 데이터 단위이며, 같은 Collection 안에서도 구조가 달라도 된다',
@@ -50,6 +54,8 @@ export const databaseProblems: Problem[] = [
     difficulty: 'easy',
     title: 'Field vs Column',
     description: 'MongoDB에서 RDBMS의 "컬럼(Column)"에 해당하는 개념과 그 특징은?',
+    conceptExplanation:
+      'Field는 Document 안의 키-값(key-value) 쌍으로, RDBMS의 Column(컬럼)에 해당하는 개념입니다. RDBMS는 테이블 생성 시 컬럼을 미리 선언해야 하지만, MongoDB의 Field는 Document마다 자유롭게 추가하거나 생략할 수 있습니다.',
     options: [
       'Document — 모든 Document에서 동일한 필드를 반드시 가져야 한다',
       'Field — Document 안의 키-값 쌍이며, 각 Document마다 다른 필드를 가질 수 있다',
@@ -72,6 +78,8 @@ export const databaseProblems: Problem[] = [
     difficulty: 'medium',
     title: 'ObjectId — _id 구조',
     description: 'MongoDB의 _id 필드와 ObjectId에 대한 설명으로 올바른 것은?',
+    conceptExplanation:
+      '_id는 MongoDB에서 각 Document를 고유하게 식별하는 기본 키(Primary Key)입니다. 기본값으로 사용되는 ObjectId는 12바이트 크기의 고유 식별자로, 생성 시각·머신 정보·카운터 등을 조합하여 분산 환경에서도 충돌 없이 유일한 값을 보장합니다.',
     options: [
       '_id는 반드시 숫자여야 하며 자동 증가(AUTO_INCREMENT)된다',
       '_id는 12바이트 ObjectId가 기본값이며, 타임스탬프·머신ID·랜덤값으로 구성된다',
@@ -94,6 +102,8 @@ export const databaseProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Embedding vs Referencing — 언제 무엇을?',
     description: '사용자(User)와 주문(Order) 데이터를 설계할 때, Referencing(참조)이 더 적합한 경우는?',
+    conceptExplanation:
+      'MongoDB에서 관련 데이터를 저장하는 방식은 두 가지입니다. Embedding(임베딩)은 관련 데이터를 하나의 Document 안에 중첩하여 저장하는 방식이고, Referencing(참조)은 다른 Collection의 _id를 저장하여 관계를 표현하는 방식입니다. 데이터의 접근 패턴과 크기에 따라 적절한 방식을 선택해야 합니다.',
     options: [
       '사용자의 기본 주소처럼 항상 함께 조회되고 독립적으로 쓰이지 않는 데이터',
       '주문 내역이 무한정 늘어날 수 있고, 주문을 독립적으로 조회/수정해야 하는 경우',
@@ -116,6 +126,8 @@ export const databaseProblems: Problem[] = [
     difficulty: 'medium',
     title: 'MongoDB CRUD 연산자',
     description: '다음 중 MongoDB 업데이트 연산자와 설명이 잘못 짝지어진 것은?',
+    conceptExplanation:
+      'MongoDB는 Document를 수정할 때 특수한 업데이트 연산자를 사용합니다. $set, $inc, $push, $pull 등의 연산자를 통해 Document 전체를 교체하지 않고 특정 필드만 선택적으로 변경할 수 있습니다. 연산자를 사용하지 않으면 Document 전체가 교체됩니다.',
     options: [
       '$set — 특정 필드 값을 설정(없으면 추가)',
       '$push — 배열 필드에 요소를 추가',
@@ -141,6 +153,8 @@ export const databaseProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Mongoose: Schema vs Model vs Document',
     description: 'Mongoose의 세 가지 핵심 개념(Schema, Model, Document)의 역할이 올바르게 설명된 것은?',
+    conceptExplanation:
+      'Mongoose는 Node.js에서 MongoDB를 사용하기 위한 ODM(Object Document Mapper) 라이브러리입니다. Schema, Model, Document라는 세 가지 계층 구조로 데이터를 정의하고 조작합니다. 이 구조를 통해 스키마 없는 MongoDB에 타입 정의와 유효성 검사를 적용할 수 있습니다.',
     options: [
       'Schema = 데이터베이스 연결, Model = 쿼리 실행기, Document = 스키마 정의',
       'Schema = 데이터 구조 정의(설계도), Model = Collection과 연결된 클래스(공장), Document = Model로 만든 실제 인스턴스(개별 레코드)',
@@ -163,6 +177,8 @@ export const databaseProblems: Problem[] = [
     difficulty: 'medium',
     title: 'populate vs $lookup — 차이점',
     description: 'Mongoose의 populate()와 MongoDB의 $lookup의 차이점으로 올바른 것은?',
+    conceptExplanation:
+      'populate()는 Mongoose가 제공하는 기능으로, 다른 Collection의 Document를 참조하는 필드를 자동으로 가져옵니다. $lookup은 MongoDB의 Aggregation Pipeline 연산자로, DB 내부에서 두 Collection을 조인합니다. 두 방법 모두 참조 관계에 있는 데이터를 함께 조회하는 데 사용됩니다.',
     options: [
       'populate는 서버에서 두 번 쿼리를 날리고, $lookup은 DB 내부에서 한 번에 처리한다',
       '$lookup은 Mongoose 전용이고, populate는 순수 MongoDB 연산자다',
@@ -185,6 +201,8 @@ export const databaseProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Mongoose Middleware (pre/post hooks)',
     description: '다음 Mongoose pre("save") 미들웨어가 실행되지 않는 경우는?',
+    conceptExplanation:
+      'Mongoose Middleware(훅)는 특정 작업(save, find, delete 등) 전후에 자동으로 실행되는 함수입니다. pre 훅은 작업 실행 전에, post 훅은 작업 완료 후에 실행됩니다. 비밀번호 해싱처럼 데이터 저장 전 처리가 필요한 로직에 활용됩니다.',
     code: `userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     this.password = await bcrypt.hash(this.password, 10)
@@ -213,6 +231,8 @@ export const databaseProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Mongoose Virtual 필드',
     description: 'Mongoose Virtual 필드의 특징으로 올바른 것은?',
+    conceptExplanation:
+      'Virtual 필드는 MongoDB에 실제로 저장되지 않고 Mongoose Document 인스턴스에서 동적으로 계산되는 필드입니다. 기존 저장 필드들을 조합하거나 가공하여 편의상 제공하는 읽기 전용(또는 getter/setter) 값입니다. DB 조회 조건으로는 사용할 수 없습니다.',
     code: `userSchema.virtual("fullName").get(function () {
   return \`\${this.firstName} \${this.lastName}\`
 })`,
@@ -238,6 +258,8 @@ export const databaseProblems: Problem[] = [
     difficulty: 'hard',
     title: 'lean() — 성능 최적화',
     description: 'Mongoose의 .lean() 옵션 사용 시 나타나는 결과는?',
+    conceptExplanation:
+      'Mongoose는 쿼리 결과를 기본적으로 Document 인스턴스(save, toJSON 등의 메서드를 가진 객체)로 반환합니다. lean()은 이 변환 과정을 생략하고 순수한 JavaScript 객체를 반환하는 옵션입니다. 인스턴스 래핑 비용이 없어 메모리 사용량과 속도가 개선됩니다.',
     code: `// A: 일반 쿼리
 const user = await User.findById(id)
 user.save()  // 가능
@@ -270,6 +292,8 @@ user.save()  // ?`,
     difficulty: 'hard',
     title: 'Aggregation Pipeline — 실행 순서',
     description: '다음 Aggregation Pipeline의 실행 결과로 올바른 것은?',
+    conceptExplanation:
+      'Aggregation Pipeline은 MongoDB에서 여러 단계(stage)를 순서대로 통과시켜 데이터를 집계·변환하는 방식입니다. 각 단계는 이전 단계의 출력을 입력으로 받으며, $match(필터), $group(집계), $sort(정렬), $project(필드 선택) 등의 단계를 조합합니다.',
     code: `db.orders.aggregate([
   { $match: { status: "completed" } },  // 1단계
   { $group: {                            // 2단계
@@ -302,6 +326,8 @@ user.save()  // ?`,
     difficulty: 'hard',
     title: '$lookup — MongoDB JOIN',
     description: '다음 $lookup에서 as: "author"의 결과 타입은?',
+    conceptExplanation:
+      '$lookup은 Aggregation Pipeline에서 다른 Collection의 데이터를 현재 Document에 조인하는 연산자입니다. SQL의 JOIN과 유사한 역할을 하며, localField와 foreignField를 기준으로 일치하는 Document를 찾아 배열로 추가합니다.',
     code: `db.posts.aggregate([
   {
     $lookup: {
@@ -334,6 +360,8 @@ user.save()  // ?`,
     difficulty: 'medium',
     title: 'MongoDB Index 종류',
     description: '전화번호와 이름으로 자주 함께 검색할 때 가장 적합한 인덱스는?',
+    conceptExplanation:
+      '인덱스는 데이터베이스에서 특정 필드를 빠르게 검색하기 위한 자료구조입니다. 책의 목차처럼 전체 데이터를 처음부터 훑지 않고 원하는 데이터의 위치를 빠르게 찾을 수 있게 합니다. MongoDB는 Single Field, Compound(복합), Text, TTL 등 다양한 인덱스 종류를 지원합니다.',
     options: [
       'Single Field Index — phone에만 인덱스',
       'Compound Index — (phone, name) 복합 인덱스',
@@ -356,6 +384,8 @@ user.save()  // ?`,
     difficulty: 'hard',
     title: 'Replica Set vs Sharding',
     description: 'MongoDB Replica Set과 Sharding에 대한 설명으로 올바른 것은?',
+    conceptExplanation:
+      'Replica Set은 동일한 데이터를 여러 서버에 복제하여 고가용성(High Availability)과 장애 복구(Failover)를 보장하는 구성입니다. Sharding은 데이터를 여러 서버에 분산 저장하여 단일 서버의 용량·성능 한계를 넘는 수평 확장(Horizontal Scaling) 방식입니다.',
     options: [
       'Replica Set은 데이터를 여러 서버에 분산 저장하고, Sharding은 데이터를 복제하여 가용성을 높인다',
       'Replica Set은 동일한 데이터를 여러 서버에 복제하여 가용성과 읽기 성능을 높이고, Sharding은 데이터를 여러 서버에 분산하여 수평 확장한다',
@@ -381,6 +411,8 @@ user.save()  // ?`,
     difficulty: 'easy',
     title: 'SQL 분류 — DDL vs DML vs DCL vs TCL',
     description: '다음 SQL 명령어들의 분류로 올바른 것은?\n\nCREATE TABLE / SELECT / GRANT / COMMIT',
+    conceptExplanation:
+      'SQL 명령어는 목적에 따라 네 가지로 분류됩니다. DDL(Data Definition Language)은 데이터 구조 정의, DML(Data Manipulation Language)은 데이터 조작, DCL(Data Control Language)은 접근 권한 제어, TCL(Transaction Control Language)은 트랜잭션 관리에 사용됩니다.',
     options: [
       'CREATE=DML, SELECT=DDL, GRANT=TCL, COMMIT=DCL',
       'CREATE=DDL, SELECT=DML, GRANT=DCL, COMMIT=TCL',
@@ -403,6 +435,8 @@ user.save()  // ?`,
     difficulty: 'medium',
     title: 'JOIN 종류 — INNER vs LEFT vs RIGHT vs FULL',
     description: 'User 테이블과 Order 테이블을 JOIN할 때, "주문이 없는 사용자도 포함해서 모든 사용자 목록을 조회"하려면?',
+    conceptExplanation:
+      'SQL JOIN은 두 개 이상의 테이블을 특정 조건으로 결합하여 조회하는 방법입니다. INNER JOIN은 양쪽 테이블에 모두 존재하는 행만 반환하고, LEFT/RIGHT JOIN은 기준 테이블의 모든 행을 포함하며 상대 테이블에 없으면 NULL로 채웁니다.',
     options: [
       'INNER JOIN — 두 테이블 모두에 일치하는 행만',
       'LEFT JOIN — 왼쪽(User) 기준, 오른쪽(Order)에 없어도 NULL로 포함',
@@ -425,6 +459,8 @@ user.save()  // ?`,
     difficulty: 'medium',
     title: 'ACID 트랜잭션',
     description: '은행 이체 시스템에서 "A 계좌에서 출금 성공, B 계좌에 입금 실패" 상황이 발생했을 때 출금을 자동으로 취소해주는 ACID 속성은?',
+    conceptExplanation:
+      'ACID는 데이터베이스 트랜잭션의 신뢰성을 보장하는 네 가지 속성의 약자입니다. Atomicity(원자성), Consistency(일관성), Isolation(격리성), Durability(지속성)로 구성되며, 여러 연산을 하나의 논리적 단위로 묶어 데이터 무결성을 유지합니다.',
     options: [
       'Consistency(일관성) — 데이터는 항상 유효한 상태여야 한다',
       'Isolation(격리성) — 트랜잭션은 서로 독립적으로 실행된다',

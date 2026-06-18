@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useUserStore } from '@/store/userStore'
@@ -32,6 +32,7 @@ export default function ProblemPage() {
     useUserStore()
   const [submitted, setSubmitted] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
+  const [conceptOpen, setConceptOpen] = useState(false)
 
   useEffect(() => {
     refreshProgress()
@@ -188,6 +189,24 @@ export default function ProblemPage() {
           {problem.description}
         </p>
 
+        {/* 개념 보기 */}
+        {problem.conceptExplanation && (
+          <div className="pt-1">
+            <button
+              onClick={() => setConceptOpen((v) => !v)}
+              className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+            >
+              <span>{conceptOpen ? '▾' : '▸'}</span>
+              <span>개념 보기 — {problem.subcategory}가 뭔가요?</span>
+            </button>
+            {conceptOpen && (
+              <div className="mt-2 text-sm text-gray-300 leading-relaxed bg-amber-500/5 border border-amber-500/20 rounded-lg px-4 py-3">
+                {problem.conceptExplanation}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* 관련 학습 카드 */}
         {relatedLessons.length > 0 && (
           <div className="pt-2 flex flex-wrap gap-2">
@@ -244,7 +263,17 @@ export default function ProblemPage() {
             }
           />
         )}
-        {problem.type === 'code-complete' && (
+        {problem.type === 'code-complete' && problem.options ? (
+          // options가 있는 code-complete → 선택지 형태
+          <MultipleChoice
+            key={`${id}-${retryCount}`}
+            {...sharedProps}
+            initialAnswer={
+              initialAnswer !== undefined ? (initialAnswer as number) : undefined
+            }
+          />
+        ) : problem.type === 'code-complete' && (
+          // options 없는 code-complete → Monaco 에디터
           <CodeComplete
             key={`${id}-${retryCount}`}
             {...sharedProps}

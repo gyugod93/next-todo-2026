@@ -11,6 +11,8 @@ export const infraBasicsProblems: Problem[] = [
     difficulty: 'easy',
     title: 'Docker Image vs Container',
     description: 'Docker Image와 Container의 관계로 올바른 것은?',
+    conceptExplanation:
+      'Docker는 애플리케이션을 컨테이너라는 격리된 환경에서 실행하는 도구입니다. Image는 애플리케이션을 실행하는 데 필요한 모든 파일(OS, 런타임, 코드, 의존성)을 담은 읽기 전용 패키지이고, Container는 그 Image를 바탕으로 실제로 실행 중인 프로세스 인스턴스입니다.',
     options: [
       'Image와 Container는 동일한 개념이다',
       'Image는 실행 중인 프로세스이고, Container는 설계도이다',
@@ -33,6 +35,8 @@ export const infraBasicsProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Docker Volume vs Bind Mount',
     description: 'Node.js 앱 컨테이너에서 MongoDB 데이터를 컨테이너 재시작 후에도 유지하려면?',
+    conceptExplanation:
+      'Docker 컨테이너는 기본적으로 임시(ephemeral) 저장소를 사용하여 컨테이너가 삭제되면 내부 데이터도 함께 사라집니다. Volume은 컨테이너 수명 주기와 독립적으로 데이터를 외부에 저장하는 메커니즘으로, Docker가 직접 관리하는 Named Volume과 호스트 경로를 직접 지정하는 Bind Mount 두 종류가 있습니다.',
     options: [
       '데이터는 컨테이너 내부에 저장하면 자동으로 유지된다',
       'Docker Volume을 사용하여 컨테이너 외부 저장소와 연결한다',
@@ -55,6 +59,8 @@ export const infraBasicsProblems: Problem[] = [
     difficulty: 'easy',
     title: 'Docker Port Mapping — -p 옵션',
     description: '`docker run -p 3000:8080 myapp`에서 포트 매핑의 의미는?',
+    conceptExplanation:
+      'Docker 컨테이너는 기본적으로 외부와 격리된 네트워크 환경에서 실행됩니다. 포트 매핑(-p 옵션)은 호스트(내 PC) 포트와 컨테이너 내부 포트를 연결하여 외부에서 컨테이너 내 서비스에 접근할 수 있게 해주는 설정입니다.',
     options: [
       '컨테이너 포트 3000을 호스트 포트 8080에 연결',
       '호스트 포트 3000을 컨테이너 포트 8080에 연결 (호스트:컨테이너)',
@@ -77,6 +83,8 @@ export const infraBasicsProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Docker Compose — 멀티 컨테이너 관리',
     description: 'Docker Compose를 사용하는 주된 이유는?',
+    conceptExplanation:
+      'Docker Compose는 여러 컨테이너로 구성된 애플리케이션을 YAML 파일 하나로 정의하고 관리하는 도구입니다. 실제 서비스는 애플리케이션 서버·데이터베이스·캐시 등 여러 컨테이너가 함께 동작하는데, Compose를 사용하면 이들을 하나의 명령으로 실행하고 중지할 수 있으며 서비스 이름으로 서로 통신할 수 있습니다.',
     options: [
       'Docker보다 빠른 컨테이너 실행을 위해',
       '여러 컨테이너(앱 + DB + Redis 등)를 하나의 YAML 파일로 정의하고 함께 관리하기 위해',
@@ -102,6 +110,8 @@ export const infraBasicsProblems: Problem[] = [
     difficulty: 'easy',
     title: '환경변수 — .env 파일 관리',
     description: 'Next.js 프로젝트에서 `.env.local`과 `.env.production`의 차이는?',
+    conceptExplanation:
+      '환경변수(Environment Variable)는 애플리케이션 코드 외부에 설정값을 저장하는 방식으로, API 키·DB 주소 등 환경마다 달라지는 값을 관리합니다. Next.js는 .env 파일 접미사(.local, .development, .production 등)에 따라 로드 시점과 우선순위가 다르며, 민감한 정보는 버전 관리(git)에서 제외합니다.',
     options: [
       '.env.local은 배포 환경에서 사용되고, .env.production은 로컬 개발에서 사용된다',
       '.env.local은 로컬 개발에서만 로드되고 git에 커밋하지 않으며, .env.production은 배포 시 적용되는 환경변수다',
@@ -124,6 +134,8 @@ export const infraBasicsProblems: Problem[] = [
     difficulty: 'medium',
     title: 'CI/CD 파이프라인 — 단계별 역할',
     description: 'CI/CD 파이프라인의 일반적인 단계 순서로 올바른 것은?',
+    conceptExplanation:
+      'CI/CD는 코드 변경을 자동으로 빌드·테스트·배포하는 소프트웨어 개발 방식입니다. CI(지속적 통합)는 코드가 커밋될 때마다 자동으로 빌드하고 테스트하여 문제를 조기에 발견하고, CD(지속적 배포/전달)는 CI를 통과한 코드를 자동으로 스테이징 또는 프로덕션 환경에 배포합니다.',
     options: [
       'Deploy → Build → Test → Code 커밋',
       'Code 커밋 → CI(빌드+테스트+린트) → CD(스테이징 배포 → 프로덕션 배포)',
@@ -146,6 +158,8 @@ export const infraBasicsProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Monolith vs Microservices',
     description: '스타트업 초기 단계에서 Monolith 아키텍처를 선택하는 이유로 올바른 것은?',
+    conceptExplanation:
+      '소프트웨어 아키텍처는 시스템의 구성 방식을 결정합니다. Monolith(모놀리스)는 모든 기능이 하나의 코드베이스와 배포 단위로 구성되는 방식이고, Microservices(마이크로서비스)는 기능을 독립적으로 배포 가능한 작은 서비스들로 분리하는 방식입니다. 두 접근법은 개발 속도, 운영 복잡도, 확장성 면에서 서로 다른 트레이드오프를 가집니다.',
     options: [
       'Monolith는 Microservices보다 항상 성능이 좋다',
       'Monolith는 단순한 개발/배포 구조로 빠른 개발과 초기 비용 절감에 유리하며, 확장 필요 시 Microservices로 전환할 수 있다',
@@ -168,6 +182,8 @@ export const infraBasicsProblems: Problem[] = [
     difficulty: 'hard',
     title: 'Blue-Green Deployment vs Canary',
     description: 'Blue-Green 배포 전략의 핵심 이점은?',
+    conceptExplanation:
+      '배포 전략은 새 버전의 서비스를 무중단으로 출시하는 방법론입니다. Blue-Green 배포는 현재 운영 환경(Blue)과 동일한 신규 환경(Green)을 구성한 뒤 트래픽을 한 번에 전환하는 방식이고, Canary 배포는 트래픽의 일부만 신버전으로 점진적으로 이동하면서 위험을 분산하는 방식입니다.',
     options: [
       '서버 비용을 50% 절감할 수 있다',
       '새 버전을 별도 환경(Green)에 배포하고 트래픽을 즉시 전환하여, 문제 발생 시 이전 버전(Blue)으로 즉각 롤백이 가능하다',
@@ -190,6 +206,8 @@ export const infraBasicsProblems: Problem[] = [
     difficulty: 'easy',
     title: 'CDN — Content Delivery Network',
     description: 'CDN을 사용하는 주된 이유는?',
+    conceptExplanation:
+      'CDN(콘텐츠 전송 네트워크)은 전 세계 여러 지역에 분산된 엣지 서버 네트워크입니다. 사용자의 요청을 물리적으로 가장 가까운 서버에서 처리하여 응답 속도를 높이고, 자주 사용되는 정적 파일(이미지, CSS, JS 등)을 캐싱하여 원본 서버의 부하를 줄입니다.',
     options: [
       'DB 쿼리 속도를 높이기 위해',
       '사용자와 지리적으로 가까운 엣지 서버에서 정적 파일(이미지, JS, CSS)을 제공하여 응답 속도를 높이고 원본 서버 부하를 줄이기 위해',
@@ -212,6 +230,8 @@ export const infraBasicsProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Load Balancer — 역할과 알고리즘',
     description: '다음 중 Load Balancer가 해결하는 문제가 아닌 것은?',
+    conceptExplanation:
+      '로드 밸런서(Load Balancer)는 클라이언트의 요청을 여러 서버에 분산하는 장치 또는 소프트웨어입니다. 트래픽이 특정 서버에 집중되는 것을 막아 과부하를 예방하고, 서버 장애 시 헬스체크를 통해 자동으로 정상 서버로만 요청을 전달하여 서비스 가용성을 높입니다.',
     options: [
       '하나의 서버에 트래픽이 집중되어 과부하가 걸리는 문제',
       '특정 서버 장애 시 다른 서버로 자동 전환',
@@ -238,6 +258,8 @@ export const infraBasicsProblems: Problem[] = [
     title: '.env vs Secret Manager — 언제 어떤 걸 쓸까?',
     description:
       '다음 중 .env 파일이 아닌 KMS/Secret Manager(AWS Secrets Manager, GCP Secret Manager 등)를 써야 하는 상황은?',
+    conceptExplanation:
+      'Secret Manager는 API 키, 비밀번호 등 민감한 정보를 중앙에서 안전하게 저장하고 배포하는 관리형 서비스입니다. .env 파일이 서버 파일시스템에 평문으로 존재하는 것과 달리, Secret Manager는 암호화된 저장소에 시크릿을 보관하고 누가 언제 접근했는지 감사 로그(audit log)를 남기며 자동 교체(rotation)를 지원합니다.',
     options: [
       '로컬 개발 환경에서 MongoDB URI를 설정할 때',
       '팀 전체가 공유하는 운영 DB 비밀번호, API 키를 관리하며 접근 이력 감사(audit)와 자동 교체(rotation)가 필요할 때',
@@ -260,6 +282,8 @@ export const infraBasicsProblems: Problem[] = [
     difficulty: 'medium',
     title: 'KMS vs Secrets Manager — 역할 구분',
     description: 'AWS KMS(Key Management Service)와 AWS Secrets Manager의 역할 차이로 올바른 것은?',
+    conceptExplanation:
+      'KMS(Key Management Service)는 데이터를 암호화하는 데 사용하는 마스터 키(CMK)를 생성하고 관리하는 서비스입니다. Secrets Manager는 실제 시크릿 값(DB 비밀번호, API 키 등)을 저장·관리·배포하는 서비스로, 내부적으로 KMS 키를 사용해 저장된 시크릿 값을 암호화합니다. 즉 KMS가 잠금장치를 만들고, Secrets Manager가 그 잠금장치로 금고를 잠급니다.',
     options: [
       'KMS와 Secrets Manager는 같은 서비스이며 이름만 다르다',
       'KMS는 암호화 키 자체를 관리하고, Secrets Manager는 KMS로 암호화된 시크릿(비밀번호, API 키 등)을 저장·교체·배포한다',

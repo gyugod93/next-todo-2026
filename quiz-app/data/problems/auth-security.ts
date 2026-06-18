@@ -11,6 +11,8 @@ export const authSecurityProblems: Problem[] = [
     difficulty: 'easy',
     title: 'JWT 구조 — Header.Payload.Signature',
     description: '다음 JWT 토큰의 Payload(중간 부분)를 디코딩하면 나타나는 정보로 올바른 것은?\n\n`eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiIxMjMiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3MDAwMDB9.xxx`',
+    conceptExplanation:
+      'JWT(JSON Web Token)는 로그인 후 서버가 발급하는 토큰입니다. "점(.)"으로 구분된 세 덩어리로 구성됩니다: Header(알고리즘 정보) · Payload(사용자 데이터) · Signature(위변조 방지용 서명). Base64Url 인코딩은 암호화가 아니라 "읽기 어려운 문자열로 변환"에 가깝습니다 — 디코딩 도구만 있으면 원래 값을 볼 수 있습니다.',
     options: [
       'Payload는 암호화되어 있어 디코딩해도 읽을 수 없다',
       'Payload는 Base64Url 인코딩이므로 디코딩하면 { userId: "123", role: "admin", iat: 1700000 } 같은 JSON이 나온다',
@@ -19,7 +21,7 @@ export const authSecurityProblems: Problem[] = [
     ],
     correctAnswer: 1,
     explanation:
-      'JWT Payload는 암호화(Encryption)가 아닌 Base64Url 인코딩만 되어 있어 누구나 디코딩해서 읽을 수 있습니다. 따라서 민감한 정보(비밀번호, 신용카드 등)를 Payload에 넣으면 안 됩니다. 무결성(변조 방지)은 Signature로 보장하지만, 기밀성(내용 숨김)은 JWT 자체로 제공되지 않습니다.',
+      '① "암호화되어 읽을 수 없다" — 틀렸습니다. Base64Url은 인코딩이지 암호화가 아닙니다. jwt.io 같은 사이트에 붙여넣으면 누구나 즉시 내용을 볼 수 있습니다.\n③ "서버의 비밀 키가 저장된다" — 틀렸습니다. 비밀 키는 Signature 생성에만 사용되고 토큰 어디에도 포함되지 않습니다. 포함된다면 보안 자체가 무너집니다.\n④ "항상 빈 객체" — 틀렸습니다. Payload는 JWT의 핵심으로, 사용자 ID·권한·만료시각 등 실제 데이터가 담깁니다.\n\n→ 이 구조 때문에 Payload에 비밀번호 같은 민감한 정보를 넣으면 안 됩니다.',
     hints: ['Base64Url = 인코딩 (암호화 아님)', 'jwt.io에서 직접 디코딩 가능'],
     deepDive:
       'JWT 구조:\n• Header: { alg: "HS256", typ: "JWT" } — 서명 알고리즘\n• Payload: { sub: "userId", role: "admin", iat: 발급시각, exp: 만료시각 }\n• Signature: HMACSHA256(base64(header) + "." + base64(payload), secretKey)\n\nClaims(Payload 필드):\n• iss (Issuer): 토큰 발급자\n• sub (Subject): 토큰 대상 (userId)\n• aud (Audience): 토큰 수신자\n• exp (Expiration): 만료 시각 (Unix timestamp)\n• iat (Issued At): 발급 시각\n• nbf (Not Before): 이 시각 이전에는 무효\n\n보안 원칙:\n• Payload에 비밀번호/민감정보 절대 금지\n• 토큰 자체를 탈취당하면 만료 전까지 유효 → 짧은 만료 시간 설정\n• 서명 검증 필수: jwt.verify() (verify 없이 decode만 하면 위험)',
@@ -33,6 +35,8 @@ export const authSecurityProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Access Token vs Refresh Token',
     description: 'Access Token과 Refresh Token의 역할 분리가 필요한 이유는?',
+    conceptExplanation:
+      'Access Token은 API를 호출할 때 "나 로그인된 사람이에요"를 증명하는 토큰입니다. Refresh Token은 Access Token이 만료됐을 때 새 Access Token을 받아오기 위한 별도 토큰입니다. 보안 시스템에서는 하나의 토큰에 모든 역할을 부여하지 않고, 역할에 따라 토큰을 분리합니다.',
     options: [
       'Access Token과 Refresh Token은 동일하며 단순히 이름만 다르다',
       'Access Token은 짧게 유지하여 탈취 피해를 최소화하고, Refresh Token은 길게 유지하여 사용자가 매번 로그인하지 않아도 되게 한다',
@@ -41,7 +45,7 @@ export const authSecurityProblems: Problem[] = [
     ],
     correctAnswer: 1,
     explanation:
-      'Access Token은 짧은 만료 시간(15분~1시간)으로 API 인증에 사용합니다. 탈취되어도 빠르게 만료됩니다. Refresh Token은 긴 만료 시간(7일~30일)으로 새 Access Token 발급에만 사용합니다. 이 분리로 보안(짧은 Access Token)과 편의성(Refresh로 재로그인 최소화)을 동시에 달성합니다.',
+      '① "동일하며 이름만 다르다" — 틀렸습니다. 둘은 만료 시간, 저장 위치, 사용 목적이 모두 다르게 설계됩니다.\n③ "서버 메모리에만 저장" — 틀렸습니다. Refresh Token은 보통 클라이언트(httpOnly Cookie 등)에 전달됩니다. 서버에만 있다면 클라이언트가 재발급 요청 자체를 할 수 없습니다.\n④ "자동으로 새 토큰 발급" — 틀렸습니다. 만료 후 자동 발급은 없으며, 클라이언트가 명시적으로 /auth/refresh 엔드포인트를 호출해야 합니다.\n\n→ 핵심 의도: Access Token을 짧게 만들어 탈취 피해를 제한하면서도, Refresh Token으로 재로그인 없이 갱신할 수 있게 합니다.',
     hints: ['짧은 수명 + 긴 수명의 조합', '탈취 피해 최소화'],
     deepDive:
       'Token Rotation 패턴 (보안 강화):\n```\n1. 로그인 → Access Token(15분) + Refresh Token(7일) 발급\n2. API 호출 시 Access Token 헤더 첨부\n3. Access Token 만료 → Refresh Token으로 갱신 요청\n4. 서버: Refresh Token 검증 → 새 Access Token + 새 Refresh Token 발급\n   (Refresh Token Rotation: 이전 RT는 무효화)\n5. Refresh Token도 만료 → 재로그인\n```\n\nRefresh Token 저장 위치:\n• httpOnly Cookie (권장): JS 접근 불가, CSRF 방어 필요\n• localStorage (비권장): XSS 공격에 노출\n\nNestJS 구현:\n```typescript\n// Access Token 발급\njwtService.sign(payload, { expiresIn: "15m" })\n// Refresh Token 발급\njwtService.sign(payload, { expiresIn: "7d", secret: RT_SECRET })\n```',
@@ -55,6 +59,8 @@ export const authSecurityProblems: Problem[] = [
     difficulty: 'medium',
     title: 'JWT 저장 위치 — localStorage vs httpOnly Cookie',
     description: 'JWT를 localStorage에 저장하는 것과 httpOnly Cookie에 저장하는 것의 보안 차이는?',
+    conceptExplanation:
+      'localStorage는 브라우저에서 JavaScript로 자유롭게 읽고 쓸 수 있는 저장소입니다. httpOnly Cookie는 브라우저가 서버에 요청을 보낼 때 자동으로 첨부하는 저장소인데, "httpOnly" 옵션이 붙으면 JavaScript 코드에서는 아예 읽을 수 없습니다. XSS 공격이란 해커의 JavaScript 코드가 우리 사이트에서 실행되는 상황입니다.',
     options: [
       'localStorage가 더 안전하다. 서버만 접근할 수 있기 때문이다',
       'httpOnly Cookie가 더 안전하다. JavaScript에서 접근할 수 없어 XSS 공격으로 토큰을 탈취할 수 없다',
@@ -63,7 +69,7 @@ export const authSecurityProblems: Problem[] = [
     ],
     correctAnswer: 1,
     explanation:
-      'httpOnly Cookie는 JavaScript로 접근 불가(document.cookie로 읽을 수 없음)하여 XSS 공격에서 토큰이 탈취되지 않습니다. localStorage는 XSS 취약점이 있으면 `localStorage.getItem("token")`으로 바로 탈취됩니다. 단, httpOnly Cookie는 CSRF 공격에 취약하므로 SameSite=Strict/Lax 또는 CSRF Token을 함께 사용해야 합니다.',
+      '① "localStorage가 더 안전하다. 서버만 접근 가능" — 틀렸습니다. localStorage는 JavaScript에서 자유롭게 읽을 수 있고, 서버 전용이 아닙니다.\n③ "두 방식이 동일하다" — 틀렸습니다. XSS 공격 시 localStorage는 토큰이 그대로 노출되지만 httpOnly Cookie는 읽기 자체가 불가합니다.\n④ "Cookie는 HTTPS에서만 작동한다" — 틀렸습니다. Cookie는 HTTP에서도 작동합니다. 다만 Secure 플래그를 추가하면 HTTPS 전용으로 제한할 수 있습니다.\n\n→ 단, httpOnly Cookie는 CSRF라는 다른 공격에 취약하다는 트레이드오프가 있습니다. 완벽한 저장소는 없고 각 공격에 맞는 대응이 필요합니다.',
     hints: ['XSS = JavaScript 코드 주입 공격', 'httpOnly = JS 접근 불가'],
     deepDive:
       '저장 위치별 비교:\n\nlocalStorage:\n• XSS에 취약 (공격자 JS로 바로 탈취 가능)\n• CSRF에 안전 (자동 전송 안 됨)\n• SPA에서 구현 쉬움\n\nhttpOnly Cookie:\n• XSS에 안전 (JS 접근 불가)\n• CSRF에 취약 (자동 전송됨) → SameSite 속성으로 방어\n• Secure 플래그: HTTPS에서만 전송\n\n권장 설정:\n```typescript\n// NestJS에서 httpOnly Cookie 설정\nres.cookie("refreshToken", token, {\n  httpOnly: true,    // JS 접근 불가\n  secure: true,      // HTTPS만\n  sameSite: "strict", // CSRF 방어\n  maxAge: 7 * 24 * 60 * 60 * 1000,  // 7일\n})\n```\n\nNext.js App Router: httpOnly Cookie는 Server Action에서 설정 권장',
@@ -77,6 +83,8 @@ export const authSecurityProblems: Problem[] = [
     difficulty: 'hard',
     title: 'JWT 만료 처리 패턴',
     description: 'Access Token이 만료된 401 응답을 받았을 때 클라이언트(Next.js)가 처리하는 올바른 패턴은?',
+    conceptExplanation:
+      'HTTP 401은 "인증 실패" 상태코드입니다. Access Token이 만료됐을 때도 401이 내려옵니다. 클라이언트는 이 시점에 세 가지 선택지가 있습니다: 그냥 로그인으로 보내기, Refresh Token으로 재발급 시도하기, 토큰을 아예 만료 없게 만들기. 실제 서비스에서는 사용자 경험을 위해 "자동으로 재발급 시도" 후 그것도 안 되면 로그인으로 보내는 방식을 씁니다.',
     options: [
       '401을 받으면 즉시 로그인 페이지로 리다이렉트한다',
       '401을 받으면 Refresh Token으로 새 Access Token을 발급 시도하고, 실패하면 로그인으로 리다이렉트한다',
@@ -85,7 +93,7 @@ export const authSecurityProblems: Problem[] = [
     ],
     correctAnswer: 1,
     explanation:
-      '올바른 패턴: ① API 요청 → 401 수신 → ② Refresh Token으로 /auth/refresh 요청 → ③ 새 Access Token 발급 성공 → 원래 요청 재시도 → ④ Refresh Token도 만료되면 로그인 페이지로. 이 로직을 axios interceptor나 fetch wrapper에서 구현하면 모든 API 호출에 자동 적용됩니다.',
+      '① "즉시 로그인으로 리다이렉트" — 동작은 하지만, 단순히 토큰이 만료된 경우에도 사용자를 내보내는 나쁜 UX입니다. Refresh Token이 있는 의미가 없습니다.\n③ "무한 유효기간" — Access Token을 영구 발급하면 탈취 시 영원히 유효합니다. auth-q-002에서 배운 "짧은 수명으로 피해 최소화" 원칙을 무너뜨립니다.\n④ "서버가 자동으로 새 토큰을 넣어준다" — 실제로 그런 표준은 없습니다. 클라이언트가 명시적으로 재발급을 요청해야 합니다.\n\n→ 실전에서는 이 로직을 axios interceptor나 fetch wrapper로 한 번 구현해두면 모든 API 호출에 자동 적용됩니다.',
     hints: ['Refresh Token이 있는 이유', '요청 재시도가 포인트'],
     deepDive:
       '```typescript\n// axios interceptor로 자동 token refresh\naxios.interceptors.response.use(\n  (response) => response,\n  async (error) => {\n    const originalRequest = error.config\n\n    // 401이고 아직 재시도 안 했을 때\n    if (error.response?.status === 401 && !originalRequest._retry) {\n      originalRequest._retry = true\n\n      try {\n        // Refresh Token으로 새 AT 발급\n        const { data } = await axios.post("/auth/refresh")\n        const newAccessToken = data.accessToken\n\n        // 헤더 업데이트\n        axios.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`\n        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`\n\n        // 원래 요청 재시도\n        return axios(originalRequest)\n      } catch (refreshError) {\n        // Refresh도 실패 → 로그인으로\n        window.location.href = "/login"\n        return Promise.reject(refreshError)\n      }\n    }\n\n    return Promise.reject(error)\n  }\n)\n```',
@@ -102,6 +110,8 @@ export const authSecurityProblems: Problem[] = [
     difficulty: 'medium',
     title: 'OAuth 2.0 Authorization Code Flow',
     description: 'Google 소셜 로그인(OAuth 2.0)의 올바른 흐름 순서는?',
+    conceptExplanation:
+      'OAuth 2.0은 "내 비밀번호를 상대 서버에 주지 않고도, 내 Google/GitHub 계정으로 로그인"하게 해주는 프로토콜입니다. 핵심은 Google이 직접 사용자를 인증하고, 우리 서버에는 비밀번호 대신 "코드"만 전달한다는 것입니다. Authorization Code Flow는 이 코드를 서버-서버 간에 교환하는 방식입니다.',
     options: [
       '사용자 → 서버에 비밀번호 전달 → 서버가 Google에 대신 로그인',
       '사용자 → Google 로그인 페이지 → Authorization Code 발급 → 서버가 Code를 Access Token으로 교환 → Google 사용자 정보 조회',
@@ -110,7 +120,7 @@ export const authSecurityProblems: Problem[] = [
     ],
     correctAnswer: 1,
     explanation:
-      'Authorization Code Flow: ① 사용자가 "Google로 로그인" 클릭 → ② Google 로그인/동의 페이지로 리다이렉트 → ③ 사용자 동의 → Google이 Authorization Code를 redirect_uri로 전달 → ④ 서버(백엔드)가 Code + Client Secret으로 Google에 Access Token 교환 요청 → ⑤ Access Token으로 Google 사용자 정보 조회 → ⑥ 자체 JWT 발급. Code를 서버에서 교환하는 이유: Client Secret이 클라이언트에 노출되지 않도록.',
+      '① "서버에 비밀번호 전달" — OAuth의 목적 자체를 부정합니다. 사용자 비밀번호를 타사 서버에 주지 않는 것이 OAuth 도입 이유입니다.\n③ "클라이언트에서 바로 Access Token 발급" — Implicit Flow라는 구형 방식이며, Client Secret이 브라우저에 노출돼 보안상 폐기되었습니다.\n④ "Google이 직접 사용자에게 토큰 전달" — 토큰의 수신자는 우리 서버이지 사용자 브라우저가 아닙니다.\n\n→ Code를 서버에서 교환하는 이유: Client Secret(민감 정보)이 브라우저에 노출되지 않도록, 반드시 서버 측에서 교환합니다.',
     hints: ['Authorization Code = 중간 단계 코드', 'Client Secret은 서버에서만'],
     deepDive:
       'Authorization Code Flow (PKCE 포함):\n```\n클라이언트 → 서버: "Google 로그인 URL 주세요"\n서버 → 클라이언트: https://accounts.google.com/o/oauth2/auth?\n  client_id=xxx&redirect_uri=xxx&scope=email+profile&response_type=code\n\n사용자가 Google에서 로그인 + 동의\n\nGoogle → 클라이언트(redirect_uri): ?code=AUTHORIZATION_CODE\n\n클라이언트 → 서버: code 전달\n서버 → Google: POST /token { code, client_secret, grant_type }\nGoogle → 서버: { access_token, refresh_token, id_token }\n\n서버: Google API로 사용자 정보 조회\n서버 → 클라이언트: 자체 JWT 발급\n```\n\nNextAuth.js는 이 전체 흐름을 자동 처리합니다.',
@@ -124,6 +134,8 @@ export const authSecurityProblems: Problem[] = [
     difficulty: 'medium',
     title: 'OAuth vs OpenID Connect (OIDC)',
     description: 'OAuth 2.0과 OpenID Connect(OIDC)의 차이로 올바른 것은?',
+    conceptExplanation:
+      'OAuth 2.0은 "리소스 접근 권한을 위임"하기 위한 인가(Authorization) 프로토콜입니다. 원래 설계 목적은 사용자 신원 확인이 아닌 제3자 서비스에 접근 권한을 부여하는 것입니다. OpenID Connect(OIDC)는 OAuth 2.0을 기반으로 그 위에 인증(Authentication) 기능을 추가한 확장 규격입니다. ID Token이라는 JWT를 통해 사용자가 누구인지 확인할 수 있습니다.',
     options: [
       'OAuth와 OIDC는 완전히 동일한 프로토콜이다',
       'OAuth 2.0은 인가(Authorization/리소스 접근 권한) 프로토콜이고, OIDC는 OAuth 위에 인증(Authentication/사용자 신원 확인)을 추가한 것이다',
@@ -146,6 +158,8 @@ export const authSecurityProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Session vs JWT Token 방식 비교',
     description: 'Session 방식과 JWT 방식의 차이로 올바른 것은?',
+    conceptExplanation:
+      'Session 방식은 서버가 사용자 로그인 상태를 DB나 메모리에 직접 저장하고(Stateful), 클라이언트는 세션 ID만 Cookie로 가지는 구조입니다. JWT 방식은 서버가 별도 저장소 없이 서명된 토큰 자체에 사용자 정보를 담아 클라이언트에 전달하는 구조(Stateless)입니다. 두 방식은 서버 확장성, 즉시 무효화 가능 여부, DB 의존도 측면에서 서로 다른 트레이드오프를 가집니다.',
     options: [
       'Session은 클라이언트에, JWT는 서버에 상태를 저장한다',
       'Session은 서버 DB/메모리에 상태를 저장(stateful)하고, JWT는 토큰 자체에 정보를 포함(stateless)한다',
@@ -171,6 +185,8 @@ export const authSecurityProblems: Problem[] = [
     difficulty: 'medium',
     title: 'CORS — 원인과 해결',
     description: 'CORS 에러가 발생하는 이유와 해결 방법으로 올바른 것은?',
+    conceptExplanation:
+      'CORS(Cross-Origin Resource Sharing)는 브라우저가 서로 다른 출처(Origin) 간의 HTTP 요청을 제한하는 보안 정책입니다. Origin은 프로토콜 + 도메인 + 포트의 조합으로 결정됩니다. 브라우저는 Same-Origin Policy(동일 출처 정책)에 의해 기본적으로 다른 Origin으로의 요청을 차단하며, 서버가 특정 응답 헤더를 통해 명시적으로 허용해야만 요청이 성공합니다.',
     options: [
       'CORS는 서버가 다운됐을 때 발생하는 에러다',
       '브라우저가 다른 Origin(프로토콜+도메인+포트)으로의 요청을 기본 차단하며, 서버가 허용 Origin을 응답 헤더에 포함해야 해결된다',
@@ -193,6 +209,8 @@ export const authSecurityProblems: Problem[] = [
     difficulty: 'medium',
     title: 'XSS — Cross-Site Scripting',
     description: '다음 중 XSS(Cross-Site Scripting) 공격에 해당하는 것은?',
+    conceptExplanation:
+      'XSS(Cross-Site Scripting)는 공격자가 악성 JavaScript 코드를 웹 페이지에 삽입하여 다른 사용자의 브라우저에서 실행되게 하는 공격 유형입니다. 공격에 성공하면 피해자의 쿠키 탈취, 키 입력 기록, 피싱 페이지 표시 등이 가능합니다. Stored XSS, Reflected XSS, DOM XSS 세 가지 유형이 있으며, 방어의 핵심은 사용자 입력값을 출력 전에 이스케이프하거나 새니타이징하는 것입니다.',
     options: [
       '공격자가 다른 사이트에서 사용자 모르게 폼을 제출하는 공격',
       '공격자가 악성 JavaScript를 웹 페이지에 삽입하여 사용자 브라우저에서 실행되게 하는 공격',
@@ -215,6 +233,8 @@ export const authSecurityProblems: Problem[] = [
     difficulty: 'medium',
     title: 'CSRF — Cross-Site Request Forgery',
     description: 'CSRF 공격과 SameSite Cookie로 방어하는 원리로 올바른 것은?',
+    conceptExplanation:
+      'CSRF(Cross-Site Request Forgery)는 사용자가 이미 로그인된 상태에서 악성 사이트가 사용자 모르게 원래 서비스에 요청을 보내는 공격입니다. 브라우저가 쿠키를 자동으로 첨부하는 특성을 악용합니다. SameSite는 Cookie가 다른 Origin의 요청에 포함될지를 제어하는 속성으로, Strict 또는 Lax 값을 통해 이 공격을 방어할 수 있습니다.',
     options: [
       'CSRF는 서버 직접 해킹이며 SameSite는 암호화로 방어한다',
       '사용자가 로그인된 상태에서 다른 사이트의 악성 폼/링크가 사용자 권한으로 요청을 보내는 공격이며, SameSite=Strict/Lax Cookie로 다른 사이트에서의 쿠키 전송을 차단한다',
@@ -237,6 +257,8 @@ export const authSecurityProblems: Problem[] = [
     difficulty: 'hard',
     title: 'NoSQL Injection — MongoDB',
     description: '다음 코드에서 발생할 수 있는 보안 취약점은?',
+    conceptExplanation:
+      'NoSQL Injection은 SQL Injection과 유사하게, 공격자가 쿼리를 조작하여 의도치 않은 데이터 접근을 유발하는 공격입니다. MongoDB에서는 쿼리 조건에 `$gt`, `$ne` 같은 연산자 객체를 주입하여 쿼리 로직 자체를 변조할 수 있습니다. 입력값이 문자열 타입인지 검증하지 않고 쿼리에 직접 사용할 때 발생합니다.',
     code: `// 사용자 로그인 API
 app.post("/login", async (req, res) => {
   const { email, password } = req.body
@@ -265,6 +287,8 @@ app.post("/login", async (req, res) => {
     difficulty: 'medium',
     title: 'Password Hashing — bcrypt, salt, rainbow table',
     description: 'bcrypt로 비밀번호를 해시할 때 salt를 사용하는 이유는?',
+    conceptExplanation:
+      'bcrypt는 비밀번호를 안전하게 저장하기 위해 설계된 단방향 해시 알고리즘입니다. 일반 해시 함수(MD5, SHA1)와 달리 의도적으로 느리게 설계되어 브루트포스 공격에 강합니다. salt는 해시 생성 시 비밀번호에 추가되는 랜덤 값으로, 동일한 비밀번호도 매번 다른 해시를 만들어 사전 공격(Rainbow Table) 방어에 핵심적인 역할을 합니다.',
     options: [
       'salt는 비밀번호를 암호화하여 원본 복원을 막는다',
       '같은 비밀번호라도 다른 해시를 생성하여 Rainbow Table 공격(미리 계산된 해시 테이블로 역추적)을 방어한다',
@@ -290,6 +314,8 @@ app.post("/login", async (req, res) => {
     difficulty: 'medium',
     title: 'WebAuthn / Passkeys — 핵심 원리',
     description: 'Passkeys(WebAuthn)가 기존 비밀번호 방식보다 안전한 핵심 이유는?',
+    conceptExplanation:
+      'WebAuthn(Web Authentication API)은 W3C 표준으로, 비밀번호 없이 공개키 암호화로 사용자를 인증하는 기술입니다. Passkeys는 WebAuthn을 기반으로 기기에서 공개키/개인키 쌍을 생성하여 인증하는 방식입니다. 생체 인식(지문, Face ID)은 기기 안의 개인키를 꺼내는 잠금 해제 수단이며, 생체 데이터 자체는 기기 밖으로 절대 전송되지 않습니다.',
     options: [
       '비밀번호를 더 길고 복잡하게 암호화하여 서버에 저장하는 방식이다',
       '공개키/개인키 쌍을 사용하며, 개인키는 기기 밖으로 절대 나가지 않고 생체 정보도 서버에 전송되지 않는다',
@@ -312,6 +338,8 @@ app.post("/login", async (req, res) => {
     difficulty: 'hard',
     title: 'navigator.credentials API — 등록 vs 인증',
     description: '다음 코드에서 각 단계의 역할로 올바른 것은?',
+    conceptExplanation:
+      '`navigator.credentials` API는 브라우저에서 WebAuthn 인증을 구현하기 위한 표준 JavaScript API입니다. `create()` 메서드는 처음 Passkey를 등록할 때 공개키/개인키 쌍을 기기에서 생성하며, `get()` 메서드는 이후 인증 시 서버가 보낸 challenge에 개인키로 서명하는 데 사용합니다. challenge는 재사용 공격(Replay Attack)을 방지하기 위해 매 요청마다 서버가 새로 생성하는 랜덤값입니다.',
     code: `// 등록 (Registration)
 const credential = await navigator.credentials.create({
   publicKey: {
@@ -356,6 +384,8 @@ const assertion = await navigator.credentials.get({
     difficulty: 'medium',
     title: 'Passkeys vs 비밀번호 — 보안 비교',
     description: 'Passkeys가 기존 비밀번호+2FA 방식 대비 갖는 장점으로 올바르지 않은 것은?',
+    conceptExplanation:
+      'Passkeys는 각 서비스마다 고유한 키 쌍을 생성하므로 비밀번호 재사용 문제가 원천적으로 없습니다. Origin Binding이라는 특성으로 인해 개인키는 오직 등록된 도메인에서만 사용되어 피싱 사이트에서는 동작하지 않습니다. 서버에는 공개키만 저장되므로 서버가 해킹당해도 계정이 탈취될 위험이 낮습니다.',
     options: [
       'Passkeys는 피싱 공격에 면역이다. 개인키가 등록된 도메인(RP ID)에서만 동작하므로 가짜 사이트에서는 사용 불가능하다',
       'Passkeys는 서버 DB가 해킹되어도 공개키만 노출되므로 계정이 탈취되지 않는다',
@@ -381,6 +411,8 @@ const assertion = await navigator.credentials.get({
     difficulty: 'easy',
     title: 'HTTPS/TLS — 중간자 공격 방어 원리',
     description: 'HTTP와 HTTPS의 보안 차이로 올바른 것은?',
+    conceptExplanation:
+      'HTTPS는 HTTP에 TLS(Transport Layer Security) 암호화 계층을 추가한 프로토콜입니다. TLS는 통신 내용을 암호화하여 네트워크 중간에서 패킷을 가로채도 내용을 읽을 수 없게 합니다. 또한 서버 인증서를 통해 클라이언트가 올바른 서버와 통신하고 있는지 확인하며, 데이터가 전송 중 변조되지 않았음을 보장합니다.',
     options: [
       'HTTPS는 HTTP보다 느리므로 내부 서비스에선 HTTP를 써도 안전하다',
       'HTTP는 평문 전송이라 중간자가 패킷을 도청·변조할 수 있고, HTTPS는 TLS로 암호화하여 기밀성·무결성을 보장하고 인증서로 서버 신원을 확인한다',
@@ -403,6 +435,8 @@ const assertion = await navigator.credentials.get({
     difficulty: 'medium',
     title: 'HTTP Security Headers — HSTS, X-Content-Type-Options',
     description: '다음 응답 헤더들의 역할로 올바른 것은?',
+    conceptExplanation:
+      'HTTP 보안 헤더는 서버가 응답에 포함시켜 브라우저의 보안 동작을 제어하는 헤더들입니다. 각 헤더는 특정 공격 유형을 방어하기 위해 설계되었으며, 서버에서 설정하면 브라우저가 자동으로 그에 맞게 동작합니다. HSTS는 브라우저가 항상 HTTPS를 사용하도록 강제하고, X-Frame-Options는 Clickjacking, X-Content-Type-Options는 MIME 스니핑 공격을 방어합니다.',
     code: 'Strict-Transport-Security: max-age=31536000; includeSubDomains\nX-Content-Type-Options: nosniff\nX-Frame-Options: DENY\nReferrer-Policy: strict-origin-when-cross-origin',
     options: [
       '모두 CORS를 설정하는 헤더다',
@@ -426,6 +460,8 @@ const assertion = await navigator.credentials.get({
     difficulty: 'medium',
     title: 'Content Security Policy (CSP) — XSS 심층 방어',
     description: '다음 CSP 헤더 설정의 의미로 올바른 것은?',
+    conceptExplanation:
+      'CSP(Content Security Policy)는 브라우저에게 이 페이지에서 어떤 출처의 리소스를 로드하고 실행할 수 있는지를 명시하는 보안 헤더입니다. 인라인 스크립트나 허용되지 않은 외부 도메인의 스크립트 실행을 차단하여 XSS 공격의 실질적인 피해를 줄이는 심층 방어(Defense in Depth) 수단입니다. 허용 목록(whitelist) 방식으로 동작하며, 지정하지 않은 리소스는 기본적으로 차단됩니다.',
     code: "Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.example.com; style-src 'self' 'unsafe-inline'; img-src *",
     options: [
       '모든 외부 리소스를 차단한다',
@@ -449,6 +485,8 @@ const assertion = await navigator.credentials.get({
     difficulty: 'medium',
     title: 'Rate Limiting — 브루트포스 공격 방어',
     description: '로그인 API에 Rate Limiting을 적용할 때 올바른 전략은?',
+    conceptExplanation:
+      'Rate Limiting은 특정 클라이언트(IP, 계정 등)가 일정 시간 내에 보낼 수 있는 요청 횟수를 제한하는 기법입니다. 브루트포스(Brute Force) 공격은 자동화 스크립트로 수많은 비밀번호를 빠르게 시도하는 공격으로, Rate Limiting으로 시도 횟수를 제한하면 공격에 소요되는 시간을 비현실적으로 늘릴 수 있습니다. 로그인 API처럼 보안이 중요한 엔드포인트에 필수적으로 적용됩니다.',
     options: [
       'Rate Limiting은 서버 성능을 위한 것으로 보안과 무관하다',
       'IP 또는 계정 단위로 일정 시간 내 요청 횟수를 제한하여 브루트포스(비밀번호 무차별 대입) 공격을 방어한다. 실패 횟수 초과 시 지수 백오프나 계정 잠금을 적용한다',
@@ -471,6 +509,8 @@ const assertion = await navigator.credentials.get({
     difficulty: 'medium',
     title: 'Clickjacking 공격과 방어',
     description: 'Clickjacking 공격의 원리와 방어 방법으로 올바른 것은?',
+    conceptExplanation:
+      'Clickjacking(클릭재킹)은 공격자가 투명하거나 숨겨진 iframe으로 정상 웹 페이지를 덮어씌워 사용자의 클릭을 가로채는 UI 레드레싱(UI Redressing) 공격입니다. 사용자는 자신이 클릭하는 것이 공격자 페이지의 요소라고 생각하지만 실제로는 iframe 안의 정상 사이트 버튼을 클릭하게 됩니다. X-Frame-Options 또는 CSP의 frame-ancestors 헤더로 자신의 페이지가 iframe에 삽입되는 것 자체를 차단하여 방어합니다.',
     options: [
       'Clickjacking은 클릭 이벤트를 JS로 가로채는 공격으로 방화벽으로 방어한다',
       "공격자가 투명한 iframe으로 정상 사이트를 덮어씌워 사용자의 클릭을 가로채는 공격이다. X-Frame-Options: DENY 또는 CSP frame-ancestors 헤더로 iframe 삽입 자체를 차단한다",
@@ -493,6 +533,8 @@ const assertion = await navigator.credentials.get({
     difficulty: 'medium',
     title: 'API Key 인증 패턴과 보안 관리',
     description: 'API Key 인증 방식의 특징과 보안 관리 방법으로 올바른 것은?',
+    conceptExplanation:
+      'API Key는 클라이언트 애플리케이션이나 서버를 식별하기 위해 발급되는 정적 문자열 토큰입니다. JWT와 달리 만료 시간이 없고, 사용자 정보를 포함하지 않습니다. 주로 서버-서버 간 통신이나 서드파티 API 연동에 사용되며, 노출되면 즉시 폐기하고 새로 발급해야 합니다. 환경변수에 저장하고 절대 소스코드에 하드코딩하면 안 됩니다.',
     options: [
       'API Key는 JWT와 동일하며 사용자 정보를 포함한다',
       'API Key는 서버간(M2M) 통신이나 서드파티 연동에 적합한 정적 토큰이다. 만료 시간이 없으므로 노출 시 즉시 폐기/재발급이 가능해야 하고, 환경변수에 저장하며 절대 코드에 하드코딩하면 안 된다',
@@ -515,6 +557,8 @@ const assertion = await navigator.credentials.get({
     difficulty: 'hard',
     title: 'CORS + credentials:true — 와일드카드 Origin 보안 실수',
     description: '다음 코드에서 발생하는 보안 문제는?',
+    conceptExplanation:
+      'CORS 설정에서 `credentials: true`는 쿠키나 Authorization 헤더 같은 인증 정보를 교차 출처 요청에 포함할 수 있도록 허용하는 옵션입니다. `origin: "*"` (와일드카드)는 모든 출처를 허용한다는 의미입니다. CORS 스펙상 인증 정보 포함 요청(`credentials: true`)과 와일드카드 Origin 허용은 동시에 사용할 수 없도록 금지되어 있으며, 만약 허용된다면 어떤 악성 사이트도 로그인된 사용자의 인증 정보로 요청을 보낼 수 있게 됩니다.',
     code: "// NestJS CORS 설정\napp.enableCors({\n  origin: '*',           // 모든 Origin 허용\n  credentials: true,     // 쿠키/인증헤더 허용\n})",
     options: [
       'origin: "*"는 안전하므로 문제없다',
@@ -538,6 +582,8 @@ const assertion = await navigator.credentials.get({
     difficulty: 'medium',
     title: 'Next.js 환경변수 보안 — NEXT_PUBLIC_ 노출 위험',
     description: '다음 .env 파일에서 브라우저(클라이언트)에 노출되는 값은?',
+    conceptExplanation:
+      'Next.js는 빌드 시 환경변수를 서버 전용과 클라이언트 공개용으로 구분합니다. `NEXT_PUBLIC_` 접두어가 붙은 환경변수는 클라이언트 번들에 포함되어 브라우저에서 접근 가능하며, 누구나 개발자 도구로 확인할 수 있습니다. 접두어 없는 환경변수는 서버 사이드(서버 컴포넌트, API 라우트, 서버 액션)에서만 접근 가능합니다.',
     code: 'DATABASE_URL=mongodb://localhost:27017/mydb\nJWT_SECRET=super-secret-key-123\nNEXT_PUBLIC_API_URL=https://api.myapp.com\nNEXT_PUBLIC_GOOGLE_MAP_KEY=AIzaSy...\nOPENAI_API_KEY=sk-xxxx',
     options: [
       '모든 환경변수가 브라우저에 노출된다',
@@ -560,6 +606,8 @@ const assertion = await navigator.credentials.get({
     type: 'multiple-choice',
     difficulty: 'medium',
     title: '시크릿 유출 방지 — config 하드코딩 vs .env vs Secret Manager',
+    conceptExplanation:
+      '시크릿(비밀 키, API 키, DB 비밀번호 등)을 소스코드에 직접 작성(하드코딩)하면 git 이력에 영구적으로 남아 삭제해도 복구 가능합니다. `.env` 파일은 git에서 제외해 개선되지만, 서버 파일시스템에 평문으로 저장되고 접근 이력 추적이 불가합니다. Secret Manager(AWS Secrets Manager, GCP Secret Manager 등)는 시크릿을 암호화 저장하고 접근 권한 제어와 자동 교체(Rotation)까지 지원합니다.',
     description:
       '소스 코드 config 파일에 API 키·DB 비밀번호를 하드코딩했다가 .env로 옮기고, 최종적으로 Secret Manager(KMS 기반)로 전환해야 하는 이유를 단계별로 올바르게 설명한 것은?',
     options: [

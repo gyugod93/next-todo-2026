@@ -9,6 +9,8 @@ export const typescriptProblems: Problem[] = [
     difficulty: 'medium',
     title: 'type vs interface 차이',
     description: 'TypeScript의 type과 interface 차이로 올바른 것은?',
+    conceptExplanation:
+      'TypeScript에서 type과 interface는 모두 타입을 정의하는 방법이지만 각각 고유한 기능이 있습니다. interface는 선언 병합(같은 이름으로 여러 번 선언 시 자동 합침)이 가능하고, type은 유니온·교차·조건부 타입 등 복잡한 표현이 가능합니다.',
     options: [
       'interface는 union 타입을 직접 정의할 수 없다',
       'type은 extends 키워드를 사용할 수 없다',
@@ -72,6 +74,8 @@ type B = A & { x: number }
     difficulty: 'easy',
     title: 'Partial<T> 동작',
     description: 'Partial<User>의 결과 타입은?',
+    conceptExplanation:
+      '유틸리티 타입은 TypeScript에 내장된 제네릭 타입 변환 도구입니다. Partial, Required, Readonly, Pick, Omit, Record 등이 있으며, 기존 타입을 변환하거나 새 타입을 파생시키는 데 사용됩니다. 맵드 타입을 기반으로 구현됩니다.',
     code: `interface User {
   id: number
   name: string
@@ -142,6 +146,8 @@ type Result = ReturnType<Fn>    // boolean`,
     difficulty: 'medium',
     title: '제네릭 제약 (extends)',
     description: 'getProperty 함수에서 컴파일 에러가 발생하는 줄은?',
+    conceptExplanation:
+      '제네릭(Generic)은 타입을 변수처럼 다루어 함수, 클래스, 인터페이스를 다양한 타입에 재사용할 수 있게 해주는 TypeScript 기능입니다. extends 키워드로 제약(constraint)을 추가하면 특정 조건을 만족하는 타입만 허용할 수 있습니다.',
     code: `function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
   return obj[key]
 }
@@ -210,6 +216,8 @@ store.set('count', 'hi')  // ❌ 컴파일 에러: string은 number가 아님
     difficulty: 'easy',
     title: 'typeof 타입 가드',
     description: 'if 블록 내부에서 value의 타입은?',
+    conceptExplanation:
+      '타입 내로잉(Type Narrowing)은 조건문, typeof, instanceof 등의 타입 가드를 통해 유니온 타입을 더 구체적인 타입으로 좁혀나가는 TypeScript의 흐름 분석 기능입니다. TypeScript는 코드 실행 경로를 추적하여 각 분기에서 정확한 타입을 자동으로 파악합니다.',
     code: `function process(value: string | number | boolean) {
   if (typeof value === 'string') {
     // 여기서 value의 타입은?
@@ -283,6 +291,8 @@ function assertNever(x: never): never {
     difficulty: 'hard',
     title: '판별 유니온 (Discriminated Union)',
     description: "'circle' case 내에서 shape.side에 접근하면?",
+    conceptExplanation:
+      '판별 유니온(Discriminated Union)은 공통 리터럴 타입 필드(판별자)를 통해 유니온 타입의 각 멤버를 구분하는 패턴입니다. TypeScript는 판별자 값을 확인하는 조건문 안에서 해당 멤버 타입으로 자동 내로잉합니다.',
     code: `type Shape =
   | { kind: 'circle'; radius: number }
   | { kind: 'square'; side: number }
@@ -359,6 +369,8 @@ type State =
     difficulty: 'medium',
     title: 'keyof 연산자',
     description: 'UserKey와 ValueOf의 타입은?',
+    conceptExplanation:
+      'keyof 연산자는 객체 타입의 모든 키를 유니온 타입으로 반환합니다. 인덱스드 접근 타입(T[K])은 객체 타입에서 특정 키에 해당하는 값의 타입을 추출합니다. 두 기능을 조합하면 객체의 모든 값 타입의 유니온을 만들 수 있습니다.',
     code: `type User = {
   id: number
   name: string
@@ -429,6 +441,8 @@ t('typo.path')   // ❌ 컴파일 에러`,
     difficulty: 'medium',
     title: 'readonly vs const',
     description: 'TypeScript에서 readonly와 const의 차이로 올바른 것은?',
+    conceptExplanation:
+      'const는 변수 바인딩을 고정하여 재할당을 막는 JavaScript 키워드이고, readonly는 TypeScript의 타입 수준에서 프로퍼티 수정을 막는 수식어입니다. readonly는 컴파일 타임에만 검사하며 런타임 동작에는 영향을 주지 않습니다.',
     code: `const arr = [1, 2, 3]
 arr.push(4) // 가능
 
@@ -497,6 +511,8 @@ type Direction = typeof DIRECTIONS[number]
     difficulty: 'hard',
     title: 'ReturnType과 Awaited',
     description: 'A와 B의 타입은?',
+    conceptExplanation:
+      'ReturnType<T>는 함수 타입 T의 반환 타입을 추출하는 유틸리티 타입입니다. Awaited<T>는 Promise로 감싸진 타입의 내부 타입을 꺼내는 유틸리티 타입으로, 중첩된 Promise도 재귀적으로 벗겨냅니다.',
     code: `async function fetchUser() {
   return { id: 1, name: 'Alice' }
 }
@@ -567,6 +583,8 @@ function withLogging<T extends (...args: any[]) => any>(fn: T): T {
     difficulty: 'hard',
     title: '맵드 타입 수정자',
     description: '아래 맵드 타입의 결과는?',
+    conceptExplanation:
+      '맵드 타입(Mapped Type)은 기존 타입의 키를 순회하며 새로운 타입을 생성하는 TypeScript 기능입니다. [K in keyof T] 문법을 사용하며, readonly나 ? 같은 수식어 앞에 -를 붙이면 해당 수식어를 제거할 수 있습니다.',
     code: `type Mutable<T> = {
   -readonly [K in keyof T]-?: T[K]
 }
@@ -645,6 +663,8 @@ type Getters<T> = { [K in keyof T as \`get\${Capitalize<string & K>}\`]: () => T
     difficulty: 'hard',
     title: 'infer로 타입 추출',
     description: 'A, B, C의 타입은?',
+    conceptExplanation:
+      '조건부 타입(Conditional Type)은 T extends U ? X : Y 형태로, 타입이 특정 조건을 만족하는지에 따라 다른 타입을 반환합니다. infer 키워드는 조건부 타입 내에서 타입을 캡처하고 이름을 붙여 재사용할 수 있게 해줍니다.',
     code: `type UnwrapPromise<T> = T extends Promise<infer U> ? U : T
 type FirstArg<T> = T extends (arg: infer A, ...rest: any[]) => any ? A : never
 
@@ -715,6 +735,8 @@ type UserItem = Item<User[]>  // User`,
     difficulty: 'hard',
     title: '템플릿 리터럴 타입',
     description: 'EventHandler의 타입은?',
+    conceptExplanation:
+      '템플릿 리터럴 타입은 JavaScript의 템플릿 리터럴 문법을 타입 수준에서 사용하는 TypeScript 기능입니다. 유니온 타입과 결합하면 가능한 모든 조합의 문자열 리터럴 타입을 자동으로 생성하며, Capitalize 등의 문자열 조작 타입과 함께 쓸 수 있습니다.',
     code: `type Event = 'click' | 'focus' | 'blur'
 type EventHandler = \`on\${Capitalize<Event>}\`
 
@@ -786,6 +808,8 @@ type WithGetters<T> = T & {
     difficulty: 'hard',
     title: 'never로 완전성 검사',
     description: "'triangle'을 추가했을 때 어떻게 되나요?",
+    conceptExplanation:
+      'never 타입은 절대 발생할 수 없는 값의 타입으로, 반환값이 없는 함수나 도달 불가능한 코드를 표현할 때 사용됩니다. 유니온에서 never는 자동으로 제거되며, 모든 타입의 하위 타입(bottom type)입니다.',
     code: `type Shape = 'circle' | 'square' // 'triangle' 추가하면?
 
 function describe(shape: Shape): string {
@@ -859,6 +883,8 @@ type NonNullable<T> = T extends null | undefined ? never : T
     difficulty: 'hard',
     title: 'satisfies 연산자 (TS 4.9)',
     description: 'as 단언 대신 satisfies를 쓸 때의 차이는?',
+    conceptExplanation:
+      'satisfies 연산자(TypeScript 4.9)는 값이 특정 타입을 만족하는지 검사하면서도, 변수의 타입은 더 좁게 추론된 타입으로 유지합니다. as 단언과 달리 타입 안전성을 포기하지 않고 타입 검사와 정밀한 추론을 동시에 얻을 수 있습니다.',
     code: `type Colors = Record<string, string | [number, number, number]>
 
 // A: as 단언
@@ -931,6 +957,8 @@ const routes = [
     difficulty: 'hard',
     title: '분배적 조건부 타입',
     description: 'A와 B의 타입은?',
+    conceptExplanation:
+      '분배적 조건부 타입은 조건부 타입에 유니온이 전달될 때, 각 멤버에 개별적으로 타입이 적용되어 결과가 다시 유니온으로 합쳐지는 동작입니다. 타입 파라미터를 튜플로 감싸면([T] extends [any]) 이 분배를 막을 수 있습니다.',
     code: `type ToArray<T> = T extends any ? T[] : never
 
 type A = ToArray<string | number>
@@ -999,6 +1027,8 @@ type StringFields = PickByType<User, string>  // { name: string; email: string }
     difficulty: 'hard',
     title: '맵드 타입 + 키 리매핑',
     description: 'Getters<User>의 결과 타입은?',
+    conceptExplanation:
+      '맵드 타입의 키 리매핑(Key Remapping)은 as 절을 사용해 순회 중인 키를 다른 타입으로 변환하는 기능입니다. 템플릿 리터럴 타입과 결합하면 기존 키 이름을 기반으로 새 키 이름을 자동 생성할 수 있습니다.',
     code: `type User = { id: number; name: string }
 
 type Getters<T> = {

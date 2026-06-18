@@ -9,6 +9,8 @@ export const realworldProblems: Problem[] = [
     difficulty: 'medium',
     title: 'useQuery가 에러를 감지하지 못하는 이유',
     description: '다음 TanStack Query 코드에서 서버가 500을 반환해도 isError가 true가 되지 않는 이유는?',
+    conceptExplanation:
+      'TanStack Query(구 React Query)는 서버 상태를 선언적으로 관리하는 라이브러리로, 캐싱·동기화·재시도 등을 자동으로 처리합니다. useQuery의 queryFn이 throw하거나 reject된 Promise를 반환해야만 에러 상태로 전환됩니다. fetch API는 HTTP 에러 상태 코드(4xx, 5xx)에서도 Promise를 resolve하므로, 수동으로 에러를 throw해야 TanStack Query가 에러를 감지합니다.',
     code: `const { data, isError } = useQuery({
   queryKey: ['users'],
   queryFn: async () => {
@@ -40,6 +42,8 @@ export const realworldProblems: Problem[] = [
     title: 'Optimistic Update — 빈칸 채우기',
     description:
       '좋아요 버튼을 클릭하면 서버 응답 전에 즉시 UI를 업데이트하는 Optimistic Update를 구현하세요. onMutate에서 무엇을 반환해야 하는가?',
+    conceptExplanation:
+      'Optimistic Update(낙관적 업데이트)는 서버 응답을 기다리지 않고 성공을 가정하여 UI를 즉시 업데이트하는 패턴입니다. 사용자에게 즉각적인 피드백을 제공해 반응성이 높아 보입니다. 서버 요청이 실패하면 이전 상태로 롤백해야 하므로, 업데이트 이전의 상태를 저장해두는 것이 핵심입니다.',
     code: `const likeMutation = useMutation({
   mutationFn: (postId: string) =>
     fetch(\`/api/posts/\${postId}/like\`, { method: 'POST' }).then(r => r.json()),
@@ -83,6 +87,8 @@ export const realworldProblems: Problem[] = [
     difficulty: 'medium',
     title: 'React Hook Form 제출이 안 되는 이유',
     description: '다음 코드에서 버튼을 클릭해도 onSubmit이 실행되지 않는 이유는?',
+    conceptExplanation:
+      'React Hook Form(RHF)은 비제어 컴포넌트 방식으로 폼 상태를 관리하는 라이브러리로, 불필요한 리렌더링을 최소화하여 성능이 뛰어납니다. handleSubmit은 모든 필드의 유효성 검사를 실행하고, 통과 시에만 onSubmit 콜백을 실제 폼 데이터와 함께 호출합니다. RHF가 관리하는 폼 데이터는 반드시 form 태그와 handleSubmit을 통해서만 올바르게 수집됩니다.',
     code: `function LoginForm() {
   const { register, handleSubmit } = useForm()
 
@@ -121,6 +127,8 @@ export const realworldProblems: Problem[] = [
     title: 'Zod 스키마 — 비밀번호 확인 검증',
     description:
       '회원가입 폼에서 비밀번호와 비밀번호 확인이 일치하는지 Zod로 검증하려면 어떤 메서드를 사용해야 하는가?',
+    conceptExplanation:
+      'Zod는 TypeScript 우선 스키마 선언 및 유효성 검사 라이브러리입니다. 스키마를 정의하면 런타임 검증과 TypeScript 타입 추론을 동시에 제공합니다. refine과 superRefine 메서드를 통해 단일 필드 범위를 넘어 여러 필드에 걸친 복잡한 커스텀 검증 로직을 추가할 수 있습니다.',
     code: `const schema = z.object({
   password: z.string().min(8),
   confirmPassword: z.string(),
@@ -153,6 +161,8 @@ export const realworldProblems: Problem[] = [
     difficulty: 'medium',
     title: 'Zustand persist — 함수가 저장 안 되는 이유',
     description: '페이지 새로고침 후 Zustand store를 복구했는데 액션 함수들이 undefined입니다. 원인은?',
+    conceptExplanation:
+      'Zustand의 persist 미들웨어는 스토어 상태를 localStorage나 sessionStorage에 직렬화하여 저장하고, 페이지 새로고침 후 복구합니다. JSON 직렬화를 사용하므로 함수는 저장되지 않고, 저장 가능한 원시값과 객체만 유지됩니다. partialize 옵션으로 직렬화할 필드를 명시적으로 지정하는 것이 권장됩니다.',
     code: `const useStore = create(
   persist(
     (set) => ({
@@ -192,6 +202,8 @@ export const realworldProblems: Problem[] = [
     title: 'NextAuth 세션이 undefined인 이유',
     description:
       'Server Component에서 사용자 세션을 가져오려 했는데 session이 null입니다. 코드의 문제는?',
+    conceptExplanation:
+      'NextAuth는 인증 세션을 다루기 위해 클라이언트용과 서버용 두 가지 API를 제공합니다. React 훅(useSession)은 클라이언트 컴포넌트 내 React 렌더링 컨텍스트에서만 실행 가능하며, 서버에서 직접 실행되는 Server Component에서는 사용할 수 없습니다. 서버 환경에서는 쿠키를 직접 읽어 세션을 반환하는 getServerSession을 사용해야 합니다.',
     code: `// app/dashboard/page.tsx (Server Component)
 import { useSession } from 'next-auth/react'
 
@@ -226,6 +238,8 @@ export default async function DashboardPage() {
     difficulty: 'medium',
     title: 'useEffect 의존성 배열 — 무한 루프 디버깅',
     description: '다음 코드가 무한 루프에 빠지는 이유와 해결법은?',
+    conceptExplanation:
+      'useEffect의 의존성 배열은 React가 이전 렌더링과 현재 렌더링의 값을 비교해 effect 재실행 여부를 결정하는 기준입니다. JavaScript에서 객체와 배열은 참조로 비교되므로, 매 렌더마다 새로 생성된 객체는 내용이 같아도 다른 것으로 간주됩니다. 이로 인해 의존성 변경 → effect 실행 → 리렌더 → 새 참조 생성 → 의존성 변경의 무한 루프가 발생할 수 있습니다.',
     code: `function UserList() {
   const [users, setUsers] = useState([])
   const [filters, setFilters] = useState({ role: 'all', active: true })
@@ -259,6 +273,8 @@ export default async function DashboardPage() {
     difficulty: 'hard',
     title: '실전 Race Condition — 검색 자동완성',
     description: '사용자가 빠르게 타이핑할 때 오래된 결과가 최신 결과를 덮어씌우는 Race Condition이 발생합니다. 다음 코드의 문제는?',
+    conceptExplanation:
+      'Race Condition(경쟁 조건)은 두 개 이상의 비동기 작업이 순서에 의존할 때, 실행 순서가 예상과 달라지면 잘못된 결과가 발생하는 문제입니다. 여러 개의 비동기 요청이 발신 순서와 다른 순서로 응답이 도착하면 마지막 응답이 반드시 최신 요청의 결과가 아닐 수 있습니다. AbortController로 이전 요청을 취소하거나 ignore 플래그로 오래된 응답을 무시하는 방식으로 해결합니다.',
     code: `function SearchBox() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
@@ -303,6 +319,8 @@ export default async function DashboardPage() {
     difficulty: 'easy',
     title: 'Google Tag Manager(GTM) vs 직접 GA 스크립트 삽입',
     description: 'Google Tag Manager(GTM)를 사용하는 이유로 올바른 것은?',
+    conceptExplanation:
+      'Google Tag Manager(GTM)는 웹사이트에 삽입하는 태그(트래킹 스크립트)를 코드 배포 없이 관리할 수 있는 태그 관리 시스템입니다. 소스 코드에 GTM 컨테이너 스크립트 하나만 심으면, 이후 GA·페이스북 픽셀 등 다양한 태그를 브라우저 기반 UI에서 추가·수정할 수 있습니다. 개발자 없이 마케터가 직접 트래킹 코드를 관리할 수 있는 것이 핵심 장점입니다.',
     options: [
       'GTM은 GA보다 더 정확한 데이터를 수집한다',
       'GTM을 쓰면 GA 계정이 필요 없다',
@@ -325,6 +343,8 @@ export default async function DashboardPage() {
     difficulty: 'medium',
     title: 'GA4 이벤트 트래킹 — 페이지뷰·커스텀 이벤트',
     description: 'Google Analytics 4(GA4)에서 "버튼 클릭" 이벤트를 추적하는 올바른 방법은?',
+    conceptExplanation:
+      'Google Analytics 4(GA4)는 이벤트 기반 데이터 모델을 사용하는 웹/앱 분석 플랫폼입니다. 이전 버전(Universal Analytics)의 세션 기반 모델과 달리, 모든 사용자 행동을 이벤트로 기록합니다. 페이지뷰·스크롤 등 일부는 자동 수집되며, 비즈니스에 특화된 이벤트는 gtag() 또는 dataLayer를 통해 직접 전송합니다.',
     options: [
       'GA4는 페이지뷰만 자동 수집하며 클릭 이벤트는 추적 불가능하다',
       'gtag("event", 이벤트명, { 파라미터 }) 또는 GTM의 클릭 트리거로 커스텀 이벤트를 전송하고, GA4 대시보드의 이벤트 리포트에서 확인한다',
