@@ -37,6 +37,7 @@ export interface Problem {
   hints?: string[]
   deepDive?: string
   relatedProblems?: string[]
+  answerFormat?: 'code' | 'text'
 }
 
 export interface UserProgress {

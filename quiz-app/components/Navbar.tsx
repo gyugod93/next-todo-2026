@@ -16,6 +16,12 @@ export default function Navbar() {
 
         <div className="flex items-center gap-4">
           <Link
+            href="/deep"
+            className="text-sm text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+          >
+            실전학습
+          </Link>
+          <Link
             href="/learn"
             className="text-sm text-gray-400 hover:text-white transition-colors"
           >

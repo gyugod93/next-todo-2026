@@ -72,11 +72,23 @@ export default function SelfCheck({ problem, onSubmit, initialAnswer, onRetry }:
         <>
           <div>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-gray-400">빈칸을 채워 코드를 완성하세요</p>
+              <p className="text-sm text-gray-400">
+                {problem.answerFormat === 'text'
+                  ? '개념을 자유롭게 설명해보세요 (핵심 키워드 중심으로)'
+                  : '빈칸을 채워 코드를 완성하세요'}
+              </p>
               <span className="text-xs text-gray-600 bg-gray-800 px-2 py-1 rounded">
                 AI가 채점해드립니다
               </span>
             </div>
+            {problem.answerFormat === 'text' ? (
+              <textarea
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="여기에 자유롭게 작성하세요..."
+                className="w-full h-48 bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-sm text-gray-200 placeholder-gray-600 resize-none focus:outline-none focus:border-violet-500 leading-relaxed"
+              />
+            ) : (
             <div className="rounded-lg overflow-hidden border border-gray-700">
               <MonacoEditor
                 height="320px"
@@ -100,6 +112,7 @@ export default function SelfCheck({ problem, onSubmit, initialAnswer, onRetry }:
                 }}
               />
             </div>
+            )}
           </div>
 
           {problem.hints && problem.hints.length > 0 && (
@@ -207,7 +220,13 @@ export default function SelfCheck({ problem, onSubmit, initialAnswer, onRetry }:
           {/* 모범 답안 */}
           <div>
             <p className="text-xs text-green-400 uppercase tracking-wider mb-2">모범 답안</p>
-            <CodeBlock code={referenceAnswer} />
+            {problem.answerFormat === 'text' ? (
+              <div className="bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+                {referenceAnswer}
+              </div>
+            ) : (
+              <CodeBlock code={referenceAnswer} />
+            )}
           </div>
 
           {/* 핵심 개념 정리 — 항상 표시 */}
