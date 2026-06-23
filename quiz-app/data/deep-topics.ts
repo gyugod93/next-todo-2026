@@ -1548,6 +1548,1548 @@ POST   /posts/:id/like           좋아요 토글 (행위라 POST + action)
     ],
     tags: ['API', 'REST', 'NestJS', 'HTTP', '설계'],
   },
+
+  // ──────────────────────────────────────────────────────────────────────
+  // 디버깅
+  // ──────────────────────────────────────────────────────────────────────
+  {
+    id: 'debug-react-render',
+    category: '디버깅',
+    emoji: '🔄',
+    title: '왜 무한으로 리렌더링되지?',
+    subtitle: 'useEffect 의존성 배열 버그 — 콘솔 폭발 상황 진단법',
+    scenario: `로그인 후 유저 정보를 불러오는 컴포넌트를 만들었다. 근데 Network 탭을 보니 API가 끊임없이 호출되고 있다. 콘솔엔 로그가 폭발 중. 분명히 useEffect 한 번만 실행되길 바랐는데... 뭐가 문제일까?`,
+    scenarioCode: `function UserProfile() {
+  const [user, setUser] = useState(null)
+  const params = { userId: '123' }  // 🚨 매 렌더마다 새 객체 생성
+
+  useEffect(() => {
+    fetchUser(params).then(setUser)
+  }, [params])  // 🚨 객체 참조가 매번 바뀜 → 무한 루프
+  //             ↑ 이게 문제인지 모르는 경우가 많음
+
+  return <div>{user?.name}</div>
+}`,
+    whyItMatters: `React의 useEffect는 의존성 배열의 값이 "변경됐는지"를 얕은 비교(===)로 확인한다. 객체·배열·함수는 렌더마다 새 참조가 생기므로, 의존성에 넣으면 무조건 "변경됨"으로 판단해 무한 루프가 된다. 이 버그는 처음엔 증상이 명확하지 않아서(API가 너무 많이 불린다, 느리다) 원인 찾기가 어렵다.`,
+    concept: `useEffect 의존성 배열은 "이전 렌더의 값"과 "이번 렌더의 값"을 === 로 비교한다. 원시값(string, number, boolean)은 값 자체를 비교하지만, 객체·배열·함수는 참조(메모리 주소)를 비교한다. 그래서 { userId: '123' }을 렌더 안에서 매번 만들면 내용이 같아도 새 객체여서 "바뀐 것"으로 본다.`,
+    examples: [
+      {
+        label: '❌ 무한 루프 — 객체를 렌더 안에서 생성',
+        code: `function UserProfile() {
+  const [user, setUser] = useState(null)
+
+  // 문제: 렌더마다 새 객체가 만들어짐
+  const options = { userId: '123', includeAvatar: true }
+
+  useEffect(() => {
+    fetchUser(options).then(setUser)
+  }, [options]) // options 참조가 매번 달라짐 → 무한 호출
+}`,
+        note: '렌더 안에서 객체/배열/함수를 만들고 의존성에 넣으면 무조건 무한 루프',
+      },
+      {
+        label: '✅ 수정 1 — 의존성에서 제거 (값이 변할 필요 없을 때)',
+        code: `function UserProfile() {
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    // userId가 고정값이면 의존성 배열에 넣을 필요 없음
+    fetchUser({ userId: '123' }).then(setUser)
+  }, []) // 마운트 시 1번만 실행
+}`,
+        note: '값이 컴포넌트 생애주기 동안 변하지 않는다면 의존성 배열에서 제거',
+      },
+      {
+        label: '✅ 수정 2 — 원시값으로 분리 (props/state에서 올 때)',
+        code: `function UserProfile({ userId }: { userId: string }) {
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    fetchUser({ userId }).then(setUser)
+  }, [userId]) // 원시값(string)은 값 비교 → 실제 변경 시에만 재실행
+}`,
+        note: '객체 대신 원시값(string, number)을 의존성으로 쓰면 안전하다',
+      },
+      {
+        label: '✅ 수정 3 — useMemo로 객체 안정화',
+        code: `function UserProfile({ userId, role }: Props) {
+  const [user, setUser] = useState(null)
+
+  // useMemo로 객체를 메모이제이션 — userId/role이 바뀔 때만 새 객체
+  const params = useMemo(
+    () => ({ userId, role }),
+    [userId, role]
+  )
+
+  useEffect(() => {
+    fetchUser(params).then(setUser)
+  }, [params]) // params 참조가 진짜 변경될 때만 재실행
+}`,
+        note: '여러 값을 묶어서 보내야 할 때 useMemo로 참조를 안정화',
+      },
+    ],
+    decisionGuide: [
+      {
+        condition: 'useEffect가 무한히 실행된다',
+        answer: '의존성 배열에 객체·배열·함수가 있는지 확인. 있다면 원시값으로 쪼개거나 useMemo/useCallback 처리',
+      },
+      {
+        condition: '의존성 배열이 [] 인데 ESLint가 경고를 낸다',
+        answer: 'react-hooks/exhaustive-deps 경고. 의존성을 추가하되, 객체면 원시값 분리 or useMemo 검토',
+      },
+      {
+        condition: '함수를 의존성에 넣어야 하는데 무한 루프가 된다',
+        answer: '함수를 useCallback으로 감싸서 참조를 안정화',
+      },
+      {
+        condition: 'API가 예상보다 많이 호출된다 (Network 탭에서 확인)',
+        answer: 'React DevTools → Profiler → "왜 리렌더됐는가" 확인. useEffect 의존성 버그거나 부모 리렌더 전파',
+      },
+      {
+        condition: 'Strict Mode에서 useEffect가 두 번 실행된다',
+        answer: 'Next.js 개발 환경의 정상 동작. 클린업 함수가 없거나 비멱등(non-idempotent) 부작용이 있는지 점검',
+      },
+    ],
+    question: `다음 코드에서 무한 루프가 발생하는 이유와, 이를 고치는 두 가지 방법을 설명하세요.
+
+\`\`\`tsx
+function PostList({ category }: { category: string }) {
+  const [posts, setPosts] = useState([])
+  const filter = { category, status: 'published' }
+
+  useEffect(() => {
+    fetchPosts(filter).then(setPosts)
+  }, [filter])
+
+  return <ul>{posts.map(p => <li key={p.id}>{p.title}</li>)}</ul>
+}
+\`\`\``,
+    referenceAnswer: `무한 루프 원인: filter 객체가 렌더마다 새로운 참조로 생성되고, useEffect는 의존성을 === 로 비교하기 때문에 매번 "바뀐 것"으로 판단해 재실행됩니다.
+
+수정 방법 1 — 원시값으로 분리: 의존성 배열에 객체 대신 category 문자열을 직접 넣습니다. useEffect 내부에서 { category, status: 'published' }를 구성합니다.
+
+수정 방법 2 — useMemo로 안정화: const filter = useMemo(() => ({ category, status: 'published' }), [category]) 로 메모이제이션하면 category가 실제로 바뀔 때만 새 객체가 만들어집니다.`,
+    keyPoints: [
+      'useEffect 의존성 배열은 === 얕은 비교 — 객체는 내용이 같아도 참조가 다르면 "변경"',
+      '의존성에 객체/배열/함수 → 무한 루프 경보. 원시값으로 쪼개거나 메모이제이션',
+      'Network 탭에서 API 폭발 확인 → React DevTools Profiler로 리렌더 원인 추적',
+      'Strict Mode 2번 실행은 정상. 클린업 함수 누락 여부를 점검하는 신호',
+    ],
+    tags: ['디버깅', 'useEffect', 'React', '무한루프', '의존성배열'],
+  },
+
+  {
+    id: 'debug-network',
+    category: '디버깅',
+    emoji: '🌐',
+    title: 'API 에러, 어디서부터 봐야 하지?',
+    subtitle: '400/401/403/404/500 — 에러 코드별 디버깅 루트맵',
+    scenario: `버튼을 눌렀더니 "에러가 발생했습니다"만 뜨고 아무것도 안 된다. 콘솔엔 뭔가 빨간 글씨가 있는데 무슨 뜻인지 모르겠다. 백엔드 탓인가? 프론트 탓인가? 어디서부터 봐야 하지?`,
+    scenarioCode: `// 이런 에러를 만났을 때 어떻게 하시나요?
+// ❌ 콘솔:
+// POST https://api.example.com/posts 400 (Bad Request)
+// Uncaught (in promise) Error: Request failed with status code 400
+
+async function createPost(data: PostForm) {
+  const response = await fetch('/api/posts', {
+    method: 'POST',
+    body: JSON.stringify(data),  // 🤔 여기가 문제일까?
+  })
+  // 응답을 확인하지 않고 바로 파싱
+  const result = await response.json()
+  return result
+}`,
+    whyItMatters: `HTTP 에러 코드는 "누가 잘못했는가"를 알려준다. 400대는 클라이언트(프론트) 문제, 500대는 서버(백엔드) 문제다. 이걸 구분하지 못하면 백엔드 개발자에게 "에러 납니다"만 말하거나, 프론트 코드를 뒤지는데 사실 서버 문제인 경우가 반복된다. 에러 코드를 읽는 것만으로 디버깅 시간이 절반 이상 줄어든다.`,
+    concept: `HTTP 상태 코드는 범위로 의미를 가진다. 2xx = 성공, 3xx = 리다이렉트, 4xx = 클라이언트 실수, 5xx = 서버 실수다. 4xx 중에서도 400(잘못된 요청)/401(인증 안 됨)/403(권한 없음)/404(리소스 없음)은 각각 원인과 해결 방향이 완전히 다르다. Network 탭 → Response 탭에서 서버가 보낸 에러 메시지를 먼저 읽는 것이 디버깅의 첫 단계다.`,
+    examples: [
+      {
+        label: '400 Bad Request — 요청 데이터 문제',
+        code: `// 🔍 Network 탭 → Response 확인 예시:
+// { "error": "title is required", "field": "title" }
+
+// 원인: 서버가 기대하는 데이터 형식과 다름
+// 흔한 케이스:
+// 1. Content-Type 헤더 누락
+await fetch('/api/posts', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' }, // ← 이걸 안 붙이면 400
+  body: JSON.stringify(data),
+})
+
+// 2. 필드명 오타 (서버는 'userId' 기대, 프론트는 'user_id' 보냄)
+// 3. 필수 필드 누락
+// 4. 날짜 형식 불일치 (ISO 8601 vs 'YYYY-MM-DD')`,
+        note: '400이면 내가 보낸 데이터 형식을 먼저 의심. Response 본문에 어떤 필드가 문제인지 나와있는 경우가 많다',
+      },
+      {
+        label: '401 Unauthorized — 토큰 문제',
+        code: `// 🔍 증상: 로그인은 됐는데 API 호출이 401
+// 원인 체크리스트:
+// 1. Authorization 헤더를 안 붙임
+await fetch('/api/me', {
+  headers: {
+    Authorization: \`Bearer \${token}\`, // ← 이게 없으면 401
+  }
+})
+
+// 2. 토큰이 만료됨 (localStorage에 있는 토큰을 확인)
+const token = localStorage.getItem('access_token')
+console.log('토큰:', token)
+// → JWT라면 jwt.io에서 exp(만료시간) 확인
+
+// 3. 토큰을 잘못된 키로 꺼냄
+// localStorage.getItem('accessToken') vs 'access_token'`,
+        note: '401은 "누구세요?" — 인증 자체가 없거나 토큰이 만료/누락. 403은 "알지만 안 돼요" — 권한 문제',
+      },
+      {
+        label: '404 Not Found — 경로/ID 문제',
+        code: `// 🔍 흔한 원인들
+
+// 1. API 경로 오타
+// ❌ fetch('/api/post/1')   → 서버는 '/api/posts/1' 이 맞음
+// ✅ fetch('/api/posts/1')
+
+// 2. 동적 ID가 undefined
+const postId = router.query.id  // Next.js pages router
+// query가 아직 안 채워졌을 때 undefined 상태로 호출
+await fetch(\`/api/posts/\${postId}\`) // → '/api/posts/undefined'
+
+// 수정:
+if (!postId) return  // 가드 추가
+await fetch(\`/api/posts/\${postId}\`)
+
+// 3. 삭제된 리소스나 잘못된 ID
+// → DB에서 해당 ID가 실제로 있는지 확인`,
+        note: '404면 URL을 콘솔에 찍어보는 게 첫 번째. undefined나 null이 들어간 URL인 경우가 흔하다',
+      },
+      {
+        label: '500 Internal Server Error — 서버 쪽 문제',
+        code: `// 🔍 500이 뜨면 프론트 코드는 일단 무죄
+// 단, 요청 데이터가 서버를 터뜨린 경우는 있음
+
+// 확인 방법:
+// 1. 동일한 요청을 curl이나 Postman으로 재현
+// curl -X POST https://api.example.com/posts \\
+//   -H "Content-Type: application/json" \\
+//   -H "Authorization: Bearer TOKEN" \\
+//   -d '{"title":"테스트"}'
+
+// 2. 서버 로그 확인 (NestJS면 터미널, 배포환경이면 로그 서비스)
+
+// 3. 요청 데이터를 단순화해서 어떤 데이터가 서버를 터뜨리는지 찾기
+// 500이 계속 나면 백엔드 담당자에게 넘길 타이밍`,
+        note: '500은 서버 담당자 영역. 하지만 "500 납니다"가 아니라 curl 재현 결과를 같이 주면 협업이 훨씬 빠르다',
+      },
+    ],
+    decisionGuide: [
+      {
+        condition: '400 Bad Request',
+        answer: 'Network 탭 → Response 탭에서 서버 에러 메시지 확인. 요청 헤더(Content-Type), 바디 필드명/형식 점검',
+      },
+      {
+        condition: '401 Unauthorized',
+        answer: 'Authorization 헤더 포함 여부 확인. 토큰 존재/만료 여부 확인. JWT라면 jwt.io에서 exp 체크',
+      },
+      {
+        condition: '403 Forbidden',
+        answer: '토큰은 있지만 권한이 없음. 요청 리소스가 내 것인지, 권한 설정이 맞는지 확인',
+      },
+      {
+        condition: '404 Not Found',
+        answer: 'URL을 콘솔에 찍어서 undefined/null 포함 여부 확인. API 경로 오타, 리소스 존재 여부 확인',
+      },
+      {
+        condition: '500 Internal Server Error',
+        answer: '서버 쪽 버그. curl/Postman으로 동일 요청 재현 후 서버 담당자에게 공유. 내 요청 데이터가 특이한지 확인',
+      },
+      {
+        condition: 'CORS 에러 (Access-Control-Allow-Origin)',
+        answer: '서버 CORS 설정 문제. 백엔드에서 허용할 오리진을 추가해야 함. 프론트 코드로 해결 불가',
+      },
+    ],
+    question: `동료가 "API 호출이 자꾸 401이 나는데 왜 그런지 모르겠다"고 합니다. 당신이라면 어떤 순서로 원인을 찾겠습니까? 확인해야 할 것들을 구체적으로 나열해보세요.`,
+    referenceAnswer: `1단계 — Network 탭에서 실제 요청 확인: Headers 탭에서 Authorization 헤더가 요청에 포함됐는지 확인합니다.
+
+2단계 — 토큰 존재 확인: localStorage/cookie에서 토큰을 콘솔로 출력해 실제로 값이 있는지 확인합니다.
+
+3단계 — 토큰 유효성 확인: JWT라면 jwt.io에 붙여넣어 exp(만료 시각)가 현재 시각보다 이후인지 확인합니다.
+
+4단계 — 헤더 형식 확인: Authorization: Bearer {token} 형식이 맞는지 확인합니다. 'Bearer ' 뒤에 공백이 있어야 합니다.
+
+5단계 — Response 본문 확인: Network 탭 Response에서 서버가 보낸 구체적인 에러 메시지를 읽습니다. "token expired"인지 "invalid token"인지에 따라 해결책이 다릅니다.`,
+    keyPoints: [
+      '4xx = 클라이언트 문제, 5xx = 서버 문제 — 범위로 책임 소재를 먼저 파악',
+      'Network 탭 → Response 탭이 첫 번째 행선지. 서버 에러 메시지에 이미 원인이 있다',
+      '401(인증 없음)과 403(권한 없음)은 다르다 — 해결 방향이 완전히 다름',
+      'URL에 undefined/null이 들어간 404는 가드 조건 누락이 원인',
+      'curl 재현 결과를 같이 주는 것이 백엔드 협업의 기본',
+    ],
+    tags: ['디버깅', 'HTTP', 'API', 'Network', '에러코드'],
+  },
+
+  {
+    id: 'debug-async',
+    category: '디버깅',
+    emoji: '⏱️',
+    title: '비동기 버그, 왜 가끔만 나타나지?',
+    subtitle: 'Race condition & Stale closure — 재현하기 어려운 버그 잡기',
+    scenario: `검색창에서 타이핑하면 API를 호출해서 결과를 보여주는 기능을 만들었다. 평소엔 잘 되는데, 빠르게 타이핑하면 가끔 이전 검색 결과가 나중에 뜨거나, 심지어 입력한 것과 전혀 다른 결과가 표시된다. 재현도 잘 안 되고, 원인도 모르겠다. 이런 버그가 왜 생기는 걸까?`,
+    scenarioCode: `function SearchBox() {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState([])
+
+  useEffect(() => {
+    if (!query) return
+
+    // 🚨 Race condition: 빠르게 타이핑하면
+    // "ri" 요청이 "react" 요청보다 늦게 응답이 올 수 있음
+    searchAPI(query).then(data => {
+      setResults(data)  // 어느 응답이 먼저 오든 덮어씀
+    })
+  }, [query])
+
+  return (
+    <div>
+      <input value={query} onChange={e => setQuery(e.target.value)} />
+      <ul>{results.map(r => <li key={r.id}>{r.name}</li>)}</ul>
+    </div>
+  )
+}`,
+    whyItMatters: `Race condition은 "가끔만 발생"해서 버그 리포트가 애매하고, 재현도 어렵고, 원인도 눈에 안 보인다. 실무에서 가장 잡기 힘든 버그 유형 중 하나다. 비동기 코드를 쓸 때마다 "이전 요청이 취소됐는가?"를 고려하는 습관만 있어도 이 버그를 미리 막을 수 있다.`,
+    concept: `Race condition은 여러 비동기 작업이 완료 순서를 보장받지 못할 때 발생한다. 네트워크 요청은 보낸 순서대로 오지 않는다. 해결책은 두 가지다: 이전 요청을 취소(AbortController)하거나, 응답이 왔을 때 이미 "무효한 요청"인지 체크하는 것이다. Stale closure는 useEffect 내부의 함수가 오래된 state 값을 캡처해서 생기는 별개의 버그다.`,
+    examples: [
+      {
+        label: '❌ Race condition 발생 코드',
+        code: `useEffect(() => {
+  // "re" → "rea" → "reac" → "react" 순으로 4번 호출
+  // 응답 순서: "react"(빠름) → "re"(느림) 이면
+  // 최종 결과는 "re" 검색 결과가 표시됨 ← 버그!
+  searchAPI(query).then(setResults)
+}, [query])`,
+        note: '응답 속도는 네트워크 상황에 따라 달라짐. 로컬에선 재현 안 되고 실서비스에서만 나타나는 경우가 많음',
+      },
+      {
+        label: '✅ AbortController로 이전 요청 취소',
+        code: `useEffect(() => {
+  if (!query) return
+
+  const controller = new AbortController()
+
+  searchAPI(query, { signal: controller.signal })
+    .then(setResults)
+    .catch(err => {
+      if (err.name === 'AbortError') return // 취소된 요청은 무시
+      console.error(err)
+    })
+
+  // 클린업: 다음 effect 실행 전에 이전 요청 취소
+  return () => controller.abort()
+}, [query])`,
+        note: 'useEffect의 클린업 함수에서 abort() 호출. 새 query가 들어오면 이전 요청이 자동 취소됨',
+      },
+      {
+        label: '✅ 플래그로 무효 응답 무시 (AbortController 미지원 환경)',
+        code: `useEffect(() => {
+  let isValid = true  // 현재 effect가 유효한지 추적
+
+  searchAPI(query).then(data => {
+    if (!isValid) return  // 이미 새 effect가 실행됐으면 무시
+    setResults(data)
+  })
+
+  return () => {
+    isValid = false  // 클린업: 이 effect를 무효화
+  }
+}, [query])`,
+        note: '클로저를 활용한 방법. AbortController보다 단순하지만 실제 네트워크 요청은 취소하지 못함',
+      },
+      {
+        label: '💡 Stale Closure 버그 — 별개의 문제',
+        code: `function Timer() {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      // 🚨 이 count는 effect 최초 실행 시점의 값(0)에 고정됨
+      setCount(count + 1)  // 항상 0 + 1 = 1
+    }, 1000)
+    return () => clearInterval(id)
+  }, [])  // 빈 배열 → count 변경을 감지 못함
+
+  // 수정: 함수형 업데이트 사용
+  // setCount(prev => prev + 1)  // 항상 최신 값 기반
+}`,
+        note: 'Stale closure: effect 내부 함수가 오래된 state를 캡처. 함수형 업데이트(prev => prev + 1)로 해결',
+      },
+    ],
+    decisionGuide: [
+      {
+        condition: '검색/자동완성에서 이상한 결과가 표시된다',
+        answer: 'Race condition 의심. useEffect 클린업에서 AbortController.abort() 호출. 또는 debounce로 요청 자체를 줄이기',
+      },
+      {
+        condition: 'setInterval/setTimeout 안에서 state 값이 0 또는 초기값에 고정된다',
+        answer: 'Stale closure. 함수형 업데이트 (setCount(prev => prev + 1)) 사용. 또는 useRef로 최신 값 추적',
+      },
+      {
+        condition: '언마운트된 컴포넌트에서 setState 경고가 뜬다',
+        answer: 'useEffect 클린업 함수가 없거나 불완전함. AbortController 또는 isValid 플래그로 비동기 완료 후 체크',
+      },
+      {
+        condition: '빠른 탭 전환 시 다른 탭의 데이터가 잠깐 보인다',
+        answer: 'Race condition + 마운트/언마운트 타이밍 문제. AbortController로 언마운트 시 요청 취소',
+      },
+      {
+        condition: '가끔만 발생하고 재현이 안 된다',
+        answer: '비동기 타이밍 문제일 가능성 높음. 네트워크 속도를 DevTools에서 Slow 3G로 낮추고 재현 시도',
+      },
+    ],
+    question: `사용자가 드롭다운에서 카테고리를 빠르게 변경할 때 선택한 카테고리와 다른 데이터가 표시되는 버그가 신고됐습니다. 이 버그의 이름과 원인, 그리고 해결 방법을 설명하세요.`,
+    referenceAnswer: `버그 이름: Race Condition (경쟁 상태)
+
+원인: 카테고리를 빠르게 변경하면 여러 API 요청이 동시에 발생합니다. 나중에 보낸 요청이 먼저 응답하고, 먼저 보낸 요청이 나중에 응답하면 최종적으로 이전 카테고리 데이터가 화면에 표시됩니다.
+
+해결 방법 1 (권장): AbortController를 useEffect의 클린업에서 사용합니다. 카테고리가 바뀌면 이전 요청을 abort() 하여 응답 자체를 무시합니다.
+
+해결 방법 2: isValid 플래그를 클로저로 활용합니다. 새 effect가 실행되면 이전 effect의 isValid를 false로 설정하고, 응답이 왔을 때 isValid가 false이면 setState를 호출하지 않습니다.
+
+추가로 debounce를 적용해서 카테고리 변경이 완료된 후에만 요청을 보내면 Race condition 발생 자체를 줄일 수 있습니다.`,
+    keyPoints: [
+      'Race condition: 응답 순서는 요청 순서와 다를 수 있다 — AbortController로 이전 요청 취소',
+      'useEffect 클린업 함수는 "다음 effect 실행 전"과 "언마운트 시" 호출됨 — 비동기 취소에 활용',
+      'Stale closure: effect 내 함수는 생성 시점의 state를 캡처 — 함수형 업데이트로 해결',
+      '재현이 안 되는 버그 = 비동기 타이밍 문제. DevTools에서 Network 속도 낮춰서 재현',
+    ],
+    tags: ['디버깅', 'Race Condition', '비동기', 'useEffect', 'AbortController'],
+  },
+
+  {
+    id: 'debug-typescript',
+    category: '디버깅',
+    emoji: '🔴',
+    title: 'TypeScript 빨간 줄, 뭐가 문제야?',
+    subtitle: 'TS 에러 메시지 독해법 — 겁먹지 말고 읽는 법',
+    scenario: `열심히 코드를 짰는데 에디터가 온통 빨간 줄이다. 에러 메시지를 읽어보면 "Type 'string | undefined' is not assignable to type 'string'" 같은 말들이 나오는데, 무슨 뜻인지 몰라서 일단 \`as any\` 를 붙이고 넘어가고 있다. 근데 이러면 안 된다고는 아는데...`,
+    scenarioCode: `// 흔히 마주치는 TS 에러들
+interface User {
+  id: string
+  name: string
+  email?: string  // optional
+}
+
+function sendWelcomeEmail(email: string) {
+  // 이메일 전송 로직
+}
+
+const user: User = getUser()
+
+// ❌ Error: Argument of type 'string | undefined' is not
+//    assignable to parameter of type 'string'
+sendWelcomeEmail(user.email)
+
+// 😅 일단 as any로 막음... 하지만 이건 타입 안전성 포기
+sendWelcomeEmail(user.email as any)`,
+    whyItMatters: `TypeScript 에러 메시지는 무서워 보이지만 항상 같은 구조로 되어있다. 읽는 법을 알면 5초 안에 원인을 파악할 수 있다. \`as any\`는 TypeScript를 끄는 것과 같아서, 런타임 에러가 그대로 통과된다. 타입 에러를 제대로 해결하면 버그를 사전에 차단하는 것이고, \`as any\`는 그 보호막을 제거하는 것이다.`,
+    concept: `TS 에러는 대부분 "A 타입을 기대했는데 B 타입이 왔다"는 패턴이다. 메시지에서 "is not assignable to type"의 왼쪽이 실제 값의 타입, 오른쪽이 필요한 타입이다. 대부분의 에러는 undefined/null 처리 누락, 타입 좁히기(narrowing) 누락, 또는 타입 정의와 실제 데이터 불일치 중 하나다.`,
+    examples: [
+      {
+        label: '에러 메시지 읽는 법 — 기본 구조',
+        code: `// "Type 'X' is not assignable to type 'Y'"
+//       ↑ 내가 넘긴 값의 타입    ↑ 함수가 기대하는 타입
+
+// Type 'string | undefined' is not assignable to type 'string'
+// → user.email이 string | undefined 인데
+// → 함수는 string 만 받음
+// → undefined 가능성을 처리해야 한다는 의미
+
+// 해결 1: 옵셔널 체이닝 + 얼리 리턴
+if (!user.email) return
+sendWelcomeEmail(user.email) // 여기선 email이 string 확정
+
+// 해결 2: nullish coalescing
+sendWelcomeEmail(user.email ?? 'no-reply@example.com')`,
+        note: '"is not assignable to" 왼쪽 = 실제 타입, 오른쪽 = 기대 타입. 왼쪽이 더 넓은 타입인 경우가 대부분',
+      },
+      {
+        label: '흔한 에러 1 — Property does not exist',
+        code: `// Error: Property 'avatar' does not exist on type 'User'
+// → User 인터페이스에 avatar 필드가 없다는 뜻
+
+// 해결 방법 3가지:
+// 1. 인터페이스에 추가
+interface User {
+  id: string
+  name: string
+  avatar?: string  // 추가
+}
+
+// 2. 타입 단언 (API 응답 타입과 다를 때)
+const user = getUser() as User & { avatar: string }
+
+// 3. 확장 타입 생성
+type UserWithAvatar = User & { avatar?: string }`,
+        note: '"does not exist on type" → 해당 타입 정의를 보고 필드가 실제로 없는지, 오타인지 확인',
+      },
+      {
+        label: '흔한 에러 2 — Object is possibly undefined',
+        code: `// Error: Object is possibly 'undefined'
+// → ?. 없이 undefined일 수 있는 값에 접근했다는 뜻
+
+const user = users.find(u => u.id === id) // User | undefined 반환
+
+// ❌ user가 undefined이면 런타임 에러
+console.log(user.name)
+
+// ✅ 해결 방법들:
+// 1. 가드 조건
+if (!user) throw new Error('유저 없음')
+console.log(user.name)  // 여기선 User 확정
+
+// 2. 옵셔널 체이닝
+console.log(user?.name)  // undefined면 undefined 반환
+
+// 3. 타입 단언 (100% 있다고 확신할 때만)
+console.log(user!.name)  // ! = "절대 undefined 아님" 주장`,
+        note: '"possibly undefined" → find/filter 결과, optional 필드, 외부 API 응답에서 자주 발생',
+      },
+      {
+        label: '흔한 에러 3 — 제네릭 타입 에러',
+        code: `// Error: Type 'unknown' is not assignable to type 'Post'
+// → API 응답을 타입 없이 받으면 unknown/any로 추론됨
+
+// ❌ 타입 없는 fetch
+const data = await fetch('/api/posts').then(r => r.json())
+// data는 any → 타입 체크 무의미
+
+// ✅ 응답 타입 명시
+interface Post { id: string; title: string }
+
+const data: Post[] = await fetch('/api/posts').then(r => r.json())
+// 실제로는 런타임 검증이 없으므로, 중요한 경우 zod 사용
+
+// zod를 쓰면 런타임까지 안전
+const PostSchema = z.object({ id: z.string(), title: z.string() })
+const posts = PostSchema.array().parse(await res.json())`,
+        note: 'fetch 응답은 기본이 any. 제네릭이나 명시적 타입 선언으로 타입 정보를 줘야 체크가 활성화됨',
+      },
+    ],
+    decisionGuide: [
+      {
+        condition: '"is not assignable to type" 에러',
+        answer: '왼쪽 타입을 오른쪽 타입으로 좁혀야 함. undefined/null이라면 가드 조건 추가. 타입이 아예 다르면 변환 로직 추가',
+      },
+      {
+        condition: '"possibly undefined/null" 에러',
+        answer: 'if 가드 후 사용, 옵셔널 체이닝(?.), nullish coalescing(??) 중 상황에 맞게 선택',
+      },
+      {
+        condition: '"Property does not exist on type" 에러',
+        answer: '타입 정의에 해당 필드가 없거나 오타. 인터페이스 확인 후 추가하거나 오타 수정',
+      },
+      {
+        condition: 'as any를 쓰고 싶어진다',
+        answer: '멈추고 에러 메시지를 읽어라. 90%는 undefined 처리 누락이다. as any는 TypeScript 보호를 끄는 것',
+      },
+      {
+        condition: 'as unknown as TargetType 패턴이 필요하다',
+        answer: '타입 간 직접 호환이 안 될 때 사용. 하지만 이 패턴은 타입 안전성 포기. 가능하면 타입을 맞추는 방향으로',
+      },
+    ],
+    question: `다음 에러 메시지를 보고: (1) 무슨 뜻인지 설명하고, (2) as any 없이 해결하는 방법 두 가지를 코드로 제시하세요.
+
+에러: \`Argument of type 'User | undefined' is not assignable to parameter of type 'User'\`
+
+발생 위치: \`updateUserProfile(users.find(u => u.id === targetId))\``,
+    referenceAnswer: `에러 의미: users.find()의 반환 타입이 'User | undefined'인데, updateUserProfile 함수는 'User'만 받기 때문입니다. find()는 조건에 맞는 요소가 없을 때 undefined를 반환합니다.
+
+해결 방법 1 — 가드 조건:
+const user = users.find(u => u.id === targetId)
+if (!user) return  // 또는 throw new Error('유저 없음')
+updateUserProfile(user)  // 이 시점에 user는 User 타입으로 좁혀짐
+
+해결 방법 2 — 옵셔널 체이닝과 얼리 리턴 결합:
+const user = users.find(u => u.id === targetId)
+if (!user) throw new Error(\`유저를 찾을 수 없습니다: \${targetId}\`)
+updateUserProfile(user)
+
+주의: user! (Non-null assertion)은 undefined일 때 런타임 에러가 발생하므로, 100% 존재를 보장할 수 없는 경우에는 사용하지 않는 것이 좋습니다.`,
+    keyPoints: [
+      '"is not assignable to": 왼쪽=실제 타입, 오른쪽=기대 타입. 왼쪽을 좁혀야 함',
+      'find/filter 결과는 항상 | undefined — 사용 전 존재 확인 필수',
+      'as any는 TypeScript 보호를 끄는 것. 에러 메시지를 읽고 제대로 해결하는 것이 우선',
+      '에러 메시지 마지막 줄이 핵심 — 긴 에러는 끝부터 읽어라',
+    ],
+    tags: ['디버깅', 'TypeScript', '타입에러', 'undefined', '타입좁히기'],
+  },
+
+  {
+    id: 'debug-nextjs-hydration',
+    category: '디버깅',
+    emoji: '💧',
+    title: 'Hydration 에러, 왜 자꾸 나오지?',
+    subtitle: 'SSR/CSR 불일치 — "서버에서 렌더한 것과 다릅니다" 해결법',
+    scenario: `Next.js 앱을 만드는데 콘솔에 이런 에러가 뜬다: "Error: Hydration failed because the initial UI does not match what was rendered on the server." 페이지는 일단 보이는데, 콘솔 에러가 계속 신경 쓰인다. 그리고 가끔은 화면이 깜빡이거나 레이아웃이 잠깐 이상하게 된다. 이게 왜 생기는 걸까?`,
+    scenarioCode: `// 🚨 Hydration 에러 유발 코드 패턴들
+
+// 패턴 1: 브라우저에서만 존재하는 값 사용
+function Header() {
+  return (
+    <div>
+      {/* window는 서버에서 undefined → 클라이언트와 HTML이 달라짐 */}
+      <span>현재 URL: {window.location.pathname}</span>
+    </div>
+  )
+}
+
+// 패턴 2: 렌더마다 다른 값
+function TimestampBadge() {
+  return (
+    // 서버 렌더 시각 ≠ 클라이언트 하이드레이션 시각
+    <span>접속 시각: {new Date().toLocaleTimeString()}</span>
+  )
+}
+
+// 패턴 3: localStorage 직접 접근
+function ThemeToggle() {
+  const theme = localStorage.getItem('theme') // 서버에서 에러
+  return <div className={theme}>{/* ... */}</div>
+}`,
+    whyItMatters: `Next.js는 서버에서 HTML을 먼저 만들고, 브라우저에서 React가 그 HTML에 "붙는"(hydration) 과정을 거친다. 이때 서버가 만든 HTML과 클라이언트 React가 그리려는 UI가 다르면 충돌이 생긴다. 방치하면 페이지가 깜빡이거나(flash), 사용자가 보는 내용이 잠깐 잘못 표시되고, React가 전체 DOM을 다시 그려서 성능도 나빠진다.`,
+    concept: `Hydration은 서버가 만든 HTML(정적) + 클라이언트 React(동적)를 연결하는 과정이다. 이 과정에서 "서버 HTML = 클라이언트 첫 렌더" 여야 한다. window, localStorage, Date.now(), Math.random() 등 서버와 클라이언트가 다른 값을 내는 것들을 초기 렌더에 직접 쓰면 불일치가 생긴다. 해결 방법은 "이 값이 필요한 부분은 클라이언트에서만 렌더하게 한다"는 것이다.`,
+    examples: [
+      {
+        label: '✅ 해결 1 — useEffect로 클라이언트 값 지연 적용',
+        code: `// window, localStorage 등 브라우저 전용 값은 마운트 후 적용
+function Header() {
+  const [pathname, setPathname] = useState('')  // 초기값: 서버/클라이언트 공통 ''
+
+  useEffect(() => {
+    // 마운트 후(클라이언트)에만 실행
+    setPathname(window.location.pathname)
+  }, [])
+
+  return (
+    <div>
+      <span>현재 URL: {pathname}</span>  {/* 처음엔 '', 마운트 후 실제 값 */}
+    </div>
+  )
+}`,
+        note: '초기 state를 서버/클라이언트 공통값으로 설정하고, useEffect에서 브라우저 전용 값으로 업데이트',
+      },
+      {
+        label: "✅ 해결 2 — 'use client' + dynamic import (SSR 완전 비활성화)",
+        code: `// next/dynamic으로 SSR 자체를 끔
+import dynamic from 'next/dynamic'
+
+const ThemeToggle = dynamic(
+  () => import('./ThemeToggle'),
+  { ssr: false }  // 이 컴포넌트는 클라이언트에서만 렌더
+)
+
+// 또는 컴포넌트 상단에 'use client' 추가 후
+// SSR이 필요 없는 컴포넌트로 분리
+// 주의: 'use client'만으로는 Hydration 에러가 안 사라짐
+//       브라우저 전용 API는 여전히 useEffect로 지연 접근 필요`,
+        note: 'ssr: false는 완전히 클라이언트에서만 렌더. 퍼포먼스 이점(SSR)은 포기하지만 가장 확실한 해결',
+      },
+      {
+        label: '✅ 해결 3 — suppressHydrationWarning (의도된 불일치)',
+        code: `// 경고를 알고도 무시해야 할 때 (예: 시각 표시)
+function Clock() {
+  const [time, setTime] = useState(new Date().toLocaleTimeString())
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setTime(new Date().toLocaleTimeString())
+    }, 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    // suppressHydrationWarning: 이 요소의 불일치는 의도된 것
+    <time suppressHydrationWarning>{time}</time>
+  )
+}`,
+        note: '시각/날짜처럼 서버/클라이언트 불일치가 불가피한 경우에만 사용. 남발하면 안 됨',
+      },
+      {
+        label: '🔍 Hydration 에러 원인 찾기',
+        code: `// 1. 에러 메시지에서 불일치 요소 확인
+// "Expected server HTML to contain a matching <div> in <div>"
+// → 어떤 요소가 서버/클라이언트에서 다른지 알 수 있음
+
+// 2. 의심되는 패턴 체크리스트:
+// □ window / document / navigator 직접 사용
+// □ localStorage / sessionStorage 접근
+// □ Date.now() / new Date() / Math.random() 렌더에 직접 사용
+// □ 브라우저 전용 라이브러리 (charts, maps)
+// □ 서버/클라이언트 환경 분기 (process.env로 분기)
+
+// 3. React DevTools에서 컴포넌트 트리 확인
+// 에러 발생 시 어느 컴포넌트에서 불일치가 생기는지 스택 트레이스 확인`,
+        note: '에러 스택 트레이스에 컴포넌트 이름이 나옴. 그 컴포넌트에서 브라우저 전용 값을 쓰는지 확인',
+      },
+    ],
+    decisionGuide: [
+      {
+        condition: '"Hydration failed" 에러',
+        answer: '서버 렌더 HTML과 클라이언트 첫 렌더가 다름. window/localStorage/Date 등 브라우저 전용 값을 초기 렌더에 쓰는지 확인',
+      },
+      {
+        condition: '화면이 깜빡이다가 정상으로 돌아온다 (Flash)',
+        answer: 'Hydration 불일치 후 React가 DOM을 다시 그리는 현상. useEffect로 브라우저 전용 값을 지연 적용',
+      },
+      {
+        condition: '특정 컴포넌트만 SSR 없애고 싶다',
+        answer: 'dynamic(() => import(...), { ssr: false })로 해당 컴포넌트만 클라이언트 전용 렌더',
+      },
+      {
+        condition: 'localStorage에서 테마/설정을 읽어야 한다',
+        answer: 'useEffect에서 읽어서 state에 저장. 초기 state는 서버/클라이언트 공통값(null 또는 기본값)으로',
+      },
+      {
+        condition: '서버에서 window 접근으로 에러가 난다',
+        answer: "typeof window !== 'undefined' 조건 체크 또는 useEffect 안에서만 접근",
+      },
+    ],
+    question: `다음 컴포넌트에서 Hydration 에러가 나는 이유를 설명하고, 에러 없이 동작하도록 수정하세요.
+
+\`\`\`tsx
+function UserGreeting() {
+  const savedName = localStorage.getItem('userName')
+
+  return (
+    <div>
+      <h1>안녕하세요, {savedName ?? '방문자'}님!</h1>
+      <p>접속 시각: {new Date().toLocaleTimeString()}</p>
+    </div>
+  )
+}
+\`\`\``,
+    referenceAnswer: `Hydration 에러 원인 두 가지:
+
+1. localStorage.getItem(): 서버 환경에는 localStorage가 없어서 에러가 발생하고, 서버에서 렌더한 HTML(방문자)과 클라이언트 렌더(저장된 이름)가 달라짐
+
+2. new Date().toLocaleTimeString(): 서버 렌더 시각과 클라이언트 하이드레이션 시각이 달라 불일치 발생
+
+수정 방법:
+\`\`\`tsx
+function UserGreeting() {
+  const [userName, setUserName] = useState<string | null>(null)
+  const [time, setTime] = useState('')
+
+  useEffect(() => {
+    setUserName(localStorage.getItem('userName'))
+    setTime(new Date().toLocaleTimeString())
+  }, [])
+
+  return (
+    <div>
+      <h1>안녕하세요, {userName ?? '방문자'}님!</h1>
+      <p>접속 시각: {time}</p>
+    </div>
+  )
+}
+\`\`\`
+초기 state를 서버/클라이언트 공통값(null, '')으로 설정하고, 브라우저 전용 값은 useEffect에서 마운트 후 적용합니다.`,
+    keyPoints: [
+      'Hydration = 서버 HTML + 클라이언트 React 연결. 둘의 첫 렌더가 같아야 함',
+      'window/localStorage/Date.now() → 서버에서 다른 값 or 에러. useEffect로 지연 처리',
+      '완전히 클라이언트 전용 컴포넌트는 dynamic({ ssr: false })로 SSR 비활성화',
+      '에러 스택 트레이스에 문제 컴포넌트 이름이 나옴 — 그 컴포넌트 안에서 브라우저 전용 API 찾기',
+    ],
+    tags: ['디버깅', 'Next.js', 'Hydration', 'SSR', 'useEffect'],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────
+  // 인증 / 세션
+  // ──────────────────────────────────────────────────────────────────────
+  {
+    id: 'nextauth-session',
+    category: '인증 / 세션',
+    emoji: '🔐',
+    title: 'getServerSession vs useSession, 뭘 써야 해?',
+    subtitle: 'NextAuth 세션 흐름 완전 이해 — 서버/클라이언트 어디서 어떻게',
+    scenario: `NextAuth를 붙였다. 로그인도 되고 세션도 생겼다. 근데 페이지에서 로그인한 유저 정보를 보여주려 할 때 막힌다. 서버 컴포넌트에서 useSession() 썼더니 에러나고, 클라이언트 컴포넌트에서 getServerSession() 썼더니 또 에러난다. 어디서 뭘 써야 하는 건지?`,
+    scenarioCode: `// 🚨 서버 컴포넌트에서 이렇게 하면 에러
+// app/dashboard/page.tsx (Server Component)
+import { useSession } from 'next-auth/react'
+
+export default async function DashboardPage() {
+  const { data: session } = useSession()  // ❌ hook은 클라이언트에서만!
+  return <div>{session?.user?.name}</div>
+}
+
+// 🚨 클라이언트 컴포넌트에서 이렇게 하면 에러
+// app/dashboard/_components/UserCard.tsx
+'use client'
+import { getServerSession } from 'next-auth'
+
+export function UserCard() {
+  const session = await getServerSession(authOptions)  // ❌ 서버 함수는 클라에서 못씀
+  return <div>{session?.user?.name}</div>
+}`,
+    whyItMatters: `NextAuth는 세션을 두 가지 방식으로 노출한다. 서버 전용 API와 클라이언트 전용 훅이 따로 있어서, 잘못 쓰면 바로 에러가 난다. 이걸 모르면 페이지마다 "왜 여기선 안 되지?" 하면서 시간을 버린다. Next.js App Router에서 대부분의 페이지가 서버 컴포넌트이므로, 특히 getServerSession 사용법이 더 중요하다.`,
+    concept: `NextAuth 세션 접근 방법은 실행 환경에 따라 다르다. 서버(Server Component, API Route, Server Action): getServerSession(authOptions). 클라이언트(Client Component): useSession() 훅. JWT 전략을 쓰면 세션은 쿠키에 암호화된 JWT로 저장되고, 서버에선 이 JWT를 복호화해서 세션을 만든다.`,
+    examples: [
+      {
+        label: '서버 컴포넌트에서 세션 읽기 — getServerSession',
+        code: `// app/dashboard/page.tsx (Server Component — async 가능)
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { redirect } from 'next/navigation'
+
+export default async function DashboardPage() {
+  // 서버에서 직접 세션 읽기 — 쿠키의 JWT를 복호화
+  const session = await getServerSession(authOptions)
+
+  // 미로그인 시 리다이렉트
+  if (!session) redirect('/login')
+
+  return (
+    <div>
+      <h1>안녕하세요 {session.user.name}님</h1>
+      <p>역할: {session.user.role}</p>
+    </div>
+  )
+}`,
+        note: 'Server Component에서는 getServerSession. async/await 사용. authOptions를 반드시 넘겨야 세션을 복호화할 수 있다',
+      },
+      {
+        label: '클라이언트 컴포넌트에서 세션 읽기 — useSession',
+        code: `// app/dashboard/_components/UserAvatar.tsx (Client Component)
+'use client'
+import { useSession } from 'next-auth/react'
+
+export function UserAvatar() {
+  const { data: session, status } = useSession()
+  //                     ↑ 'loading' | 'authenticated' | 'unauthenticated'
+
+  if (status === 'loading') return <div>로딩중...</div>
+  if (status === 'unauthenticated') return null
+
+  return (
+    <div>
+      <img src={session.user.image} alt={session.user.name} />
+      <span>{session.user.name}</span>
+    </div>
+  )
+}
+
+// ⚠️ 전제: 부모 어딘가에 SessionProvider가 있어야 함
+// app/layout.tsx:
+// <SessionProvider session={session}>{children}</SessionProvider>`,
+        note: 'Client Component에서는 useSession. status로 로딩/인증 상태 구분. SessionProvider가 상위에 필요',
+      },
+      {
+        label: 'JWT 콜백으로 커스텀 필드 추가 — admin 프로젝트 패턴',
+        code: `// lib/auth.ts
+export const authOptions: NextAuthOptions = {
+  session: { strategy: 'jwt' },
+  callbacks: {
+    // ① 로그인 시 token에 추가 정보 저장
+    jwt: async ({ token, user }) => {
+      if (user) {
+        // user는 authorize()가 반환한 객체
+        token.role = user.role       // 커스텀 필드 추가
+        token.trainerId = user.id
+      }
+      return token
+    },
+    // ② 클라이언트가 session 요청할 때 token → session 변환
+    session: async ({ session, token }) => {
+      if (token) {
+        session.user.role = token.role       // session에도 추가
+        session.user.trainerId = token.trainerId
+      }
+      return session
+    },
+  },
+}
+
+// 이렇게 하면 session.user.role, session.user.trainerId 사용 가능
+// 단, TypeScript에서 타입 확장 필요:
+// types/next-auth.d.ts
+declare module 'next-auth' {
+  interface Session {
+    user: { role: string; trainerId: string } & DefaultSession['user']
+  }
+}`,
+        note: 'jwt 콜백 → token 저장, session 콜백 → client에 노출. 이 두 단계를 거쳐야 session.user.role 같은 커스텀 필드를 쓸 수 있다',
+      },
+      {
+        label: 'API Route에서 세션 확인 — 서버 사이드 인증',
+        code: `// app/api/posts/route.ts
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { NextResponse } from 'next/server'
+
+export async function POST(req: Request) {
+  // API Route도 서버 → getServerSession 사용
+  const session = await getServerSession(authOptions)
+
+  if (!session) {
+    return NextResponse.json({ error: '로그인 필요' }, { status: 401 })
+  }
+
+  // role 체크
+  if (session.user.role !== 'admin') {
+    return NextResponse.json({ error: '권한 없음' }, { status: 403 })
+  }
+
+  const body = await req.json()
+  // ... 비즈니스 로직
+}`,
+        note: 'API Route도 서버이므로 getServerSession. 미들웨어에서 인증을 먼저 걸러도, API 레벨에서 role 체크는 따로 하는 것이 안전하다',
+      },
+    ],
+    decisionGuide: [
+      {
+        condition: 'Server Component (page.tsx, layout.tsx, async 컴포넌트)',
+        answer: 'getServerSession(authOptions) — await로 호출. 미로그인 시 redirect()로 튕겨냄',
+      },
+      {
+        condition: "Client Component ('use client' 붙은 컴포넌트)",
+        answer: "useSession() 훅. 상위에 SessionProvider 필요. status === 'loading' 처리 필수",
+      },
+      {
+        condition: 'API Route (app/api/**/route.ts)',
+        answer: 'getServerSession(authOptions) — 서버 함수. 인증 + role 체크 여기서 직접',
+      },
+      {
+        condition: 'session에 role이나 userId 같은 커스텀 필드가 없다',
+        answer: 'jwt 콜백에서 token에 추가, session 콜백에서 session.user에 복사. TypeScript 타입 확장도 필요',
+      },
+      {
+        condition: '로그인했는데 session이 null로 보인다',
+        answer: 'Client Component라면 SessionProvider 누락 확인. Server Component라면 authOptions 인자 누락 확인. JWT 전략이면 NEXTAUTH_SECRET 환경변수 설정 확인',
+      },
+    ],
+    question: `다음 두 컴포넌트가 있습니다. 각각 어떤 방식으로 세션을 읽어야 하는지, 왜 그래야 하는지 설명하세요.
+
+A) \`app/dashboard/layout.tsx\` — 서버 컴포넌트, 유저 role에 따라 다른 메뉴를 보여줌
+B) \`app/dashboard/_components/LogoutButton.tsx\` — 로그아웃 버튼, 클릭 이벤트 처리 필요`,
+    referenceAnswer: `A) layout.tsx (Server Component): getServerSession(authOptions)를 await로 호출합니다. Server Component는 서버에서 실행되므로 React 훅을 쓸 수 없습니다. getServerSession은 서버 전용 함수로, JWT 쿠키를 직접 복호화해서 세션을 가져옵니다. 세션이 없으면 redirect('/login')으로 보냅니다.
+
+B) LogoutButton.tsx (Client Component): 클릭 이벤트 핸들러가 필요하므로 'use client'가 필요합니다. 클라이언트에서는 useSession() 훅으로 세션을 읽고, 로그아웃은 next-auth/react의 signOut()을 호출합니다. 이 컴포넌트는 SessionProvider 안에 있어야 useSession이 동작합니다.
+
+핵심: 서버(async 함수 실행 환경) → getServerSession, 클라이언트(브라우저 실행 환경) → useSession`,
+    keyPoints: [
+      'Server Component/API Route → getServerSession(authOptions), Client Component → useSession()',
+      'jwt 콜백: 토큰에 커스텀 필드 저장 / session 콜백: 클라이언트에 노출할 필드 결정',
+      'useSession은 SessionProvider 없이는 동작하지 않음 — root layout에 필수',
+      'NEXTAUTH_SECRET 환경변수 없으면 JWT 복호화 실패 → session이 null',
+    ],
+    tags: ['NextAuth', '인증', '세션', 'JWT', 'Server Component'],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────
+  // 데이터 패칭 심화
+  // ──────────────────────────────────────────────────────────────────────
+  {
+    id: 'swr-key-pattern',
+    category: '데이터 통신',
+    emoji: '🗝️',
+    title: 'SWR key가 바뀌면 왜 자동으로 다시 불려?',
+    subtitle: 'SWR 캐시 키 원리 + mutate로 수동 갱신하는 타이밍',
+    scenario: `SWR로 목록을 불러오는데, 필터(카테고리, 날짜 등)를 바꿀 때마다 자동으로 API가 다시 호출된다. 신기하게 잘 되긴 하는데... 왜 되는지 모르겠다. 그리고 글을 새로 등록했는데 목록이 안 바뀐다. mutate를 써야 한다는데, 어떻게 쓰는 건지?`,
+    scenarioCode: `// 이렇게 짰는데 필터 바꾸면 자동으로 refetch됨 — 왜?
+const [category, setCategory] = useState('all')
+
+const { data } = useSWR(
+  \`/api/posts?category=\${category}\`,  // 🤔 이게 바뀌면 자동으로?
+  fetcher
+)
+
+// 그리고 글 등록 후 목록을 어떻게 갱신하지?
+async function createPost(data: PostForm) {
+  await api.post('/api/posts', data)
+  // ← 여기서 뭔가 해야 목록이 업데이트될 것 같은데...
+}`,
+    whyItMatters: `SWR에서 key는 단순한 URL이 아니라 캐시의 식별자다. key가 바뀌면 "다른 데이터"로 인식해서 자동으로 새로 불러온다. 이 원리를 모르면 필터가 왜 자동으로 동작하는지 이해 못하고, mutate를 언제 어떻게 쓸지 몰라서 목록 갱신을 페이지 리프레시로 해결하게 된다.`,
+    concept: `SWR은 key를 기준으로 캐시를 관리한다. 같은 key = 같은 캐시, 다른 key = 다른 캐시다. key가 변경되면 SWR은 자동으로 새 key에 대한 데이터를 fetch한다. mutate()는 캐시를 직접 무효화하거나 업데이트하는 함수다. 특정 key의 데이터를 강제로 새로고침하거나, 응답 없이 직접 값을 넣을 수 있다.`,
+    examples: [
+      {
+        label: 'key 변경 → 자동 refetch 원리',
+        code: `const [category, setCategory] = useState('all')
+const [page, setPage] = useState(1)
+
+// key가 변수를 포함하면 변수가 바뀔 때마다 다른 캐시로 인식
+const { data, isLoading } = useSWR(
+  \`/api/posts?category=\${category}&page=\${page}\`,
+  fetcher,
+  { keepPreviousData: true }  // 새 key 로딩 중 이전 데이터 유지
+)
+
+// category를 'react'로 바꾸면:
+// key: '/api/posts?category=all&page=1'  → 캐시에 있으면 즉시 표시
+//  ↓ 변경 후
+// key: '/api/posts?category=react&page=1' → 새 key, 자동으로 fetch 시작
+setCategory('react')`,
+        note: 'key가 다르면 새로운 fetch. 같은 key면 캐시 반환 (stale-while-revalidate). keepPreviousData로 로딩 깜빡임 방지',
+      },
+      {
+        label: 'mutate — 등록/수정/삭제 후 목록 갱신',
+        code: `// useSWR이 반환하는 mutate는 해당 key의 데이터를 갱신
+const { data: posts, mutate } = useSWR('/api/posts', fetcher)
+
+async function handleCreatePost(formData: PostForm) {
+  // 1. API 호출
+  await api.post('/api/posts', formData)
+
+  // 2. mutate()로 캐시 무효화 → 자동으로 재요청
+  mutate()  // '/api/posts' 키를 다시 fetch
+
+  // 또는 낙관적 업데이트 (서버 응답 기다리지 않고 UI 먼저 반영)
+  mutate(
+    async (currentPosts) => {
+      const newPost = await api.post('/api/posts', formData)
+      return [...currentPosts, newPost.data]  // 응답 데이터로 캐시 업데이트
+    },
+    { optimisticData: (current) => [...current, { ...formData, id: 'temp' }] }
+  )
+}`,
+        note: 'mutate()는 인자 없이 호출하면 재요청. 함수를 넘기면 캐시 직접 업데이트 (낙관적 업데이트 가능)',
+      },
+      {
+        label: 'useSWRMutation — 등록/수정/삭제 전용',
+        code: `import useSWRMutation from 'swr/mutation'
+
+// useSWRMutation: 데이터 변경(POST/PUT/DELETE) 전용
+// useSWR은 읽기 전용, useSWRMutation은 쓰기 전용
+const { trigger: createPost, isMutating } = useSWRMutation(
+  '/api/posts',
+  async (url, { arg }: { arg: PostForm }) => {
+    const res = await api.post(url, arg)
+    return res.data
+  }
+)
+
+// trigger 호출 시 자동으로 '/api/posts' 캐시 무효화
+await createPost({ title: '새 글', content: '...' })
+//                 ↑ arg로 전달
+
+// isMutating: 요청 중 여부 (로딩 상태)
+<Button disabled={isMutating}>
+  {isMutating ? '저장중...' : '저장'}
+</Button>`,
+        note: 'useSWRMutation은 수동으로 trigger를 호출해야 실행됨. useSWR은 자동 실행. 생성/수정/삭제는 useSWRMutation이 적합',
+      },
+      {
+        label: '전역 mutate — 다른 컴포넌트의 캐시 갱신',
+        code: `import { mutate } from 'swr'  // 전역 mutate
+
+// 하위 컴포넌트에서 상위 컴포넌트의 캐시를 갱신할 때
+function PostForm() {
+  async function handleSubmit(data: PostForm) {
+    await api.post('/api/posts', data)
+
+    // 이 컴포넌트에서 useSWR을 안 써도 다른 컴포넌트의 캐시를 갱신 가능
+    mutate('/api/posts')  // '/api/posts' key를 쓰는 모든 useSWR 재요청
+  }
+}
+
+// ⚠️ key가 동적이면 패턴 매칭 사용
+mutate((key) => typeof key === 'string' && key.startsWith('/api/posts'))
+// '/api/posts?category=react', '/api/posts?page=2' 등 모두 무효화`,
+        note: "전역 mutate는 key를 직접 지정. 동적 key라면 함수 형태로 패턴 매칭. 'swr'에서 import하는 것이 useSWR이 반환하는 mutate와 다름에 주의",
+      },
+    ],
+    decisionGuide: [
+      {
+        condition: '필터/페이지 변경 시 자동으로 다른 데이터를 불러오고 싶다',
+        answer: '변수를 key에 포함시키면 됨. key가 바뀌면 자동 fetch. keepPreviousData: true로 로딩 중 이전 데이터 표시',
+      },
+      {
+        condition: '등록/수정/삭제 후 목록을 새로고침하고 싶다',
+        answer: 'useSWR의 mutate() 호출 (인자 없음). 또는 전역 mutate(key) 사용. API 호출 후 반드시 mutate 필요',
+      },
+      {
+        condition: '생성/수정 API 요청을 만들고 싶다',
+        answer: 'useSWRMutation 사용. trigger() 함수로 수동 실행. isMutating으로 로딩 상태 추적',
+      },
+      {
+        condition: '로딩 중에 이전 데이터가 사라지는 깜빡임이 있다',
+        answer: 'keepPreviousData: true 옵션 추가. key 변경 중에도 이전 캐시를 표시',
+      },
+      {
+        condition: 'key를 null로 설정하면?',
+        answer: 'fetch를 실행하지 않음. 조건부 fetch에 활용. useSWR(condition ? url : null, fetcher)',
+      },
+    ],
+    question: `다음 코드에서 "글 삭제 후 목록이 자동으로 갱신되지 않는" 이유를 설명하고, 수정된 코드를 작성하세요.
+
+\`\`\`tsx
+function PostList() {
+  const { data: posts, mutate } = useSWR('/api/posts', fetcher)
+
+  async function handleDelete(id: string) {
+    await api.delete(\`/api/posts/\${id}\`)
+    // 여기서 끝
+  }
+
+  return (
+    <ul>
+      {posts?.map(post => (
+        <li key={post.id}>
+          {post.title}
+          <button onClick={() => handleDelete(post.id)}>삭제</button>
+        </li>
+      ))}
+    </ul>
+  )
+}
+\`\`\``,
+    referenceAnswer: `이유: 삭제 API를 호출했지만 SWR 캐시를 갱신하는 코드가 없습니다. SWR은 캐시 기반으로 동작하므로, 외부에서 데이터가 바뀌어도 자동으로 감지하지 못합니다.
+
+수정 방법 1 — mutate()로 재요청:
+async function handleDelete(id: string) {
+  await api.delete(\`/api/posts/\${id}\`)
+  mutate()  // '/api/posts' 캐시를 무효화하고 재요청
+}
+
+수정 방법 2 — 낙관적 업데이트 (더 빠른 UX):
+async function handleDelete(id: string) {
+  mutate(
+    async (current) => {
+      await api.delete(\`/api/posts/\${id}\`)
+      return current?.filter(p => p.id !== id)  // 삭제된 항목 즉시 제거
+    },
+    { optimisticData: posts?.filter(p => p.id !== id) }  // 서버 응답 전에 UI 먼저 반영
+  )
+}`,
+    keyPoints: [
+      'SWR key = 캐시 식별자. key가 바뀌면 새 fetch, 같으면 캐시 반환',
+      '등록/수정/삭제 후 mutate() 호출 필수 — 안 하면 화면이 안 바뀜',
+      'useSWR = 읽기(자동), useSWRMutation = 쓰기(수동 trigger)',
+      'null key → fetch 중단. 조건부 fetch: useSWR(isReady ? url : null, fetcher)',
+    ],
+    tags: ['SWR', '데이터패칭', 'mutate', '캐시', 'useSWRMutation'],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Next.js
+  // ──────────────────────────────────────────────────────────────────────
+  {
+    id: 'nextjs-middleware',
+    category: 'Next.js',
+    emoji: '🛡️',
+    title: '미들웨어가 뭐고 언제 쓰는 거야?',
+    subtitle: 'Next.js middleware.ts — 인증 체크, 경로 보호, 헤더 추가',
+    scenario: `대시보드 페이지들이 10개가 넘는다. 로그인 안 한 사람이 주소를 직접 치고 들어오면 막아야 하는데, 모든 page.tsx에 세션 체크 코드를 붙이기엔 너무 반복된다. 미들웨어를 쓰면 된다고 하는데, 미들웨어가 뭔지, 어디에 파일을 만드는지, 어떻게 동작하는지 모르겠다.`,
+    scenarioCode: `// 미들웨어 없이 모든 페이지에 이걸 반복해야 할까?
+// app/dashboard/page.tsx
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions)
+  if (!session) redirect('/login')  // 반복 ①
+  // ...
+}
+
+// app/settings/page.tsx
+export default async function SettingsPage() {
+  const session = await getServerSession(authOptions)
+  if (!session) redirect('/login')  // 반복 ②
+  // ...
+}
+
+// app/members/page.tsx
+export default async function MembersPage() {
+  const session = await getServerSession(authOptions)
+  if (!session) redirect('/login')  // 반복 ③ ... 10개 더
+}`,
+    whyItMatters: `인증 체크를 페이지마다 반복하면 하나라도 빠뜨리면 보안 구멍이 된다. 미들웨어는 요청이 페이지/API에 도달하기 전에 실행되는 "관문"이다. 인증 체크, 경로 보호, 헤더 추가 같은 공통 로직을 한 곳에서 처리할 수 있다. 특히 NextAuth는 withAuth 미들웨어를 제공해서 훨씬 간단하게 구현할 수 있다.`,
+    concept: `미들웨어(middleware.ts)는 요청이 서버에 도착했을 때, 페이지나 API Route가 실행되기 전에 먼저 실행되는 함수다. 파일 위치는 프로젝트 루트(src/ 사용 시 src/middleware.ts). matcher 설정으로 어떤 경로에 적용할지 지정한다. Edge Runtime에서 실행되므로 Node.js API(fs 등)는 쓸 수 없다.`,
+    examples: [
+      {
+        label: '기본 구조 — 인증 없는 접근 차단',
+        code: `// src/middleware.ts (또는 프로젝트 루트 middleware.ts)
+import { NextRequest, NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
+
+export async function middleware(request: NextRequest) {
+  const token = await getToken({ req: request })
+  const isAuthenticated = !!token
+
+  const isAuthPage = request.nextUrl.pathname.startsWith('/login')
+
+  // 로그인 안 됐고, 로그인 페이지도 아니면 → 로그인으로
+  if (!isAuthenticated && !isAuthPage) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // 이미 로그인했는데 로그인 페이지 접근 → 홈으로
+  if (isAuthenticated && isAuthPage) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  return NextResponse.next()  // 통과
+}
+
+// 어떤 경로에 미들웨어를 적용할지
+export const config = {
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  // api, 정적 파일은 제외하고 나머지 전부 적용
+}`,
+        note: '미들웨어 파일 위치: src/middleware.ts. matcher로 적용 경로 지정. return NextResponse.next()는 "그대로 통과"',
+      },
+      {
+        label: 'NextAuth withAuth — admin 프로젝트 실제 패턴',
+        code: `// src/middleware.ts
+import { withAuth } from 'next-auth/middleware'
+import { NextRequest, NextResponse } from 'next/server'
+
+// ① 미들웨어 로직 (withAuth 통과 후 실행)
+const middleware = (request: NextRequest) => {
+  // 현재 경로를 헤더에 추가 (서버 컴포넌트에서 읽기 위해)
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-current-pathname', request.nextUrl.pathname)
+
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  })
+}
+
+// ② withAuth: 토큰 없으면 자동으로 signIn 페이지로
+export default withAuth(middleware, {
+  callbacks: {
+    authorized: ({ token }) => {
+      // forceLogout 플래그 있으면 강제 로그아웃
+      if (token?.forceLogout) return false
+      return !!token  // 토큰 있으면 통과
+    },
+  },
+})
+
+export const config = {
+  // 이 경로들은 미들웨어 적용 안 함 (negative lookahead)
+  matcher: ['/((?!api|login|register|_next|favicon).*)'],
+}`,
+        note: 'withAuth(내부로직, 옵션) 패턴. authorized 콜백에서 false 반환 시 → signIn 페이지로 자동 리다이렉트',
+      },
+      {
+        label: 'role 기반 접근 제어',
+        code: `// 특정 경로는 admin만 접근 가능
+export default withAuth(
+  function middleware(request) {
+    const token = request.nextauth.token
+    const pathname = request.nextUrl.pathname
+
+    // /admin/* 경로에 일반 유저가 접근하면
+    if (pathname.startsWith('/admin') && token?.role !== 'admin') {
+      return NextResponse.redirect(new URL('/403', request.url))
+    }
+
+    return NextResponse.next()
+  },
+  {
+    callbacks: {
+      authorized: ({ token }) => !!token,  // 기본: 로그인만 확인
+    },
+  }
+)
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/settings/:path*'],
+  //         ↑ 동적 세그먼트도 가능
+}`,
+        note: 'matcher에 :path*로 하위 경로 전체 적용. role 체크는 미들웨어에서 하되, API는 서버에서도 다시 확인 (Defense in Depth)',
+      },
+      {
+        label: '미들웨어 vs API 레벨 인증 — 둘 다 해야 하는 이유',
+        code: `// ❓ 미들웨어에서 인증 체크하는데 API에서 또 해야 해?
+// → YES. 이유:
+
+// 1. 미들웨어는 페이지 라우트만 보호
+//    matcher에서 /api를 제외하면 API는 무방비
+export const config = {
+  matcher: ['/((?!api|...).*)'],  // api 제외!
+}
+
+// 2. 미들웨어를 우회할 수 있음 (curl 등 직접 호출)
+// curl https://myapp.com/api/posts -H "직접 요청"
+// → 미들웨어 없이 API에 접근 가능
+
+// 3. 역할(role) 체크는 API 레벨에서 다시 해야 안전
+// app/api/admin/route.ts
+export async function DELETE(req: Request) {
+  const session = await getServerSession(authOptions)
+  if (!session) return Response.json({ error: '401' }, { status: 401 })
+  if (session.user.role !== 'admin') return Response.json({ error: '403' }, { status: 403 })
+  // ...
+}
+// 미들웨어: 페이지 접근 1차 차단 (UX)
+// API 레벨: 실제 데이터 보호 (Security)`,
+        note: '미들웨어 = UX 보호 (잘못된 페이지 접근 방지). API 레벨 = 실제 보안. 둘 다 필요하며 역할이 다름',
+      },
+    ],
+    decisionGuide: [
+      {
+        condition: '로그인 안 한 사람이 대시보드에 접근하면 막고 싶다',
+        answer: 'middleware.ts에서 getToken()으로 확인 후 redirect. matcher로 보호할 경로 지정',
+      },
+      {
+        condition: '특정 경로는 admin만 접근 가능하게 하고 싶다',
+        answer: '미들웨어에서 pathname 체크 + token.role 확인. API는 서버에서 별도로 role 체크 (Defense in Depth)',
+      },
+      {
+        condition: '미들웨어에서 DB 조회를 하고 싶다',
+        answer: 'Edge Runtime에서는 Prisma 등 일부 라이브러리 동작 안 함. DB 조회는 page/API 레벨에서. 미들웨어는 토큰 검사만',
+      },
+      {
+        condition: 'API Route도 인증이 필요하다',
+        answer: '미들웨어 matcher에서 /api를 포함시키거나, API Route 내부에서 직접 세션 체크. 민감한 API는 반드시 API 레벨에서도 확인',
+      },
+      {
+        condition: 'matcher 패턴을 어떻게 짜야 해?',
+        answer: "/((?!제외경로1|제외경로2).*)  형태의 negative lookahead 사용. /api, /_next/static, /favicon.ico 등은 보통 제외",
+      },
+    ],
+    question: `Next.js 앱에서 다음 요구사항을 미들웨어로 구현한다면 어떻게 짜겠습니까?
+
+요구사항:
+- /dashboard/*, /settings/* 경로는 로그인해야 접근 가능
+- 미로그인 시 /login?callbackUrl=원래경로 로 리다이렉트
+- /api 경로와 정적 파일은 미들웨어 적용 제외`,
+    referenceAnswer: `\`\`\`ts
+// src/middleware.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
+
+export async function middleware(request: NextRequest) {
+  const token = await getToken({ req: request })
+
+  if (!token) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/settings/:path*'],
+  // /api, _next 등은 matcher에 포함시키지 않으면 자동 제외됨
+}
+\`\`\`
+
+미들웨어에서 getToken()으로 JWT 토큰 유무를 확인하고, 없으면 현재 경로를 callbackUrl로 담아서 /login으로 리다이렉트합니다. matcher를 /dashboard/:path*와 /settings/:path*로만 지정해서 해당 경로에만 적용합니다.`,
+    keyPoints: [
+      '미들웨어는 페이지/API 실행 전 "관문". Edge Runtime에서 동작 → Prisma 등 Node.js 전용 라이브러리 사용 불가',
+      'matcher로 적용 경로 지정. /api, /_next/static은 보통 제외',
+      '미들웨어(UX 보호) + API 레벨 인증(실제 보안) — 둘 다 필요, 역할이 다름',
+      'withAuth는 NextAuth 전용 미들웨어 헬퍼. authorized 콜백에서 false 반환 시 자동 리다이렉트',
+    ],
+    tags: ['Next.js', '미들웨어', '인증', 'NextAuth', '경로보호'],
+  },
+
+  {
+    id: 'prisma-n-plus-one',
+    category: 'DB 설계',
+    emoji: '🐢',
+    title: 'N+1 쿼리, 왜 느려지는 거야?',
+    subtitle: '반복문 안에서 DB 호출 — 성능 최악의 패턴과 해결법',
+    scenario: `대시보드 페이지가 처음엔 잘 됐는데, 회원이 100명을 넘으면서 느려지기 시작했다. 코드를 보면 별로 복잡한 게 없는데... 왜 느린 걸까? 알고보니 "100명 조회"했더니 사실은 DB에 301번 쿼리가 날아가고 있었다. N+1 문제라는 게 뭔지, 어떻게 찾고 어떻게 고치는지.`,
+    scenarioCode: `// 실제 admin 프로젝트 코드 (ThumbnailMaster.tsx)
+// 회원 10명 = DB 쿼리 최소 21번 발생!
+
+const users = await prisma.businessusers.findMany({
+  where: { trainerId, useYn: 'Y' },
+})
+// ① 쿼리 1번: 전체 회원 조회
+
+for (const user of users) {
+  // ② 쿼리 N번: 회원마다 스케줄 조회
+  const schedule = await prisma.userptschedules.findFirst({
+    where: { uid: user.uid }
+  })
+
+  if (schedule) {
+    // ③ 쿼리 N번: 회원마다 히스토리 조회
+    const histories = await prisma.thumbnailmasterhistories.findMany({
+      where: { uid: user.uid }
+    })
+  }
+}
+// 회원 10명 → 1 + 10 + 10 = 21번 쿼리
+// 회원 100명 → 1 + 100 + 100 = 201번 쿼리 😱`,
+    whyItMatters: `N+1 쿼리는 "1번 조회 + N번 반복 조회"가 합쳐진 패턴이다. 데이터가 적을 때는 티가 안 나지만, 회원이 100명, 1000명이 되면 쿼리가 201번, 2001번으로 늘어난다. 실무에서 가장 흔한 성능 버그 중 하나이고, 코드만 보면 이상해 보이지 않아서 발견하기도 어렵다. Prisma Logging으로 쿼리 수를 확인하는 방법을 알면 바로 발견할 수 있다.`,
+    concept: `N+1 문제는 1번의 "목록 조회" 후 각 항목에 대해 N번의 "개별 조회"가 반복되는 패턴이다. 해결책은 두 가지다: (1) Prisma include로 관련 데이터를 한 번에 조인 조회, (2) 먼저 전체 ID 목록을 모아서 한 번에 in 쿼리로 조회. 어떤 방식이 더 나은지는 데이터 크기와 관계 구조에 따라 다르다.`,
+    examples: [
+      {
+        label: '❌ N+1 발생 — for loop 안에서 DB 호출',
+        code: `// 🐢 N+1 패턴: 회원 100명 = 201번 쿼리
+const users = await prisma.businessusers.findMany({
+  where: { trainerId }
+})
+
+for (const user of users) {
+  // 🚨 각 user마다 별도 쿼리 실행
+  const pt = await prisma.userptschedules.findFirst({
+    where: { uid: user.uid }
+  })
+  // 전체 쿼리 수 = 1 + N
+}
+
+// 이걸 발견하는 법: Prisma 로그 켜기
+const prisma = new PrismaClient({
+  log: ['query'],  // 모든 쿼리를 콘솔에 출력
+})
+// 로그에 SELECT ... WHERE uid = '...' 가 N번 반복되면 N+1 문제`,
+        note: 'for / forEach / map 안에서 await prisma.xxx.find 패턴이 보이면 N+1 의심. 쿼리 로그 켜서 개수 확인',
+      },
+      {
+        label: '✅ 해결 1 — Prisma include로 한 번에 조인',
+        code: `// ✅ include: 관련 데이터를 한 쿼리로 같이 가져옴
+const users = await prisma.businessusers.findMany({
+  where: { trainerId, useYn: 'Y' },
+  include: {
+    // users와 연결된 userptschedules도 같이 조회
+    userptschedules: {
+      where: { usedYn: 'Y', scheduleState: '1' },
+      orderBy: { scheduleDt: 'desc' },
+      take: 1,  // 최근 1개만
+    },
+    thumbnailmasterhistories: true,
+  },
+})
+// 쿼리 수: 1~2번 (JOIN으로 처리)
+
+// 이제 for loop 안에서 추가 쿼리 없이 접근
+for (const user of users) {
+  const schedule = user.userptschedules[0]  // 이미 포함됨
+  const histories = user.thumbnailmasterhistories  // 이미 포함됨
+}`,
+        note: 'include는 Prisma에서 관련 테이블을 JOIN으로 가져오는 방법. 단, 데이터가 많으면 한 번에 너무 많이 가져올 수 있음',
+      },
+      {
+        label: '✅ 해결 2 — ID 목록 모아서 한 번에 in 조회',
+        code: `// ✅ 먼저 users 조회 → uid 목록 추출 → in 쿼리로 한 번에
+const users = await prisma.businessusers.findMany({
+  where: { trainerId, useYn: 'Y' },
+  select: { uid: true, name: true },  // 필요한 필드만
+})
+
+const uids = users.map(u => u.uid)  // uid 목록 추출
+
+// 한 번에 모든 schedule 조회
+const schedules = await prisma.userptschedules.findMany({
+  where: {
+    uid: { in: uids },  // ← in 쿼리: uid가 목록 중 하나인 것
+    usedYn: 'Y',
+    scheduleState: '1',
+  },
+})
+
+// Map으로 uid → schedule 매핑 (O(1) 접근)
+const scheduleMap = new Map(schedules.map(s => [s.uid, s]))
+
+// 이제 DB 쿼리 없이 매핑
+for (const user of users) {
+  const schedule = scheduleMap.get(user.uid)  // 추가 쿼리 없음
+}
+// 전체 쿼리 수: 2번 (users 조회 + schedules 조회)`,
+        note: 'in 쿼리 패턴: ID 목록 모으기 → WHERE id IN (...) → Map으로 매핑. include보다 유연하고 필요한 데이터만 가져올 수 있음',
+      },
+      {
+        label: '✅ 해결 3 — Promise.all로 병렬 실행 (부분 해결)',
+        code: `// 관계가 없어서 JOIN이 안 될 때: 병렬 실행으로 시간 단축
+const users = await prisma.businessusers.findMany({ where: { trainerId } })
+
+// ❌ 순차 실행: user1 기다리고 → user2 기다리고 → ...
+for (const user of users) {
+  const pt = await prisma.userptschedules.findFirst({ where: { uid: user.uid } })
+}
+
+// ✅ 병렬 실행: 동시에 모두 요청
+const schedulePromises = users.map(user =>
+  prisma.userptschedules.findFirst({ where: { uid: user.uid } })
+)
+const schedules = await Promise.all(schedulePromises)
+// 쿼리 수는 여전히 N+1이지만, 시간은 1개 쿼리 시간으로 단축
+
+// ⚠️ 이건 완전한 해결은 아님. N개 쿼리 자체는 남아있음
+// → DB 연결 수 제한에 걸릴 수 있음 (Prisma 기본값: 10개)`,
+        note: 'Promise.all은 쿼리 수는 그대로지만 병렬로 실행해서 시간 단축. 완전한 해결은 아님. N이 클수록 DB 연결 고갈 위험',
+      },
+    ],
+    decisionGuide: [
+      {
+        condition: 'for loop 안에 await prisma 코드가 있다',
+        answer: 'N+1 의심. Prisma log: [\'query\'] 켜서 실제 쿼리 수 확인. include나 in 쿼리로 교체 검토',
+      },
+      {
+        condition: '연관된 데이터를 같이 가져오고 싶다 (1:N 관계)',
+        answer: 'Prisma include 사용. Prisma schema에 relation 정의되어 있어야 함',
+      },
+      {
+        condition: 'Prisma schema에 relation이 없어서 include를 못 쓴다',
+        answer: 'ID 목록을 먼저 모으고 WHERE uid IN (...) 쿼리로 한 번에 조회. Map으로 매핑',
+      },
+      {
+        condition: '조회하는 필드가 너무 많아서 한 번에 가져오면 느리다',
+        answer: 'select로 필요한 필드만 지정. include 대신 ID 목록 모아서 필요한 필드만 두 번 쿼리',
+      },
+      {
+        condition: '페이지가 갑자기 느려졌다 (데이터 증가 후)',
+        answer: 'Prisma 로그 켜서 쿼리 수 확인. N+1이면 include 또는 in 쿼리로 해결. DB 인덱스 누락 여부도 확인',
+      },
+    ],
+    question: `다음 코드에서 N+1 문제가 발생하는 이유를 설명하고, Prisma의 \`in\` 쿼리를 사용해서 2번의 DB 쿼리로 해결하는 코드를 작성하세요.
+
+\`\`\`ts
+// 모든 트레이너의 최근 PT 횟수를 보여주는 대시보드
+const trainers = await prisma.businesstrainers.findMany({
+  where: { useYn: 'Y' }
+})
+
+const results = []
+for (const trainer of trainers) {
+  const ptCount = await prisma.userptschedules.count({
+    where: { trainerId: trainer.id, usedYn: 'Y' }
+  })
+  results.push({ name: trainer.name, ptCount })
+}
+\`\`\``,
+    referenceAnswer: `N+1 원인: trainers 조회 1번 + 각 trainer마다 ptCount 조회 N번 = 총 N+1번 쿼리. 트레이너가 50명이면 51번 쿼리 발생.
+
+해결 코드 (2번 쿼리):
+\`\`\`ts
+// 1번째 쿼리: 트레이너 목록
+const trainers = await prisma.businesstrainers.findMany({
+  where: { useYn: 'Y' },
+  select: { id: true, name: true },
+})
+
+const trainerIds = trainers.map(t => t.id)
+
+// 2번째 쿼리: 모든 트레이너의 PT 기록을 한 번에
+const ptSchedules = await prisma.userptschedules.findMany({
+  where: { trainerId: { in: trainerIds }, usedYn: 'Y' },
+  select: { trainerId: true },
+})
+
+// Map으로 trainerId별 count 계산 (DB 추가 호출 없음)
+const countMap = new Map<string, number>()
+for (const s of ptSchedules) {
+  countMap.set(s.trainerId, (countMap.get(s.trainerId) ?? 0) + 1)
+}
+
+const results = trainers.map(t => ({
+  name: t.name,
+  ptCount: countMap.get(t.id) ?? 0,
+}))
+\`\`\``,
+    keyPoints: [
+      'N+1 = "목록 조회 1번 + 각 항목마다 N번" → 데이터 늘수록 기하급수적으로 느려짐',
+      '발견법: Prisma log: [\'query\'] 켜서 같은 구조의 쿼리가 반복되는지 확인',
+      '해결 1: Prisma include (JOIN), 해결 2: ID 목록 → WHERE IN 쿼리 + Map 매핑',
+      'Promise.all은 병렬화로 시간을 줄이지만 쿼리 수는 그대로 — 근본 해결 아님',
+    ],
+    tags: ['Prisma', 'DB', 'N+1', '성능', 'MongoDB'],
+  },
 ]
 
 export function getDeepTopicById(id: string) {
